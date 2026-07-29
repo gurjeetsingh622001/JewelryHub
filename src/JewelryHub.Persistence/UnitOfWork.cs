@@ -1,4 +1,5 @@
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Customers;
 using JewelryHub.Domain.Identity;
 using JewelryHub.Domain.Sellers;
@@ -15,6 +16,9 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<RefreshToken>? _refreshTokens;
     private IRepository<Customer>? _customers;
     private IRepository<Seller>? _sellers;
+    private IRepository<Category>? _categories;
+    private IRepository<Product>? _products;
+    private IRepository<Inventory>? _inventory;
 
     public UnitOfWork(JewelryHubDbContext context)
     {
@@ -28,6 +32,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<RefreshToken> RefreshTokens => _refreshTokens ??= new Repository<RefreshToken>(_context);
     public IRepository<Customer> Customers => _customers ??= new Repository<Customer>(_context);
     public IRepository<Seller> Sellers => _sellers ??= new Repository<Seller>(_context);
+    public IRepository<Category> Categories => _categories ??= new Repository<Category>(_context);
+    public IRepository<Product> Products => _products ??= new Repository<Product>(_context);
+    public IRepository<Inventory> Inventory => _inventory ??= new Repository<Inventory>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _context.SaveChangesAsync(cancellationToken);

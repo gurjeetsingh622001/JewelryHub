@@ -36,6 +36,9 @@ public interface IUnitOfWork
     IRepository<Domain.Identity.RefreshToken> RefreshTokens { get; }
     IRepository<Domain.Customers.Customer> Customers { get; }
     IRepository<Domain.Sellers.Seller> Sellers { get; }
+    IRepository<Domain.Catalog.Category> Categories { get; }
+    IRepository<Domain.Catalog.Product> Products { get; }
+    IRepository<Domain.Catalog.Inventory> Inventory { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
