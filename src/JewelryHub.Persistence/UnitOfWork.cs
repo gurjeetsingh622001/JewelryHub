@@ -3,7 +3,10 @@ using JewelryHub.Domain.Cart;
 using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Customers;
 using JewelryHub.Domain.Identity;
+using JewelryHub.Domain.Orders;
+using JewelryHub.Domain.Payments;
 using JewelryHub.Domain.Sellers;
+using JewelryHub.Domain.Tax;
 using JewelryHub.Domain.Wishlist;
 using JewelryHub.Persistence.Repositories;
 
@@ -24,6 +27,9 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Inventory>? _inventory;
     private IRepository<Cart>? _carts;
     private IRepository<Wishlist>? _wishlists;
+    private IRepository<Order>? _orders;
+    private IRepository<Payment>? _payments;
+    private IRepository<TaxRate>? _taxRates;
 
     public UnitOfWork(JewelryHubDbContext context)
     {
@@ -43,6 +49,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Inventory> Inventory => _inventory ??= new Repository<Inventory>(_context);
     public IRepository<Cart> Carts => _carts ??= new Repository<Cart>(_context);
     public IRepository<Wishlist> Wishlists => _wishlists ??= new Repository<Wishlist>(_context);
+    public IRepository<Order> Orders => _orders ??= new Repository<Order>(_context);
+    public IRepository<Payment> Payments => _payments ??= new Repository<Payment>(_context);
+    public IRepository<TaxRate> TaxRates => _taxRates ??= new Repository<TaxRate>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _context.SaveChangesAsync(cancellationToken);

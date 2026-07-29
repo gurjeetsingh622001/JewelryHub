@@ -53,6 +53,9 @@ public interface IUnitOfWork
     IRepository<Domain.Catalog.Inventory> Inventory { get; }
     IRepository<Domain.Cart.Cart> Carts { get; }
     IRepository<Domain.Wishlist.Wishlist> Wishlists { get; }
+    IRepository<Domain.Orders.Order> Orders { get; }
+    IRepository<Domain.Payments.Payment> Payments { get; }
+    IRepository<Domain.Tax.TaxRate> TaxRates { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
