@@ -1,0 +1,57 @@
+## .NET / Visual Studio ##
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# MSTest / test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.DotSettings.user
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+*.env
+.env
+secrets.json
