@@ -15,6 +15,17 @@ public interface IRepository<T> where T : class
 {
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     IQueryable<T> Query();
+
+    /// <summary>
+    /// Same as Query() but change-tracked. Needed whenever a handler must
+    /// mutate a loaded aggregate's child collection directly (e.g.
+    /// cart.Items.Remove(item)) — EF Core only picks up collection
+    /// add/remove as an INSERT/DELETE when the graph was tracked to begin
+    /// with; doing that against a no-tracking Query() result silently
+    /// loses the removal. Everything else should keep using Query().
+    /// </summary>
+    IQueryable<T> QueryTracking();
+
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
     Task AddAsync(T entity, CancellationToken cancellationToken = default);
     void Update(T entity);
@@ -40,6 +51,8 @@ public interface IUnitOfWork
     IRepository<Domain.Catalog.Category> Categories { get; }
     IRepository<Domain.Catalog.Product> Products { get; }
     IRepository<Domain.Catalog.Inventory> Inventory { get; }
+    IRepository<Domain.Cart.Cart> Carts { get; }
+    IRepository<Domain.Wishlist.Wishlist> Wishlists { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

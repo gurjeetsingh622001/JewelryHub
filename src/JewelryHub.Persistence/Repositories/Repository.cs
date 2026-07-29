@@ -23,6 +23,8 @@ public class Repository<T> : IRepository<T> where T : class
     // should GetByIdAsync it (tracked) rather than pull it from Query().
     public IQueryable<T> Query() => _dbSet.AsNoTracking();
 
+    public IQueryable<T> QueryTracking() => _dbSet;
+
     public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) =>
         _dbSet.AnyAsync(predicate, cancellationToken);
 

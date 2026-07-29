@@ -1,8 +1,10 @@
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Domain.Cart;
 using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Customers;
 using JewelryHub.Domain.Identity;
 using JewelryHub.Domain.Sellers;
+using JewelryHub.Domain.Wishlist;
 using JewelryHub.Persistence.Repositories;
 
 namespace JewelryHub.Persistence;
@@ -20,6 +22,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Category>? _categories;
     private IRepository<Product>? _products;
     private IRepository<Inventory>? _inventory;
+    private IRepository<Cart>? _carts;
+    private IRepository<Wishlist>? _wishlists;
 
     public UnitOfWork(JewelryHubDbContext context)
     {
@@ -37,6 +41,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Category> Categories => _categories ??= new Repository<Category>(_context);
     public IRepository<Product> Products => _products ??= new Repository<Product>(_context);
     public IRepository<Inventory> Inventory => _inventory ??= new Repository<Inventory>(_context);
+    public IRepository<Cart> Carts => _carts ??= new Repository<Cart>(_context);
+    public IRepository<Wishlist> Wishlists => _wishlists ??= new Repository<Wishlist>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _context.SaveChangesAsync(cancellationToken);
