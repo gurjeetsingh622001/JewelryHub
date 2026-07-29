@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JewelryHub.Domain\JewelryHub.Domain.csproj" />
+    <ProjectReference Include="..\JewelryHub.Application\JewelryHub.Application.csproj" />
   </ItemGroup>
 
 </Project>

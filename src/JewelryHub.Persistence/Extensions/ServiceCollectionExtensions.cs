@@ -1,4 +1,6 @@
+using JewelryHub.Application.Common.Interfaces;
 using JewelryHub.Persistence.Interceptors;
+using JewelryHub.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,8 +12,8 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Call from JewelryHub.API's Program.cs:
     ///   builder.Services.AddPersistence(builder.Configuration);
-    /// Registers the DbContext, the audit interceptor, and (once added)
-    /// repository/unit-of-work implementations — kept in one place so
+    /// Registers the DbContext, the audit interceptor, and the
+    /// Repository/Unit-of-Work implementations — kept in one place so
     /// Program.cs stays a thin composition root.
     /// </summary>
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
@@ -34,6 +36,9 @@ public static class ServiceCollectionExtensions
 
             options.AddInterceptors(provider.GetRequiredService<AuditableEntitySaveChangesInterceptor>());
         });
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         return services;
     }

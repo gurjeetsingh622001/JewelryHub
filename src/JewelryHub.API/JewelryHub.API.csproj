@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>JewelryHub.API</RootNamespace>
+    <UserSecretsId>jewelryhub-api-secrets</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JewelryHub.Application\JewelryHub.Application.csproj" />
+    <ProjectReference Include="..\JewelryHub.Persistence\JewelryHub.Persistence.csproj" />
+    <ProjectReference Include="..\JewelryHub.Infrastructure\JewelryHub.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

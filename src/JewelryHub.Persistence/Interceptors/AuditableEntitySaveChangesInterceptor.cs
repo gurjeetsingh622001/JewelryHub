@@ -1,3 +1,4 @@
+using JewelryHub.Application.Common.Interfaces;
 using JewelryHub.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -68,13 +69,3 @@ public class AuditableEntitySaveChangesInterceptor : SaveChangesInterceptor
     }
 }
 
-/// <summary>
-/// Application-layer abstraction (defined here for now since Application
-/// hasn't been scaffolded yet) so Persistence never references
-/// ASP.NET Core directly. Infrastructure/API implements this by reading
-/// the "sub" claim off the authenticated JWT.
-/// </summary>
-public interface ICurrentUserService
-{
-    Guid? UserId { get; }
-}
