@@ -56,6 +56,7 @@ public interface IUnitOfWork
     IRepository<Domain.Orders.Order> Orders { get; }
     IRepository<Domain.Payments.Payment> Payments { get; }
     IRepository<Domain.Tax.TaxRate> TaxRates { get; }
+    IRepository<Domain.Reviews.Review> Reviews { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
