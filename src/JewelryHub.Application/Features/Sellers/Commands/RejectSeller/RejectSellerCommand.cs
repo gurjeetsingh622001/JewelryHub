@@ -1,6 +1,7 @@
 using FluentValidation;
 using JewelryHub.Application.Common.Exceptions;
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Application.Common.Services;
 using JewelryHub.Domain.Enums;
 using JewelryHub.Domain.Sellers;
 using MediatR;
@@ -21,11 +22,13 @@ public class RejectSellerCommandHandler : IRequestHandler<RejectSellerCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notificationService;
 
-    public RejectSellerCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    public RejectSellerCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task Handle(RejectSellerCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,9 @@ public class RejectSellerCommandHandler : IRequestHandler<RejectSellerCommand>
         _unitOfWork.Sellers.Update(seller);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO once Notifications exist: notify the seller with the rejection reason.
+        await _notificationService.NotifyAsync(
+            seller.UserId, "Seller", "Your seller application needs attention",
+            $"Your application was not approved: {request.Reason}",
+            cancellationToken: cancellationToken);
     }
 }

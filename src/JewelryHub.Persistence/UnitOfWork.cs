@@ -3,6 +3,7 @@ using JewelryHub.Domain.Cart;
 using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Customers;
 using JewelryHub.Domain.Identity;
+using JewelryHub.Domain.Notifications;
 using JewelryHub.Domain.Orders;
 using JewelryHub.Domain.Payments;
 using JewelryHub.Domain.Reviews;
@@ -32,6 +33,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Payment>? _payments;
     private IRepository<TaxRate>? _taxRates;
     private IRepository<Review>? _reviews;
+    private IRepository<Notification>? _notifications;
 
     public UnitOfWork(JewelryHubDbContext context)
     {
@@ -55,6 +57,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Payment> Payments => _payments ??= new Repository<Payment>(_context);
     public IRepository<TaxRate> TaxRates => _taxRates ??= new Repository<TaxRate>(_context);
     public IRepository<Review> Reviews => _reviews ??= new Repository<Review>(_context);
+    public IRepository<Notification> Notifications => _notifications ??= new Repository<Notification>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _context.SaveChangesAsync(cancellationToken);

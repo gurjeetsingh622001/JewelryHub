@@ -1,6 +1,7 @@
 using FluentValidation;
 using JewelryHub.Application.Common.Exceptions;
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Application.Common.Services;
 using JewelryHub.Domain.Enums;
 using JewelryHub.Domain.Orders;
 using MediatR;
@@ -42,16 +43,19 @@ public class UpdateOrderItemStatusCommandHandler : IRequestHandler<UpdateOrderIt
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notificationService;
 
-    public UpdateOrderItemStatusCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    public UpdateOrderItemStatusCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task Handle(UpdateOrderItemStatusCommand request, CancellationToken cancellationToken)
     {
         var order = await _unitOfWork.Orders.QueryTracking()
+            .Include(o => o.Customer)
             .Include(o => o.Items).ThenInclude(i => i.Seller)
             .Include(o => o.Items).ThenInclude(i => i.Shipment)
             .FirstOrDefaultAsync(o => o.Items.Any(i => i.Id == request.OrderItemId), cancellationToken)
@@ -87,6 +91,15 @@ public class UpdateOrderItemStatusCommandHandler : IRequestHandler<UpdateOrderIt
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (request.NewStatus is OrderStatus.Shipped or OrderStatus.Delivered)
+        {
+            var verb = request.NewStatus == OrderStatus.Shipped ? "shipped" : "delivered";
+            await _notificationService.NotifyAsync(
+                order.Customer.UserId, "Order", $"Item {verb}",
+                $"'{item.ProductNameSnapshot}' from order {order.OrderNumber} has been {verb}.",
+                linkUrl: $"/orders/{order.Id}", cancellationToken: cancellationToken);
+        }
 
         // TODO: once every item on the parent Order reaches Delivered, a
         // background/orchestration step should roll the Order itself to

@@ -1,5 +1,6 @@
 using JewelryHub.Application.Common.Exceptions;
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Application.Common.Services;
 using JewelryHub.Domain.Enums;
 using JewelryHub.Domain.Sellers;
 using MediatR;
@@ -13,11 +14,13 @@ public class ApproveSellerCommandHandler : IRequestHandler<ApproveSellerCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notificationService;
 
-    public ApproveSellerCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    public ApproveSellerCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task Handle(ApproveSellerCommand request, CancellationToken cancellationToken)
@@ -47,6 +50,9 @@ public class ApproveSellerCommandHandler : IRequestHandler<ApproveSellerCommand>
         _unitOfWork.Sellers.Update(seller);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO once Notifications exist: notify the seller their account is live.
+        await _notificationService.NotifyAsync(
+            seller.UserId, "Seller", "Your seller account is approved",
+            "Your KYC documents have been verified. You can now list products on JewelryHub.",
+            cancellationToken: cancellationToken);
     }
 }

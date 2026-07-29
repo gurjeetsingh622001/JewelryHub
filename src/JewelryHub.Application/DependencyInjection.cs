@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         services.AddAutoMapper(assembly);
         services.AddScoped<Common.Interfaces.ITaxCalculator, Common.Services.GstTaxCalculator>();
+        services.AddScoped<Common.Services.INotificationService, Common.Services.NotificationService>();
 
         return services;
     }

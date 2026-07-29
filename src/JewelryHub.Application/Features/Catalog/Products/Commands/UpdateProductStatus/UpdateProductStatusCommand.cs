@@ -1,9 +1,11 @@
 using FluentValidation;
 using JewelryHub.Application.Common.Exceptions;
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Application.Common.Services;
 using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace JewelryHub.Application.Features.Catalog.Products.Commands.UpdateProductStatus;
 
@@ -22,19 +24,30 @@ public class UpdateProductStatusCommandValidator : AbstractValidator<UpdateProdu
 public class UpdateProductStatusCommandHandler : IRequestHandler<UpdateProductStatusCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
-    public UpdateProductStatusCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public UpdateProductStatusCommandHandler(IUnitOfWork unitOfWork, INotificationService notificationService)
+    {
+        _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
+    }
 
     public async Task Handle(UpdateProductStatusCommand request, CancellationToken cancellationToken)
     {
-        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken)
+        var product = await _unitOfWork.Products.QueryTracking()
+            .Include(p => p.Seller)
+            .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken)
             ?? throw new NotFoundException(nameof(Product), request.ProductId);
 
         product.Status = request.NewStatus;
-        _unitOfWork.Products.Update(product);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO once the Notifications vertical slice exists: notify the
-        // seller of the status change (and Reason, if rejected).
+        if (request.NewStatus == ProductStatus.Rejected)
+        {
+            await _notificationService.NotifyAsync(
+                product.Seller.UserId, "Product", "Listing rejected",
+                $"'{product.Name}' was rejected: {request.Reason}",
+                linkUrl: $"/seller/products/{product.Id}", cancellationToken: cancellationToken);
+        }
     }
 }

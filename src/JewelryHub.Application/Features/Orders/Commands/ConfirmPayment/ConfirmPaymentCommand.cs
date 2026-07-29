@@ -1,5 +1,6 @@
 using JewelryHub.Application.Common.Exceptions;
 using JewelryHub.Application.Common.Interfaces;
+using JewelryHub.Application.Common.Services;
 using JewelryHub.Domain.Enums;
 using JewelryHub.Domain.Orders;
 using JewelryHub.Domain.Payments;
@@ -21,11 +22,13 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notificationService;
 
-    public ConfirmPaymentCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    public ConfirmPaymentCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task Handle(ConfirmPaymentCommand request, CancellationToken cancellationToken)
@@ -75,5 +78,10 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _notificationService.NotifyAsync(
+            order.Customer.UserId, "Order", "Order confirmed",
+            $"Your order {order.OrderNumber} is confirmed and being prepared.",
+            linkUrl: $"/orders/{order.Id}", cancellationToken: cancellationToken);
     }
 }
