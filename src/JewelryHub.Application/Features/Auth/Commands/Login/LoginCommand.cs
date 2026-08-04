@@ -85,7 +85,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         var roleNames = user.UserRoles.Select(ur => ur.Role.Name).ToArray();
         var tokens = _tokenService.GenerateTokenPair(user.Id, user.Email, roleNames);
 
-        await _unitOfWork.RefreshTokens.AddAsync(new RefreshToken
+        await _unitOfWork.RefreshTokens.AddAsync(new Domain.Identity.RefreshToken
         {
             UserId = user.Id,
             TokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken),

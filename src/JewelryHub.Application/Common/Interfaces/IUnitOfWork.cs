@@ -58,6 +58,19 @@ public interface IUnitOfWork
     IRepository<Domain.Tax.TaxRate> TaxRates { get; }
     IRepository<Domain.Reviews.Review> Reviews { get; }
     IRepository<Domain.Notifications.Notification> Notifications { get; }
+    IRepository<Domain.Unions.Union> Unions { get; }
+    IRepository<Domain.Unions.UnionMember> UnionMembers { get; }
+    IRepository<Domain.Unions.UnionAnnouncement> UnionAnnouncements { get; }
+    IRepository<Domain.Unions.UnionDocument> UnionDocuments { get; }
+    IRepository<Domain.Unions.UnionEvent> UnionEvents { get; }
+    IRepository<Domain.Unions.UnionPoll> UnionPolls { get; }
+    IRepository<Domain.Unions.PollOption> PollOptions { get; }
+    IRepository<Domain.Unions.PollVote> PollVotes { get; }
+    IRepository<Domain.Unions.Meeting> Meetings { get; }
+    IRepository<Domain.Unions.MeetingAgendaItem> MeetingAgendaItems { get; }
+    IRepository<Domain.Unions.MeetingAttendee> MeetingAttendees { get; }
+    IRepository<Domain.Unions.MeetingMinute> MeetingMinutes { get; }
+    IRepository<Domain.Unions.ActionItem> ActionItems { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

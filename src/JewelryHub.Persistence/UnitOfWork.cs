@@ -1,4 +1,5 @@
 using JewelryHub.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using JewelryHub.Domain.Cart;
 using JewelryHub.Domain.Catalog;
 using JewelryHub.Domain.Customers;
@@ -9,6 +10,7 @@ using JewelryHub.Domain.Payments;
 using JewelryHub.Domain.Reviews;
 using JewelryHub.Domain.Sellers;
 using JewelryHub.Domain.Tax;
+using JewelryHub.Domain.Unions;
 using JewelryHub.Domain.Wishlist;
 using JewelryHub.Persistence.Repositories;
 
@@ -34,6 +36,19 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<TaxRate>? _taxRates;
     private IRepository<Review>? _reviews;
     private IRepository<Notification>? _notifications;
+    private IRepository<Union>? _unions;
+    private IRepository<UnionMember>? _unionMembers;
+    private IRepository<UnionAnnouncement>? _unionAnnouncements;
+    private IRepository<UnionDocument>? _unionDocuments;
+    private IRepository<UnionEvent>? _unionEvents;
+    private IRepository<UnionPoll>? _unionPolls;
+    private IRepository<PollOption>? _pollOptions;
+    private IRepository<PollVote>? _pollVotes;
+    private IRepository<Meeting>? _meetings;
+    private IRepository<MeetingAgendaItem>? _meetingAgendaItems;
+    private IRepository<MeetingAttendee>? _meetingAttendees;
+    private IRepository<MeetingMinute>? _meetingMinutes;
+    private IRepository<ActionItem>? _actionItems;
 
     public UnitOfWork(JewelryHubDbContext context)
     {
@@ -58,6 +73,19 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<TaxRate> TaxRates => _taxRates ??= new Repository<TaxRate>(_context);
     public IRepository<Review> Reviews => _reviews ??= new Repository<Review>(_context);
     public IRepository<Notification> Notifications => _notifications ??= new Repository<Notification>(_context);
+    public IRepository<Union> Unions => _unions ??= new Repository<Union>(_context);
+    public IRepository<UnionMember> UnionMembers => _unionMembers ??= new Repository<UnionMember>(_context);
+    public IRepository<UnionAnnouncement> UnionAnnouncements => _unionAnnouncements ??= new Repository<UnionAnnouncement>(_context);
+    public IRepository<UnionDocument> UnionDocuments => _unionDocuments ??= new Repository<UnionDocument>(_context);
+    public IRepository<UnionEvent> UnionEvents => _unionEvents ??= new Repository<UnionEvent>(_context);
+    public IRepository<UnionPoll> UnionPolls => _unionPolls ??= new Repository<UnionPoll>(_context);
+    public IRepository<PollOption> PollOptions => _pollOptions ??= new Repository<PollOption>(_context);
+    public IRepository<PollVote> PollVotes => _pollVotes ??= new Repository<PollVote>(_context);
+    public IRepository<Meeting> Meetings => _meetings ??= new Repository<Meeting>(_context);
+    public IRepository<MeetingAgendaItem> MeetingAgendaItems => _meetingAgendaItems ??= new Repository<MeetingAgendaItem>(_context);
+    public IRepository<MeetingAttendee> MeetingAttendees => _meetingAttendees ??= new Repository<MeetingAttendee>(_context);
+    public IRepository<MeetingMinute> MeetingMinutes => _meetingMinutes ??= new Repository<MeetingMinute>(_context);
+    public IRepository<ActionItem> ActionItems => _actionItems ??= new Repository<ActionItem>(_context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _context.SaveChangesAsync(cancellationToken);

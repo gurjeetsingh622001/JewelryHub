@@ -1,0 +1,97 @@
+# Roadmap
+
+Ordered by dependency, not by calendar. A phase should only start once the phases it depends on
+are actually done — check [PROJECT_STATUS.md](PROJECT_STATUS.md) before assuming a "Completed"
+phase below is still accurate.
+
+## Phase 1 — Backend Foundation
+**Completed.** Clean Architecture skeleton, Domain entities, EF Core configurations, DbContext,
+Repository/UnitOfWork, DI composition per layer.
+
+## Phase 2 — Authentication & Authorization
+**Completed.** JWT issuance/rotation, BCrypt hashing, role-based `[Authorize]`, login lockout.
+*Not done, not blocking*: password reset, email verification.
+
+## Phase 3 — Seller Module
+**Completed.** Profile, KYC document submission/review, approve/reject flow, pending queue.
+
+## Phase 4 — Product Module
+**Completed.** Categories (with tree via `ParentCategoryId`) and Products CRUD, inventory
+adjustment, product status transitions.
+
+## Phase 5 — Cart & Wishlist
+**Completed.**
+
+## Phase 6 — Orders
+**Mostly complete.** Checkout, retrieval, cancellation, seller fulfillment queue, per-item status
+updates all work end-to-end. Remaining before this phase can close:
+- Shipping rate calculation (currently hardcoded to 0)
+- Order-level auto-completion when every item is delivered
+
+## Phase 7 — Payments
+**Partially complete — blocked on an external decision.** `ConfirmPaymentCommand` has complete,
+real logic (idempotency, state transition, inventory deduction, notification) but nothing calls
+it from an actual payment gateway. Needs: pick a gateway (Razorpay vs Stripe — India-based
+jewelry marketplace suggests Razorpay, but confirm with the user), implement the webhook
+signature verification, wire it to call the existing command.
+
+## Phase 8 — Reviews
+**Completed.** Product/seller review listing, creation tied to a verified purchase
+(`OrderItemId`), seller responses, admin moderation.
+
+## Phase 9 — Notifications & Real-Time Layer
+**Completed.** Persist-then-push notifications, SignalR hub with JWT-over-querystring auth for
+the WebSocket handshake.
+
+## Phase 10 — Tax Management
+**Pending.** `TaxRate` entities exist and are applied at checkout, but there's no CRUD API. Small
+phase — likely a half-day of work following the exact same pattern as Categories.
+
+## Phase 11 — Jewelry Union APIs
+**Completed (2026-08-04).** `Features/Unions/` Application slice plus three controllers
+(`UnionsController`, `UnionMeetingsController`, `UnionPollsController`) — 33 endpoints covering
+union creation + admin approval, membership (join/review/officer roles/removal), officer-gated
+announcements/documents/events, meetings with agenda items/RSVP/minutes/action items, and
+governance polls with voting. Authorization model chosen: union officer role
+(President/VicePresident/Secretary) *or* platform Admin for governance actions; Admin has no
+bypass for actions that need a `UnionMember` author (creating a meeting/poll/announcement) since
+Admin accounts don't have a membership row to attribute the record to. See
+[BACKEND_PROGRESS.md](BACKEND_PROGRESS.md) and [API_PROGRESS.md](API_PROGRESS.md) for full detail.
+No schema changes were needed — Domain/Persistence already had every table this phase needed.
+
+## Phase 12 — Admin Module (dedicated)
+**Pending.** Currently admin capability is role-gated actions bolted onto other controllers with
+no dedicated dashboard. Needs: decide whether this stays distributed (current pattern, works fine
+for approve/reject/moderate-style actions) or gets a real `AdminController` for
+platform-wide concerns (user management, role assignment, reporting/analytics). Recommend
+deciding this only after Phase 11, since Union approval/moderation will likely need admin
+actions too and should follow whichever pattern is chosen here.
+
+## Phase 13 — Customer UI (Angular)
+**Pending.** No Angular project exists yet. Backend is CORS/JWT-ready for it
+(`Cors:AllowedOrigins` defaults to `http://localhost:4200`).
+
+## Phase 14 — Seller Dashboard (Angular)
+**Pending.**
+
+## Phase 15 — Admin Dashboard (Angular)
+**Pending.** Depends on Phase 12's decision about whether a dedicated Admin API exists to back it.
+
+## Phase 16 — Union Dashboard (Angular)
+**Pending.** Depends on Phase 11.
+
+## Phase 17 — Reports / Analytics
+**Pending.** No reporting endpoints exist anywhere yet (sales, seller performance, union
+activity). Likely follows naturally once Admin (Phase 12) exists to consume from.
+
+## Phase 18 — Testing
+**Pending — deliberately deferred.** Unit tests, integration tests, and architecture tests
+(enforcing the Clean Architecture dependency rules mechanically) all start here, once feature
+work above has settled down. Do not pull this phase forward without being asked.
+
+## Phase 19 — CI/CD
+**Pending — deliberately deferred.** `.github/workflows/` exists but is empty by design for now.
+
+## Maintenance
+
+Update this file whenever a phase's status changes, and whenever a new phase is identified.

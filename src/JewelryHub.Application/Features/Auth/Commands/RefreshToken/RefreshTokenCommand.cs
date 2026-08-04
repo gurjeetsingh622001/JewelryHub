@@ -77,7 +77,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         existingToken.ReplacedByTokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken);
         _unitOfWork.RefreshTokens.Update(existingToken);
 
-        await _unitOfWork.RefreshTokens.AddAsync(new RefreshToken
+        await _unitOfWork.RefreshTokens.AddAsync(new Domain.Identity.RefreshToken
         {
             UserId = user.Id,
             TokenHash = existingToken.ReplacedByTokenHash,

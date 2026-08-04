@@ -20,7 +20,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(x => x.LastName).IsRequired().HasMaxLength(100);
         b.Property(x => x.PhoneNumber).HasMaxLength(20);
 
-        b.IsRowVersion(x => x.RowVersion);
+        b.Property(x => x.RowVersion).IsRowVersion();
 
         // Global soft-delete filter: deleted users never show up in a
         // normal query without an explicit IgnoreQueryFilters() call.

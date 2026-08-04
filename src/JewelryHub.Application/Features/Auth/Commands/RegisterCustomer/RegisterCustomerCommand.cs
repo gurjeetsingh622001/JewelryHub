@@ -77,7 +77,7 @@ public class RegisterCustomerCommandHandler : IRequestHandler<RegisterCustomerCo
         await _unitOfWork.Customers.AddAsync(new Customer { UserId = user.Id, User = user }, cancellationToken);
 
         var tokens = _tokenService.GenerateTokenPair(user.Id, user.Email, new[] { "Customer" });
-        await _unitOfWork.RefreshTokens.AddAsync(new RefreshToken
+        await _unitOfWork.RefreshTokens.AddAsync(new Domain.Identity.RefreshToken
         {
             UserId = user.Id,
             TokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken),

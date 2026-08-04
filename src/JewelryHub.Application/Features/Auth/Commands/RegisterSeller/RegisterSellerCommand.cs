@@ -112,7 +112,7 @@ public class RegisterSellerCommandHandler : IRequestHandler<RegisterSellerComman
         await _unitOfWork.Sellers.AddAsync(seller, cancellationToken);
 
         var tokens = _tokenService.GenerateTokenPair(user.Id, user.Email, new[] { "Seller" });
-        await _unitOfWork.RefreshTokens.AddAsync(new RefreshToken
+        await _unitOfWork.RefreshTokens.AddAsync(new Domain.Identity.RefreshToken
         {
             UserId = user.Id,
             TokenHash = _tokenService.HashRefreshToken(tokens.RefreshToken),

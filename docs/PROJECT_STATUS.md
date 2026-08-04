@@ -1,0 +1,91 @@
+# Project Status
+
+Last updated: **2026-08-04** (Jewelry Union module added). This file, along with the rest of
+`docs/`, is the project's
+permanent memory — it should always reflect the actual state of the repository, independent of
+any chat history. See the Maintenance Rule at the bottom.
+
+## Completed
+
+**Backend**
+
+- ✔ Solution architecture (Clean Architecture, 5 projects — see [ARCHITECTURE.md](ARCHITECTURE.md))
+- ✔ Domain entities and relationships (14 aggregates, 41 tables' worth of entities)
+- ✔ EF Core configurations and DbContext
+- ✔ Repository Pattern + Unit of Work
+- ✔ Dependency Injection (per-layer composition)
+- ✔ Authentication (JWT access/refresh with rotation, BCrypt hashing)
+- ✔ Authorization (role-based, `[Authorize(Roles=...)]`)
+- ✔ Auth API (register customer/seller, login, refresh, logout)
+- ✔ Sellers API (profile, KYC document submission + admin review + approve/reject)
+- ✔ Catalog API (Categories CRUD, Products CRUD + inventory adjustment)
+- ✔ Cart API
+- ✔ Wishlist API
+- ✔ Orders API (checkout, retrieval, cancellation, seller fulfillment queue, item status)
+- ✔ Reviews API (create, seller response, admin moderation)
+- ✔ Notifications API + real-time push (SignalR)
+- ✔ Jewelry Union API: union creation + admin approval, membership (join/review/roles/removal),
+  officer-gated announcements/documents/events, meetings with agenda items, RSVP, minutes and
+  action items, and governance polls with voting (33 endpoints across `UnionsController`,
+  `UnionMeetingsController`, `UnionPollsController` — see [API_PROGRESS.md](API_PROGRESS.md))
+- ✔ Initial EF Core migration (`InitialCreate`, generated 2026-08-04 — the app can now create its
+  schema; previously `Database.MigrateAsync()` had nothing to apply)
+- ✔ Fixed 4 files with a build-breaking `RefreshToken` namespace/type collision, a missing
+  `using Microsoft.EntityFrameworkCore;` in `UnitOfWork.cs`, an incorrect `IsRowVersion()` call
+  site, and a missing ASP.NET Core `FrameworkReference` in Infrastructure — the solution did not
+  compile before this pass; it now builds with 0 warnings/errors.
+- ✔ Documentation set (this `docs/` folder)
+
+**Frontend**
+
+- (nothing yet — see below)
+
+## In Progress
+
+Nothing is actively mid-implementation as of this pass — the backend foundation described above
+is stable and builds cleanly. The next work is genuinely *new* work, not a resumption of
+something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
+
+## Pending
+
+**Backend**
+
+- ⏳ Shipping rate calculation (currently hardcoded to 0 at checkout)
+- ⏳ Order auto-completion rollup (parent `Order` doesn't transition when all `OrderItems` are
+  delivered)
+- ⏳ Real payment gateway integration (Razorpay/Stripe) — `ConfirmPaymentCommand` logic exists but
+  nothing calls it from a real provider yet
+- ⏳ Tax rate management API (currently seed/DB-edit only; applied at checkout but not manageable)
+- ⏳ Password reset / email verification for Auth
+- ⏳ Admin dashboard / reporting endpoints (today: role-gated actions only, no dedicated module)
+- ⏳ Unit Tests, Integration Tests, Architecture Tests (explicitly deferred — see below)
+- ⏳ CI/CD pipeline (`.github/workflows/` exists but is empty — explicitly deferred)
+
+**Frontend**
+
+- ❌ Customer UI
+- ❌ Seller UI
+- ❌ Admin UI
+- ❌ Union UI
+
+(No Angular project exists in the repo yet at all — see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
+
+## Explicit Non-Priorities (by decision, not oversight)
+
+- **Testing** — deliberately deferred until after functionality is complete. Do not spend time on
+  unit/integration/architecture tests until told otherwise.
+- **CI/CD** — deliberately deferred. No GitHub Actions workflow is required right now.
+
+## Maintenance Rule
+
+Whenever a feature is completed, update, in this order:
+
+1. `PROJECT_STATUS.md` (this file)
+2. `ROADMAP.md`
+3. `CHANGELOG.md`
+4. `API_PROGRESS.md` (if any API changed)
+5. `DATABASE.md` (if the schema changed — regenerate the table/relationship inventory from the
+   new migration)
+
+These five files must always reflect the current state of the codebase, so that development can
+resume correctly even if chat history is lost.
