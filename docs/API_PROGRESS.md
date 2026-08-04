@@ -55,16 +55,24 @@ polling API and the live push never disagree.
 
 | Verb | Route | Auth | Handler | Status |
 |---|---|---|---|---|
-| POST | `` | Customer | `CreateOrderCommand` | ⚠️ Complete but shipping cost hardcoded to 0 |
+| POST | `` | Customer | `CreateOrderCommand` | ✅ Complete (shipping computed per seller via `IShippingCalculator`, see below) |
 | GET | `{id}` | Any authenticated | `GetOrderByIdQuery` | ✅ Complete |
 | GET | `me` | Customer | `GetMyOrdersQuery` | ✅ Complete |
 | POST | `{id}/cancel` | Any authenticated | `CancelOrderCommand` | ✅ Complete |
 | POST | `{id}/payments/{paymentId}/confirm` | Customer | `ConfirmPaymentCommand` | ⚠️ Complete logic, but stands in for a real gateway webhook — nothing calls it from an actual payment provider |
 | GET | `seller/queue` | Seller | `GetSellerOrderItemsQuery` | ✅ Complete |
-| PATCH | `items/{orderItemId}/status` | Seller, Admin | `UpdateOrderItemStatusCommand` | ⚠️ Complete but doesn't auto-transition the parent Order to Delivered when all items are delivered |
+| PATCH | `items/{orderItemId}/status` | Seller, Admin | `UpdateOrderItemStatusCommand` | ✅ Complete (rolls the parent Order to Delivered once every item is; updates the fulfilling seller's revenue/count rollups) |
 
-**Missing**: real payment gateway integration (Razorpay/Stripe), shipping rate calculation,
-order-level status rollup, refunds/returns.
+**Shipping** (added 2026-08-04): `IShippingCalculator` (`Application/Common/Interfaces/ITaxCalculator.cs`)
++ `FlatRateShippingCalculator` — flat base rate, an inter-state surcharge, and a per-gram
+surcharge past a small weight allowance, waived above a free-shipping subtotal threshold.
+Computed per seller group (each seller ships independently) and summed into
+`Order.ShippingCharges`. Not yet admin-configurable — see **Missing** below.
+
+**Missing**: real payment gateway integration (Razorpay/Stripe), refunds/returns, an
+admin-configurable shipping-rate table (today's rates are constants in
+`FlatRateShippingCalculator`, same shape as `GstTaxCalculator` before tax rates were made
+DB-driven).
 
 ## ProductsController — `api/v1/products`
 

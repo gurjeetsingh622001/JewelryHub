@@ -26,12 +26,15 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly ITaxCalculator _taxCalculator;
+    private readonly IShippingCalculator _shippingCalculator;
 
-    public CreateOrderCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ITaxCalculator taxCalculator)
+    public CreateOrderCommandHandler(
+        IUnitOfWork unitOfWork, ICurrentUserService currentUser, ITaxCalculator taxCalculator, IShippingCalculator shippingCalculator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _taxCalculator = taxCalculator;
+        _shippingCalculator = shippingCalculator;
     }
 
     public async Task<OrderDto> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -67,6 +70,11 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
         };
 
         decimal subtotal = 0, totalTax = 0;
+
+        // Each seller ships independently, so shipping is computed per
+        // seller group and summed into one order-level charge — see
+        // IShippingCalculator.
+        var shippingInputsBySeller = new Dictionary<Guid, (decimal Subtotal, decimal WeightGrams, string SellerState)>();
 
         foreach (var cartItem in cart.Items)
         {
@@ -122,6 +130,11 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
             subtotal += lineTotal;
             totalTax += taxLines.Sum(t => t.TaxAmount);
 
+            var itemWeight = product.GrossWeightGrams * cartItem.Quantity;
+            shippingInputsBySeller[product.SellerId] = shippingInputsBySeller.TryGetValue(product.SellerId, out var existing)
+                ? (existing.Subtotal + lineTotal, existing.WeightGrams + itemWeight, existing.SellerState)
+                : (lineTotal, itemWeight, product.Seller.State);
+
             // Reserve, don't decrement yet — the stock is only truly
             // consumed once payment is confirmed (see ConfirmPayment).
             // This keeps an abandoned/failed payment from permanently
@@ -134,7 +147,11 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Ord
 
         order.Subtotal = subtotal;
         order.TotalTax = totalTax;
-        order.ShippingCharges = 0; // TODO: shipping rate calculation is a future slice
+        order.ShippingCharges = shippingInputsBySeller.Values.Sum(v =>
+        {
+            var isInterState = !string.Equals(v.SellerState.Trim(), shippingAddress.State.Trim(), StringComparison.OrdinalIgnoreCase);
+            return _shippingCalculator.Calculate(v.Subtotal, v.WeightGrams, isInterState);
+        });
         order.DiscountAmount = 0;
         order.GrandTotal = subtotal + totalTax + order.ShippingCharges - order.DiscountAmount;
 

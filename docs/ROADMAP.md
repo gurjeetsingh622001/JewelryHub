@@ -23,10 +23,13 @@ adjustment, product status transitions.
 **Completed.**
 
 ## Phase 6 — Orders
-**Mostly complete.** Checkout, retrieval, cancellation, seller fulfillment queue, per-item status
-updates all work end-to-end. Remaining before this phase can close:
-- Shipping rate calculation (currently hardcoded to 0)
-- Order-level auto-completion when every item is delivered
+**Completed (2026-08-04).** Checkout, retrieval, cancellation, seller fulfillment queue, per-item
+status updates all work end-to-end, including per-seller shipping calculation
+(`IShippingCalculator`/`FlatRateShippingCalculator` — flat rate + inter-state surcharge +
+weight surcharge, waived above a free-shipping threshold) and order-level auto-completion
+(parent `Order` rolls to `Delivered` once every item is; seller revenue/count rollups update per
+delivered item). Shipping rates are constants, not yet admin-configurable — a natural follow-up
+once/if that's wanted, same shape as how Tax rates became DB-driven.
 
 ## Phase 7 — Payments
 **Partially complete — blocked on an external decision.** `ConfirmPaymentCommand` has complete,

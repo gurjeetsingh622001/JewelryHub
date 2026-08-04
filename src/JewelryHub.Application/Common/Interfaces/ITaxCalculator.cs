@@ -16,3 +16,17 @@ public interface ITaxCalculator
         Guid categoryId, MetalType metalType, string sellerState, string buyerState, decimal taxableAmount,
         CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Computes the shipping charge for one seller's line items within an
+/// order. Each seller ships independently (see the note on Order), so
+/// CreateOrderCommand groups items by SellerId and sums one call per
+/// group into Order.ShippingCharges. A pure function, not async — unlike
+/// tax there's no admin-configured rate table behind it yet (see
+/// docs/PROJECT_STATUS.md); swapping in a DB-backed implementation later
+/// only requires a new IShippingCalculator, not a change to CreateOrder.
+/// </summary>
+public interface IShippingCalculator
+{
+    decimal Calculate(decimal sellerSubtotal, decimal totalWeightGrams, bool isInterState);
+}

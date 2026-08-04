@@ -90,6 +90,23 @@ public class UpdateOrderItemStatusCommandHandler : IRequestHandler<UpdateOrderIt
             item.Shipment.DeliveredAtUtc = DateTime.UtcNow;
         }
 
+        var orderNewlyCompleted = false;
+        if (request.NewStatus == OrderStatus.Delivered)
+        {
+            // A seller's own rollup updates the moment their line is
+            // delivered — it doesn't wait on other sellers' items in the
+            // same order, since each seller fulfills independently.
+            item.Seller.TotalOrdersFulfilled += 1;
+            item.Seller.TotalRevenue += item.LineTotal;
+
+            if (order.Items.All(i => i.ItemStatus == OrderStatus.Delivered))
+            {
+                order.Status = OrderStatus.Delivered;
+                order.DeliveredAtUtc = DateTime.UtcNow;
+                orderNewlyCompleted = true;
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (request.NewStatus is OrderStatus.Shipped or OrderStatus.Delivered)
@@ -101,11 +118,12 @@ public class UpdateOrderItemStatusCommandHandler : IRequestHandler<UpdateOrderIt
                 linkUrl: $"/orders/{order.Id}", cancellationToken: cancellationToken);
         }
 
-        // TODO: once every item on the parent Order reaches Delivered, a
-        // background/orchestration step should roll the Order itself to
-        // Delivered and update Seller.TotalOrdersFulfilled/TotalRevenue —
-        // left as a follow-up rather than computed inline here so this
-        // single-item command doesn't need to re-load and lock the whole
-        // order graph on every fulfillment update.
+        if (orderNewlyCompleted)
+        {
+            await _notificationService.NotifyAsync(
+                order.Customer.UserId, "Order", "Order delivered",
+                $"Every item in order {order.OrderNumber} has been delivered.",
+                linkUrl: $"/orders/{order.Id}", cancellationToken: cancellationToken);
+        }
     }
 }

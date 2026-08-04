@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: **2026-08-04** (Jewelry Union module added). This file, along with the rest of
+Last updated: **2026-08-04** (Jewelry Union module + Orders shipping/rollup TODOs resolved). This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -21,7 +21,10 @@ any chat history. See the Maintenance Rule at the bottom.
 - ✔ Catalog API (Categories CRUD, Products CRUD + inventory adjustment)
 - ✔ Cart API
 - ✔ Wishlist API
-- ✔ Orders API (checkout, retrieval, cancellation, seller fulfillment queue, item status)
+- ✔ Orders API (checkout, retrieval, cancellation, seller fulfillment queue, item status),
+  including per-seller shipping calculation (`IShippingCalculator`) and order-completion rollup
+  (parent `Order` auto-transitions to `Delivered` once every item is, seller revenue/count
+  rollups update per delivered item)
 - ✔ Reviews API (create, seller response, admin moderation)
 - ✔ Notifications API + real-time push (SignalR)
 - ✔ Jewelry Union API: union creation + admin approval, membership (join/review/roles/removal),
@@ -50,9 +53,6 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Backend**
 
-- ⏳ Shipping rate calculation (currently hardcoded to 0 at checkout)
-- ⏳ Order auto-completion rollup (parent `Order` doesn't transition when all `OrderItems` are
-  delivered)
 - ⏳ Real payment gateway integration (Razorpay/Stripe) — `ConfirmPaymentCommand` logic exists but
   nothing calls it from a real provider yet
 - ⏳ Tax rate management API (currently seed/DB-edit only; applied at checkout but not manageable)

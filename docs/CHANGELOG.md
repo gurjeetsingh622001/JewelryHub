@@ -5,6 +5,28 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-04 — Orders: Shipping Calculation + Completion Rollup
+
+**Module**: Orders
+
+**Files modified**:
+- `src/JewelryHub.Application/Common/Interfaces/ITaxCalculator.cs` (added `IShippingCalculator`)
+- `src/JewelryHub.Application/Common/Services/FlatRateShippingCalculator.cs` (new)
+- `src/JewelryHub.Application/DependencyInjection.cs` (registered `IShippingCalculator`)
+- `src/JewelryHub.Application/Features/Orders/Commands/CreateOrder/CreateOrderCommand.cs`
+- `src/JewelryHub.Application/Features/Orders/Commands/UpdateOrderItemStatus/UpdateOrderItemStatusCommand.cs`
+- `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`, `docs/API_PROGRESS.md`, `docs/BACKEND_PROGRESS.md`
+
+**Summary**: Resolved the two `TODO`s flagged in the original onboarding pass. Checkout now
+computes a real shipping charge per seller group (flat rate + inter-state surcharge + weight
+surcharge past a small allowance, waived above a free-shipping subtotal threshold) instead of
+hardcoding `0`, via a new `IShippingCalculator` abstraction mirroring `ITaxCalculator`. Marking an
+order item Delivered now rolls the parent Order to `Delivered` once every item reaches that
+status, and updates the fulfilling seller's `TotalOrdersFulfilled`/`TotalRevenue` rollups
+immediately (independent of other sellers on the same multi-seller order). No schema changes.
+
+---
+
 ## 2026-08-04 — Jewelry Union Module (Application + API)
 
 **Module**: Jewelry Union

@@ -14,7 +14,7 @@ columns here.
 | Catalog — Products | ✅ | ✅ | ✅ (6 use cases) | ✅ (6 endpoints) | **Complete** |
 | Cart | ✅ | ✅ | ✅ (5 use cases) | ✅ (5 endpoints) | **Complete** |
 | Wishlist | ✅ | ✅ | ✅ (3 use cases) | ✅ (3 endpoints) | **Complete** |
-| Orders | ✅ | ✅ | ✅ (7 use cases) | ✅ (7 endpoints) | **Partially complete** — shipping cost hardcoded, no auto-complete rollup |
+| Orders | ✅ | ✅ | ✅ (7 use cases) | ✅ (7 endpoints) | **Complete** |
 | Payments | ✅ | ✅ | ✅ (folded into Orders) | ✅ (folded into Orders) | **Partially complete** — confirmation logic is real, no real gateway wired in |
 | Tax | ✅ | ✅ | ⚠️ applied at checkout only, no CRUD | ❌ no controller | **Partially complete** |
 | Reviews | ✅ | ✅ | ✅ (5 use cases) | ✅ (5 endpoints) | **Complete** |
@@ -47,6 +47,19 @@ is the most fully-built module in the codebase.
 (SignalR hub with JWT-over-querystring auth for the WebSocket handshake, persist-then-push so
 offline users still see notifications later).
 
+**Orders** (closed out 2026-08-04): checkout, retrieval (single/mine/seller queue), cancellation,
+and per-item status updates — all real, EF-backed logic, and the two previously-open gaps are now
+resolved:
+- Shipping is computed by `IShippingCalculator`/`FlatRateShippingCalculator` — flat base rate +
+  inter-state surcharge + per-gram surcharge past a small weight allowance, waived above a
+  free-shipping subtotal threshold. Computed per seller group (each seller ships independently)
+  and summed into `Order.ShippingCharges`. Rates are constants for now, not admin-configurable —
+  see Tax below for the shape a follow-up DB-driven version would take.
+- `UpdateOrderItemStatusCommand` now rolls the parent `Order` to `Delivered` once every
+  `OrderItem` reaches that status, and updates the fulfilling seller's `TotalOrdersFulfilled`/
+  `TotalRevenue` rollups the moment *their* item is delivered (independent of other sellers on a
+  multi-seller order).
+
 **Jewelry Union** (added 2026-08-04): union creation (KYC-approved sellers only, founder becomes
 President) with admin approval before the union is publicly visible; membership lifecycle
 (request → officer/admin review → active, plus role changes and removal, with a safeguard
@@ -63,13 +76,6 @@ poll) do allow Admin as an alternate to the officer check. No Domain or Persiste
 needed — the schema already had every table this module uses.
 
 ### ⚠️ Partially Complete
-
-**Orders**: checkout, retrieval (single/mine/seller queue), cancellation, per-item status
-updates — all real, EF-backed logic. Two known gaps, both marked with `TODO` comments in source:
-- `Features/Orders/Commands/CreateOrder/CreateOrderCommand.cs:137` — shipping charge hardcoded to
-  `0`; no rate calculation engine.
-- `Features/Orders/Commands/UpdateOrderItemStatus/UpdateOrderItemStatusCommand.cs:104` — no
-  auto-transition of the parent `Order` to a completed state once every `OrderItem` is delivered.
 
 **Payments**: `ConfirmPaymentCommand` has real, complete logic (idempotency check, order/payment
 state transition, inventory deduction, notification dispatch) but its own doc comment describes
