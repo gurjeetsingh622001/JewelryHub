@@ -70,9 +70,15 @@ platform-wide concerns (user management, role assignment, reporting/analytics). 
 deciding this only after Phase 11, since Union approval/moderation will likely need admin
 actions too and should follow whichever pattern is chosen here.
 
-## Phase 13 — Customer UI (Angular)
-**Pending.** No Angular project exists yet. Backend is CORS/JWT-ready for it
-(`Cors:AllowedOrigins` defaults to `http://localhost:4200`).
+## Phase 13 — Frontend Foundation (Angular)
+**Completed (2026-08-04).** Angular 22 workspace at `client/` — Material + PrimeNG + Tailwind,
+JWT auth with dedup'd refresh-and-retry, route guards, login/register pages, app shell. See
+[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md). Not yet tested against a live backend. No feature
+screens yet — that's every phase below.
+
+## Phase 13b — Customer UI (Angular)
+**Pending.** Product browsing, cart, checkout, order history, reviews. Builds directly on the
+Phase 13 foundation (auth, HTTP layer, routing already in place).
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Pending.**

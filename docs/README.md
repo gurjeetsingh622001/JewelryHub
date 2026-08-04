@@ -26,7 +26,7 @@ kinds of users through one backend:
 | Real-time | SignalR (`/hubs/notifications`) |
 | Logging | Serilog, plus a MediatR `LoggingBehavior` that times every request |
 | API docs | Swashbuckle/Swagger (Development only) |
-| Frontend | Angular (planned — no frontend project exists in this repo yet) |
+| Frontend | Angular 22, standalone components + signals, Angular Material + PrimeNG + Tailwind CSS |
 
 ## Solution Structure
 
@@ -38,10 +38,11 @@ src/
 ├── JewelryHub.Persistence     # EF Core DbContext, entity configs, Repository/UnitOfWork, migrations
 ├── JewelryHub.Infrastructure  # JWT issuing, password hashing, current-user accessor
 └── JewelryHub.API             # Controllers, SignalR hubs, middleware, Program.cs
+client/                        # Angular SPA — separate npm workspace, not part of JewelryHub.sln
 docs/                          # This documentation set
 ```
 
-There is currently no `tests/` directory and no Angular frontend directory in this repository.
+There is currently no `tests/` directory in this repository.
 
 ## Architecture
 
@@ -70,12 +71,15 @@ Modeled in the database but with no Application/API layer yet:
 for tax rates).
 
 Known incomplete sub-behaviors inside otherwise-working features:
-- Shipping cost is hardcoded to `0` at checkout — no rate engine yet.
-- Orders don't auto-transition to a completed state when every item is delivered.
 - Payment confirmation is a stand-in for a real gateway webhook (Razorpay/Stripe) — the logic is
   real, but nothing calls it from an actual payment provider yet.
 
+Frontend: the Angular foundation (auth, routing, HTTP layer) is built — see
+[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) — but no feature screens exist yet.
+
 ## How to Run
+
+### Backend
 
 Prerequisites: .NET 8 SDK, SQL Server (local or remote), the `dotnet-ef` global tool.
 
@@ -92,6 +96,19 @@ dotnet run --project src/JewelryHub.API
 ```
 
 Swagger UI is available at `/swagger` when running in the `Development` environment.
+
+### Frontend
+
+Prerequisites: Node.js 20+, npm.
+
+```bash
+cd client
+npm install
+npm start   # ng serve — http://localhost:4200
+```
+
+Expects the API at the URL configured in `client/src/environments/environment.development.ts`
+(`https://localhost:65334` by default — matches `launchSettings.json`).
 
 ### Configuration
 

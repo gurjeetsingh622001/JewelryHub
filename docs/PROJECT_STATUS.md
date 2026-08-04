@@ -1,6 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-04** (Jewelry Union module + Orders shipping/rollup TODOs resolved). This file, along with the rest of
+Last updated: **2026-08-04** (Jewelry Union module + Orders shipping/rollup TODOs resolved +
+Angular frontend foundation). This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -41,7 +42,17 @@ any chat history. See the Maintenance Rule at the bottom.
 
 **Frontend**
 
-- (nothing yet — see below)
+- ✔ Angular 22 workspace at `client/` — standalone components, signals, Angular Material +
+  PrimeNG + Tailwind CSS combined (see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) for why/how
+  they coexist)
+- ✔ Auth foundation: login + register (Customer/Seller toggle) pages, `AuthService` (JWT +
+  refresh-token session state via signals), HTTP interceptors (Bearer-token attach, dedup'd
+  401-refresh-and-retry, global error toast), `authGuard`/`roleGuard`, app shell with
+  login/logout UI
+- ✔ Verified: production build clean (0 warnings after budget adjustment), unit-test smoke
+  passes (confirms the full DI graph — Router, HttpClient, AuthService, Material, PrimeNG —
+  resolves at runtime), dev server boots cleanly. **Not** yet tested against a live backend (no
+  database available in the environment this was built in).
 
 ## In Progress
 
@@ -63,12 +74,13 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Customer UI
-- ❌ Seller UI
+- ❌ Customer UI (product browsing, cart, checkout, order history, reviews)
+- ❌ Seller UI (dashboard, product/inventory management, fulfillment queue, KYC submission)
 - ❌ Admin UI
 - ❌ Union UI
 
-(No Angular project exists in the repo yet at all — see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
+(The Angular foundation exists — see above and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) —
+but no feature screens are built on top of it yet.)
 
 ## Explicit Non-Priorities (by decision, not oversight)
 

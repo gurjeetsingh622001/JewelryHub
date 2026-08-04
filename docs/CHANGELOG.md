@@ -5,6 +5,39 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-04 — Angular Frontend Foundation
+
+**Module**: Frontend (new `client/` workspace)
+
+**Files modified**: new `client/` directory — Angular 22 workspace scaffolded via `ng new`, plus:
+- `client/src/styles.scss`, `client/.postcssrc.json` — Angular Material theming + Tailwind v4
+  (theme/utilities only, Preflight excluded) + PrimeIcons wired together
+- `client/src/app/app.config.ts` — HttpClient with `authInterceptor`/`errorInterceptor`,
+  PrimeNG (`providePrimeNG`, `MessageService`), animations
+- `client/src/app/core/auth/` — `models.ts`, `token-storage.service.ts`, `auth.service.ts`,
+  `auth.guard.ts`, `auth.interceptor.ts` (new)
+- `client/src/app/core/http/` — `problem-details.ts`, `error.interceptor.ts` (new)
+- `client/src/app/core/layout/shell.component.ts` (+ html) (new)
+- `client/src/app/features/auth/login/`, `client/src/app/features/auth/register/`,
+  `client/src/app/features/home/`, `client/src/app/features/forbidden/` (new)
+- `client/src/environments/` — dev points at `https://localhost:65334/api/v1` (matches
+  `launchSettings.json`), production defaults to a relative `/api/v1`
+- `client/angular.json` (bundle budget raised to 750kB/1.2MB — expected given 3 UI libraries)
+- `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Summary**: Scaffolded the Angular frontend from scratch — nothing existed before this. Built
+the foundation every future screen depends on: JWT auth (login, register-as-customer-or-seller,
+token refresh with request deduplication so concurrent 401s don't each trigger their own
+`/auth/refresh` and trip the backend's reuse-detection), route guards matching the backend's role
+model, a global HTTP error toast, and an app shell. Combined Angular Material, PrimeNG, and
+Tailwind CSS per explicit instruction — Tailwind's Preflight reset is turned off so it doesn't
+fight the two component libraries' own base styles; Tailwind is utility-only here. Verified via a
+clean production build, a passing DI-wiring smoke test, and a dev-server boot — not yet exercised
+against a live backend since no database was available in this environment. No feature screens
+(product browsing, dashboards, etc.) yet — that's the next phase.
+
+---
+
 ## 2026-08-04 — Orders: Shipping Calculation + Completion Rollup
 
 **Module**: Orders
