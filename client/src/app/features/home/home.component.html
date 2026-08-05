@@ -1,0 +1,84 @@
+<section class="hero" [style.background-image]="'url(' + heroImage + ')'">
+  <div class="hero__scrim"></div>
+  <div class="hero__content mx-auto max-w-7xl px-4 md:px-8">
+    <p class="eyebrow eyebrow--on-dark">New Collection</p>
+    <h1>Timeless Elegance,<br />Ethically Crafted</h1>
+    <p class="hero__lead">
+      Fine jewelry sourced with care and finished by hand — designed to be worn for generations,
+      not just a season.
+    </p>
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="#featured">
+        Explore Collection
+        <lucide-icon name="ArrowRight" [size]="18" [strokeWidth]="1.5" />
+      </a>
+      <a class="btn btn--secondary-on-dark" href="#brand-story">Our Story</a>
+    </div>
+  </div>
+</section>
+
+<section class="categories mx-auto max-w-7xl px-4 py-24 md:px-8">
+  <p class="eyebrow text-center">Shop by Category</p>
+  <h2 class="section-title text-center">Find Your Piece</h2>
+
+  <div class="categories__grid">
+    @for (category of categories; track category.id) {
+      <a [id]="category.id" class="category-card" href="#featured">
+        <div class="category-card__image" [style.background-image]="'url(' + category.image + ')'"></div>
+        <h3>{{ category.name }}</h3>
+        <p>{{ category.description }}</p>
+      </a>
+    }
+  </div>
+</section>
+
+<section id="featured" class="featured py-24">
+  <div class="mx-auto max-w-7xl px-4 md:px-8">
+    <p class="eyebrow text-center">Featured Pieces</p>
+    <h2 class="section-title text-center">This Season's Edit</h2>
+
+    <div class="featured__grid">
+      @for (piece of featured; track piece.name) {
+        <article class="product-card">
+          <div class="product-card__image" [style.background-image]="'url(' + piece.image + ')'"></div>
+          <div class="product-card__body">
+            <span class="eyebrow">{{ piece.category }}</span>
+            <h3>{{ piece.name }}</h3>
+            <p class="product-card__price">{{ piece.price }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section id="brand-story" class="brand-story">
+  <div class="mx-auto grid max-w-7xl gap-12 px-4 py-24 md:grid-cols-2 md:items-center md:px-8">
+    <div class="brand-story__image" [style.background-image]="'url(' + heroImage + ')'"></div>
+    <div class="brand-story__copy">
+      <p class="eyebrow">The Atelier</p>
+      <h2 class="section-title">Crafted With Intention</h2>
+      <p>
+        Every JewelryHub piece begins with a relationship — with the artisans who shape it, the
+        gemstones we source responsibly, and the customer who will wear it for years to come.
+        We work with independent jewelry houses who share our commitment to craftsmanship over
+        volume.
+      </p>
+      <div class="brand-story__stats">
+        <div>
+          <strong>15+</strong>
+          <span>Years of craftsmanship</span>
+        </div>
+        <div>
+          <strong>100%</strong>
+          <span>Certified materials</span>
+        </div>
+        <div>
+          <strong>#1</strong>
+          <span>Customer trust priority</span>
+        </div>
+      </div>
+      <a class="btn btn--secondary" routerLink="/register">Meet Our Sellers</a>
+    </div>
+  </div>
+</section>

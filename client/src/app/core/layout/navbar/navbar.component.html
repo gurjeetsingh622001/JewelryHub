@@ -1,0 +1,71 @@
+<div class="announcement-bar">
+  <p>Complimentary shipping on orders over ₹5,000 · Lifetime craftsmanship guarantee</p>
+</div>
+
+<header class="navbar" [class.navbar--scrolled]="scrolled()">
+  <div class="navbar__inner mx-auto flex max-w-7xl items-center justify-between px-4 md:px-8">
+    <button type="button" class="navbar__icon-btn lg:hidden" (click)="toggleMobileMenu()" aria-label="Open menu">
+      <lucide-icon name="Menu" [size]="22" [strokeWidth]="1.5" />
+    </button>
+
+    <nav class="navbar__links hidden lg:flex">
+      @for (link of navLinks; track link.fragment) {
+        <a [routerLink]="['/']" [fragment]="link.fragment">{{ link.label }}</a>
+      }
+    </nav>
+
+    <a routerLink="/" class="navbar__logo">Jewelry<span>Hub</span></a>
+
+    <div class="navbar__actions flex items-center">
+      <button type="button" class="navbar__icon-btn hidden sm:inline-flex" (click)="notifyComingSoon('Search')" aria-label="Search">
+        <lucide-icon name="Search" [size]="20" [strokeWidth]="1.5" />
+      </button>
+      <button type="button" class="navbar__icon-btn hidden sm:inline-flex" (click)="notifyComingSoon('Wishlist')" aria-label="Wishlist">
+        <lucide-icon name="Heart" [size]="20" [strokeWidth]="1.5" />
+      </button>
+      <button type="button" class="navbar__icon-btn" (click)="notifyComingSoon('Shopping bag')" aria-label="Shopping bag">
+        <lucide-icon name="ShoppingBag" [size]="20" [strokeWidth]="1.5" />
+      </button>
+
+      @if (auth.isAuthenticated()) {
+        <button type="button" class="navbar__icon-btn" [matMenuTriggerFor]="accountMenu" aria-label="Account menu">
+          <lucide-icon name="User" [size]="20" [strokeWidth]="1.5" />
+        </button>
+        <mat-menu #accountMenu="matMenu" class="navbar__account-menu">
+          <div class="navbar__account-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</div>
+          <button mat-menu-item (click)="logout()">
+            <lucide-icon name="LogOut" [size]="16" [strokeWidth]="1.5" />
+            <span>Log out</span>
+          </button>
+        </mat-menu>
+      } @else {
+        <a routerLink="/login" class="navbar__icon-btn" aria-label="Log in">
+          <lucide-icon name="User" [size]="20" [strokeWidth]="1.5" />
+        </a>
+      }
+    </div>
+  </div>
+</header>
+
+@if (mobileMenuOpen()) {
+  <div class="navbar__scrim" (click)="closeMobileMenu()"></div>
+}
+
+<div class="navbar__mobile-panel" [class.navbar__mobile-panel--open]="mobileMenuOpen()">
+  <button type="button" class="navbar__mobile-close" (click)="closeMobileMenu()" aria-label="Close menu">
+    <lucide-icon name="X" [size]="24" [strokeWidth]="1.5" />
+  </button>
+
+  <nav class="navbar__mobile-links">
+    @for (link of navLinks; track link.fragment) {
+      <a [routerLink]="['/']" [fragment]="link.fragment" (click)="closeMobileMenu()">{{ link.label }}</a>
+    }
+  </nav>
+
+  @if (!auth.isAuthenticated()) {
+    <div class="navbar__mobile-auth">
+      <a routerLink="/login" (click)="closeMobileMenu()">Log in</a>
+      <a routerLink="/register" (click)="closeMobileMenu()">Register</a>
+    </div>
+  }
+</div>

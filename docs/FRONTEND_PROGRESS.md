@@ -1,28 +1,48 @@
 # Frontend Progress
 
-## Status: Foundation Complete, No Feature Modules Yet
+## Status: Foundation + Design System + Home Page Complete
 
-Last updated 2026-08-04. An Angular workspace now exists at `client/` (sibling to `src/`, not
-part of `JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, and routing
-shell are built and verified (production build clean, unit-test smoke passes, dev server boots).
-No feature screens (product browsing, cart, seller dashboard, etc.) exist yet — see
-[ROADMAP.md](ROADMAP.md) Phase 13 onward.
+Last updated 2026-08-05. An Angular workspace exists at `client/` (sibling to `src/`, not part of
+`JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing shell, a full
+premium design system, and the public Home page (navbar, footer, hero, categories, featured
+pieces, brand story) are built and verified against a live dev server. Product browsing, cart,
+checkout, and the Seller/Admin/Union dashboards don't exist yet — see
+[ROADMAP.md](ROADMAP.md) Phase 13b onward.
+
+## Design System
+
+See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — the permanent visual/UX reference (colors, type,
+spacing, component/library boundaries, icons, imagery sourcing). Every screen follows it. Brand
+direction: a premium editorial jewelry boutique (Cartier/Tiffany/Swarovski/Pandora/Blue Nile as
+inspiration only, never copied) — warm ivory + near-black ink + a single gold accent, Playfair
+Display serif headings over Inter body copy, restrained motion, real curated Unsplash photography
+(never placeholder boxes).
 
 ## Stack
 
 - **Angular 22**, standalone components (no NgModules), signals for local/service state.
-- **UI**: Angular Material (forms, buttons, toolbar, cards, menu) **+** PrimeNG (used where
-  Material has no equivalent — `SelectButton` on the register page, `Toast`/`MessageService` for
-  global error notifications) **+** Tailwind CSS v4 for layout/spacing utilities. Tailwind's
-  Preflight base-reset is deliberately excluded (`styles.scss` imports `tailwindcss/theme` +
-  `tailwindcss/utilities` separately, not the `tailwindcss` shorthand) so it doesn't fight
-  Material's and PrimeNG's own base styles — Tailwind is utility-only here, not the app's CSS
-  reset. All three were an explicit choice for this project, not a default; expect to normalize
-  toward fewer libraries once real screens reveal which one actually carries most of the UI.
+- **UI**: Angular Material (buttons, form fields, menus, button-toggles, snack bars) **+**
+  Tailwind CSS v4 for layout/spacing utilities, styled to the design system's tokens via
+  `--mat-sys-*` overrides. Tailwind's Preflight base-reset is deliberately excluded (`styles.scss`
+  imports `tailwindcss/theme` + `tailwindcss/utilities` separately, not the `tailwindcss`
+  shorthand) so it doesn't fight Material's own base styles.
+- **PrimeNG was removed (2026-08-05).** It was part of the original 3-library stack choice, but
+  the installed version (22.x) requires a paid PrimeUI license — without one it injects an
+  "Invalid PrimeUI License" banner into every page via a closed shadow-DOM element
+  (`primeng/fesm2022/primeng-license.mjs`, cryptographically verified, not a bug or something
+  hideable with CSS). Rather than pay for a license or ship a broken-looking banner, PrimeNG,
+  `@primeuix/themes`, and `primeicons` were uninstalled entirely and every usage swapped for a
+  Material equivalent: `Toast`/`MessageService` → `MatSnackBar`; `SelectButton` (the
+  Customer/Seller toggle on the register page) → `MatButtonToggleGroup`. See
+  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) § Components for the full note. If a real PrimeNG license
+  is purchased later, re-adding it is straightforward.
+- **Icons**: Lucide (`lucide-angular`) exclusively, registered once in `app.config.ts` via
+  `LucideAngularModule.pick({...})`. Installed with `--legacy-peer-deps` since its peer range
+  hasn't caught up to Angular 22 yet — functions correctly regardless (verified via a full build).
 - **HTTP**: `provideHttpClient` with two functional interceptors, `authInterceptor` (attaches the
   Bearer token, catches a 401, refreshes once via a shared/deduped `Observable` so concurrent
   401s don't each trigger their own `/auth/refresh` call, retries the original request) and
-  `errorInterceptor` (last-resort PrimeNG toast for any error a component didn't handle itself;
+  `errorInterceptor` (last-resort `MatSnackBar` for any error a component didn't handle itself;
   skips 401s since authInterceptor already owns that flow).
 - **Auth storage**: access + refresh tokens and the current user in `localStorage` via
   `TokenStorageService` (the only thing allowed to touch it directly) — not an httpOnly cookie,
@@ -30,41 +50,68 @@ No feature screens (product browsing, cart, seller dashboard, etc.) exist yet �
   cookie. This is a plain SPA-calls-API setup, not a BFF.
 - **Route guards**: `authGuard` (must be logged in) and `roleGuard(['Seller', 'Admin'])` (must
   hold one of the given roles — mirrors the backend's `[Authorize(Roles = "...")]` convention).
+  The Home route is intentionally **not** guarded — a storefront landing page is public, same as
+  Cartier/Tiffany/Blue Nile; `authGuard` is reserved for account-specific pages (orders, wishlist)
+  once they exist.
+- **Fragment scrolling**: `provideRouter` uses `withInMemoryScrolling({ anchorScrolling: 'enabled' })`
+  so the navbar/footer's category links (e.g. `/#category-rings`) actually scroll to the matching
+  `id` on the Home page.
 
 ## What's Built
 
-- `core/auth/` — `models.ts` (mirrors `AuthResponse`/`RegisterCustomerCommand`/
-  `RegisterSellerCommand` field-for-field, since ASP.NET Core's default JSON settings serialize
-  camelCase and need no mapping layer), `token-storage.service.ts`, `auth.service.ts` (signals:
+- `core/auth/` — `models.ts`, `token-storage.service.ts`, `auth.service.ts` (signals:
   `currentUser`, `isAuthenticated`, `roles`), `auth.guard.ts`, `auth.interceptor.ts`.
 - `core/http/` — `problem-details.ts` (the RFC 7807 shape `ExceptionHandlingMiddleware` returns),
-  `error.interceptor.ts`.
-- `core/layout/shell.component.ts` — toolbar with login/register links or an account menu +
-  logout, wraps `<router-outlet>`.
-- `features/auth/login/`, `features/auth/register/` (a single page with a `SelectButton` toggling
-  between the Customer and Seller forms — matches the backend's two separate registration
-  commands), `features/home/` and `features/forbidden/` as placeholders.
-- `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development
-  (matches `src/JewelryHub.API/Properties/launchSettings.json`), a relative `/api/v1` default for
-  production (assumes a reverse-proxied deployment).
+  `error.interceptor.ts` (now `MatSnackBar`-based).
+- `core/layout/navbar/` — gold-tint announcement strip (real backend fact: free shipping over
+  ₹5,000, matching `FlatRateShippingCalculator`'s threshold) + a sticky main bar (nav links,
+  centered serif wordmark, search/wishlist/cart/account icon cluster) that gains a shadow on
+  scroll, plus a charcoal off-canvas mobile panel. Search/wishlist/cart aren't built yet, so they
+  surface an honest "coming soon" `MatSnackBar` instead of a dead link or a route to a page that
+  doesn't exist.
+- `core/layout/footer/` — trust-signal row (shipping/security/craftsmanship/sourcing), brand +
+  social links, sitemap columns, a newsletter form (also "coming soon" — no backend endpoint for
+  it), copyright bar.
+- `core/layout/shell.component.ts` — composes Navbar + `<router-outlet>` + Footer (previously an
+  inline Material toolbar; replaced now that Navbar/Footer exist).
+- `features/home/` — hero (full-bleed photo, serif headline, primary + `secondary-on-dark` CTAs),
+  a 4-tile category grid (`id`-anchored for the nav's fragment links), a 3-up featured-pieces
+  grid, and a brand-story split section with stats. Illustrative content only — Products/
+  Categories APIs exist on the backend but the Customer UI isn't wired to them yet (Phase 13b).
+- `features/auth/login/`, `features/auth/register/` (Customer/Seller toggle now a
+  `MatButtonToggleGroup`), `features/home/`, `features/forbidden/`.
+- `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
+  relative `/api/v1` default for production.
+
+## Imagery
+
+7 curated Unsplash photos (free tier, Unsplash License, verified individually — several
+candidates were rejected either for being Unsplash+ paid photos or, in one case, for visibly
+showing a real jewelry brand's name ("dinh van") printed on the display risers in the source
+photo, which was replaced before shipping). See `HomeComponent` for the exact CDN URLs in use.
 
 ## Not Yet Wired Up / Known Gaps
 
-- **Not tested against a live backend** — no SQL Server is available in the environment this was
-  built in, so the login/register flow has been verified by build + a DI-wiring smoke test, not
-  by an actual round trip. Worth a real end-to-end pass once a database is available.
+- **Not tested against a live backend** — verified via a live `ng serve` + headless-Chromium pass
+  (fonts, colors, layout, fragment scrolling, mobile menu, console errors all confirmed clean),
+  but no SQL Server was available in this environment, so the actual login/register HTTP round
+  trip has not been exercised end-to-end.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
 - Testing is a placeholder smoke test only (`app.spec.ts`) — matches the backend's stance of
   deferring real test coverage until more functionality exists.
+- Home page content (categories, featured pieces, brand-story copy) is illustrative — not backed
+  by the real Products/Categories APIs yet.
 
 ## Per-Module Frontend Status
 
 | Module | Status |
 |---|---|
 | Foundation (auth, routing, HTTP, shell) | ✅ Complete |
-| Customer UI | ❌ Missing |
+| Design system (`docs/DESIGN_SYSTEM.md`) | ✅ Complete |
+| Customer UI — Home page | ✅ Complete (illustrative content) |
+| Customer UI — product browsing, cart, checkout, orders, reviews | ❌ Missing |
 | Seller UI | ❌ Missing |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |
@@ -73,7 +120,7 @@ No feature screens (product browsing, cart, seller dashboard, etc.) exist yet �
 
 ```bash
 cd client
-npm install   # already run once during scaffolding; re-run after pulling new commits
+npm install   # re-run after pulling new commits
 npm start     # ng serve — http://localhost:4200
 ```
 
@@ -84,4 +131,5 @@ default in `appsettings.json`.
 ## Maintenance
 
 Update this file whenever a feature module moves from ❌ to 🚧/✅, or the stack/library choices
-change.
+change. Keep [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) in sync whenever a genuinely new visual pattern
+is introduced.

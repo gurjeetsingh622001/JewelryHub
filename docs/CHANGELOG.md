@@ -5,6 +5,44 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-05 — Design System + Home Page (Angular); PrimeNG Removed
+
+**Module**: Frontend (`client/`)
+
+**Files modified**:
+- `docs/DESIGN_SYSTEM.md` (new) — permanent visual/UX reference
+- `client/src/styles/_tokens.scss` (new) — color/type/spacing/shadow/motion CSS custom properties
+- `client/src/styles.scss` — tokens import, Material system-token overrides, global `.btn`/
+  `.eyebrow`/`.section-title` classes, `MatSnackBar` error-panel styling
+- `client/src/index.html` — Playfair Display + Inter fonts (was Roboto + Material Icons font)
+- `client/src/app/core/layout/navbar/` (new), `client/src/app/core/layout/footer/` (new)
+- `client/src/app/core/layout/shell.component.ts` — now composes Navbar + Footer instead of an
+  inline Material toolbar
+- `client/src/app/features/home/` — real hero/categories/featured/brand-story page (was a
+  placeholder welcome message)
+- `client/src/app/app.routes.ts` — Home route no longer requires auth (a storefront landing page
+  must be public)
+- `client/src/app/app.config.ts` — registered Lucide icons app-wide (`--legacy-peer-deps` install,
+  peer range not yet updated for Angular 22), added `withInMemoryScrolling` for fragment nav links
+- `client/src/app/core/http/error.interceptor.ts`, `client/src/app/core/layout/navbar/*.ts`,
+  `client/src/app/core/layout/footer/*.ts` — `MessageService`/`Toast` → `MatSnackBar`
+- `client/src/app/features/auth/register/*` — `SelectButton` → `MatButtonToggleGroup`
+- `client/package.json` — removed `primeng`, `@primeuix/themes`, `primeicons`; added
+  `lucide-angular`
+- `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`, `docs/FRONTEND_PROGRESS.md`
+
+**Summary**: Built the permanent design system doc and the app's first real page (Home: navbar,
+footer, hero, category grid, featured pieces, brand story) in a premium editorial jewelry-boutique
+direction. Mid-build, an actual `ng serve` + headless-Chromium visual check (not just a production
+build) surfaced two real problems a build alone would never catch: the installed PrimeNG version
+requires a paid license and was injecting an "Invalid PrimeUI License" banner into every page, and
+the sourced hero photo had a real jewelry brand's name visible on the display risers. PrimeNG was
+removed entirely (every usage swapped for a Material equivalent) rather than worked around, and
+the hero image was replaced with a verified clean one. Final state verified: clean build, zero
+console errors, correct fonts/colors, working fragment-scroll nav, working mobile menu.
+
+---
+
 ## 2026-08-04 — Angular Frontend Foundation
 
 **Module**: Frontend (new `client/` workspace)

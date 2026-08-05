@@ -1,0 +1,68 @@
+<footer class="footer">
+  <div class="footer__trust mx-auto max-w-7xl px-4 md:px-8">
+    <div>
+      <lucide-icon name="Truck" [size]="22" [strokeWidth]="1.25" />
+      <span>Free shipping over ₹5,000</span>
+    </div>
+    <div>
+      <lucide-icon name="ShieldCheck" [size]="22" [strokeWidth]="1.25" />
+      <span>Secure checkout</span>
+    </div>
+    <div>
+      <lucide-icon name="Award" [size]="22" [strokeWidth]="1.25" />
+      <span>Certified craftsmanship</span>
+    </div>
+    <div>
+      <lucide-icon name="Gem" [size]="22" [strokeWidth]="1.25" />
+      <span>Ethically sourced stones</span>
+    </div>
+  </div>
+
+  <div class="footer__top mx-auto grid max-w-7xl gap-12 px-4 md:grid-cols-4 md:px-8">
+    <div class="footer__brand">
+      <a routerLink="/" class="footer__logo">Jewelry<span>Hub</span></a>
+      <p>Fine jewelry, thoughtfully sourced and crafted to last a lifetime.</p>
+      <div class="footer__social">
+        <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram on Instagram">
+          <lucide-icon name="Instagram" [size]="18" [strokeWidth]="1.5" />
+        </a>
+        <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="JewelryHub on Facebook">
+          <lucide-icon name="Facebook" [size]="18" [strokeWidth]="1.5" />
+        </a>
+        <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="JewelryHub on Twitter">
+          <lucide-icon name="Twitter" [size]="18" [strokeWidth]="1.5" />
+        </a>
+      </div>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="eyebrow">Shop</h3>
+      <a [routerLink]="['/']" fragment="category-rings">Rings</a>
+      <a [routerLink]="['/']" fragment="category-necklaces">Necklaces</a>
+      <a [routerLink]="['/']" fragment="category-earrings">Earrings</a>
+      <a [routerLink]="['/']" fragment="category-bracelets">Bracelets</a>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="eyebrow">Company</h3>
+      <a [routerLink]="['/']" fragment="brand-story">The Atelier</a>
+      <a routerLink="/register">Become a Seller</a>
+      <a routerLink="/register">Join as a Customer</a>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="eyebrow">Stay in touch</h3>
+      <p>Be the first to know about new collections and exclusive offers.</p>
+      <form class="footer__newsletter-form" (submit)="$event.preventDefault(); notifyComingSoon()">
+        <input type="email" placeholder="Your email" required aria-label="Email address" />
+        <button type="submit" aria-label="Subscribe">
+          <lucide-icon name="ArrowRight" [size]="18" [strokeWidth]="1.5" />
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer__bottom mx-auto max-w-7xl px-4 md:px-8">
+    <p>&copy; {{ year }} JewelryHub. All rights reserved.</p>
+  </div>
+</footer>

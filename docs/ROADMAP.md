@@ -71,14 +71,25 @@ deciding this only after Phase 11, since Union approval/moderation will likely n
 actions too and should follow whichever pattern is chosen here.
 
 ## Phase 13 — Frontend Foundation (Angular)
-**Completed (2026-08-04).** Angular 22 workspace at `client/` — Material + PrimeNG + Tailwind,
-JWT auth with dedup'd refresh-and-retry, route guards, login/register pages, app shell. See
-[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md). Not yet tested against a live backend. No feature
-screens yet — that's every phase below.
+**Completed (2026-08-04).** Angular 22 workspace at `client/` — Material + Tailwind (PrimeNG was
+tried and removed, see Phase 13a), JWT auth with dedup'd refresh-and-retry, route guards,
+login/register pages, app shell. See [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
-## Phase 13b — Customer UI (Angular)
-**Pending.** Product browsing, cart, checkout, order history, reviews. Builds directly on the
-Phase 13 foundation (auth, HTTP layer, routing already in place).
+## Phase 13a — Design System + Home Page (Angular)
+**Completed (2026-08-05).** Permanent design system (`docs/DESIGN_SYSTEM.md`) — premium editorial
+jewelry-boutique direction, warm ivory/gold/charcoal palette, Playfair Display + Inter type,
+Lucide icons, curated Unsplash imagery. Built Navbar, Footer, and the Home page (hero, category
+grid, featured pieces, brand story) to it. **Also discovered and resolved mid-build**: the
+installed PrimeNG version (22.x) requires a paid PrimeUI license or it shows an "Invalid PrimeUI
+License" banner on every page — found via an actual `ng serve` + headless-Chromium check, not
+just a build pass. PrimeNG was removed; `Toast`/`SelectButton` usages replaced with
+`MatSnackBar`/`MatButtonToggleGroup`. Verified live (fonts, colors, fragment-scroll nav, mobile
+menu, zero console errors) — still not tested against a live backend.
+
+## Phase 13b — Customer UI: Browsing, Cart, Checkout (Angular)
+**Pending.** Product browsing (wired to the real Products/Categories APIs — Home page content is
+currently illustrative), cart, checkout, order history, reviews. Builds directly on the Phase
+13/13a foundation (auth, HTTP layer, routing, design system already in place).
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Pending.**

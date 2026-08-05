@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -15,8 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
   },
   {
+    // Public storefront home — a luxury retail site's landing page is
+    // browsable without an account, same as Cartier/Tiffany/Blue Nile.
+    // authGuard is reserved for account-specific pages (orders, wishlist).
     path: '',
-    canActivate: [authGuard],
     loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
   },
   { path: '**', redirectTo: '' },

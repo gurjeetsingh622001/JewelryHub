@@ -4,30 +4,46 @@
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
+@use 'styles/tokens';
 
 // Tailwind's Preflight base-reset is intentionally left out (importing
 // theme + utilities separately instead of the "tailwindcss" shorthand) —
-// it would fight with Angular Material's and PrimeNG's own base styles
-// (margins, box-sizing, typography). Tailwind is used here purely for
-// utility classes (layout/spacing) alongside Material and PrimeNG
-// components, not as the app's CSS reset.
+// it would fight with Angular Material's own base styles (margins,
+// box-sizing, typography). Tailwind is used here purely for utility
+// classes (layout/spacing) alongside Material components, not as the
+// app's CSS reset.
 @import 'tailwindcss/theme' layer(theme);
 @import 'tailwindcss/utilities' layer(utilities);
-
-@import 'primeicons/primeicons.css';
 
 html {
   height: 100%;
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: mat.$orange-palette,
+        tertiary: mat.$green-palette,
       ),
-      typography: Roboto,
+      typography: Inter,
       density: 0,
     )
   );
+
+  // Material ships M3's default palettes above, then we override the
+  // handful of system tokens that actually render (buttons, menus,
+  // inputs, toggles) so Material's own chrome matches the brand palette
+  // in docs/DESIGN_SYSTEM.md instead of a generic Material orange/green.
+  --mat-sys-primary: var(--color-gold);
+  --mat-sys-on-primary: var(--color-bg);
+  --mat-sys-primary-container: var(--color-gold-tint);
+  --mat-sys-on-primary-container: var(--color-gold-deep);
+  --mat-sys-secondary: var(--color-ink-muted);
+  --mat-sys-surface: var(--color-bg);
+  --mat-sys-on-surface: var(--color-ink);
+  --mat-sys-surface-container: var(--color-surface);
+  --mat-sys-surface-container-high: var(--color-bg-alt);
+  --mat-sys-outline: var(--color-border);
+  --mat-sys-outline-variant: var(--color-border);
+  --mat-sys-error: var(--color-error);
 }
 
 body {
@@ -36,15 +52,114 @@ body {
   // user's system settings.
   color-scheme: light;
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
 
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+
+p {
+  line-height: 1.6;
+}
+
+// Shared "eyebrow" label used to introduce a section ahead of its serif
+// headline (see docs/DESIGN_SYSTEM.md § Typography) — global because it's
+// a cross-cutting text style, not tied to one component's layout.
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold-deep);
+
+  &--on-dark {
+    color: var(--color-gold);
+  }
+}
+
+// Shared section title style — every "h2" that introduces a homepage-style
+// section (see docs/DESIGN_SYSTEM.md § Components) uses this rather than a
+// one-off per component.
+.section-title {
+  font-size: var(--text-3xl);
+  margin-top: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+// The two button styles allowed by docs/DESIGN_SYSTEM.md § Components —
+// global because every page needs them, not just Home.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+
+  &--primary {
+    background: var(--color-gold);
+    color: var(--color-bg);
+
+    &:hover {
+      background: var(--color-gold-deep);
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-ink);
+
+    &:hover {
+      background: var(--color-ink);
+      color: var(--color-bg);
+    }
+  }
+
+  // For a secondary button placed over a dark/photographic background
+  // (e.g. the hero) — --secondary's ink-on-transparent styling would be
+  // near-invisible there.
+  &--secondary-on-dark {
+    background: transparent;
+    color: var(--color-charcoal-ink);
+    border-color: var(--color-charcoal-ink);
+
+    &:hover {
+      background: var(--color-charcoal-ink);
+      color: var(--color-charcoal);
+    }
+  }
+}
+
+// MatSnackBar renders into a CDK overlay outside any component's DOM, so
+// its panelClass (see errorInterceptor) can only be styled globally.
+.app-snackbar--error {
+  --mdc-snackbar-container-color: var(--color-error);
+  --mdc-snackbar-supporting-text-color: var(--color-bg);
+  --mat-snack-bar-button-color: var(--color-bg);
 }
 /* You can add global styles to this file, and also import other style files */

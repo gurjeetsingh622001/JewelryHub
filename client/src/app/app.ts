@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
-import { ToastModule } from 'primeng/toast';
 import { ShellComponent } from './core/layout/shell.component';
 
 @Component({
   selector: 'app-root',
-  imports: [ShellComponent, ToastModule],
+  imports: [ShellComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
