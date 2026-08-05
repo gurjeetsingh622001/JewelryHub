@@ -37,6 +37,10 @@ html {
   --mat-sys-primary-container: var(--color-gold-tint);
   --mat-sys-on-primary-container: var(--color-gold-deep);
   --mat-sys-secondary: var(--color-ink-muted);
+  --mat-sys-secondary-container: var(--color-gold-tint);
+  --mat-sys-on-secondary-container: var(--color-gold-deep);
+  --mat-sys-tertiary-container: var(--color-gold-tint);
+  --mat-sys-on-tertiary-container: var(--color-gold-deep);
   --mat-sys-surface: var(--color-bg);
   --mat-sys-on-surface: var(--color-ink);
   --mat-sys-surface-container: var(--color-surface);
@@ -161,5 +165,83 @@ p {
   --mdc-snackbar-container-color: var(--color-error);
   --mdc-snackbar-supporting-text-color: var(--color-bg);
   --mat-snack-bar-button-color: var(--color-bg);
+}
+
+// Shared between the Login/Register pages (both render inside
+// AuthLayoutComponent's projected content) — kept global rather than
+// duplicated in two component stylesheets.
+.auth-lead {
+  margin-top: 0.75rem;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 2rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.auth-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+
+  &--three {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-note {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin: 0.5rem 0 0;
+}
+
+// Account-type toggle on the Register page — full-width, evenly split,
+// so "Customer"/"Seller" reads as one deliberate choice rather than a
+// default Material control dropped into the page.
+.account-type-toggle {
+  display: flex;
+  width: 100%;
+  margin: 2rem 0 0.5rem;
+
+  .mat-button-toggle {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+.auth-submit {
+  width: 100%;
+  height: 3rem;
+  margin-top: 0.75rem;
+}
+
+.auth-switch {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+
+  a {
+    color: var(--color-gold-deep);
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 0.25rem;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 /* You can add global styles to this file, and also import other style files */

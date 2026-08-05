@@ -148,6 +148,30 @@ arrow, checkbox check — are unaffected; this rule is about icons *we* choose t
 Default stroke width `1.5`, default size `20`–`24px` depending on context (nav/action icons `20`,
 feature/empty-state icons `32`–`48`).
 
+## Auth Pages (Login / Register)
+
+Login and Register are deliberately **outside the storefront Shell** — no Navbar/Footer, so
+nothing invites someone to wander off mid-signin/signup (see `app.routes.ts`: they're top-level
+routes, while everything else nests under a `ShellComponent` parent route). Both use the shared
+`core/layout/auth-layout/AuthLayoutComponent`:
+
+- **Desktop (`lg` and up)**: split-screen. Left panel is a full-bleed photo (`position: sticky`,
+  so a long form scrolls past it rather than stretching it) with a dark scrim, the wordmark
+  linking home in the top-left corner, and an italic serif editorial quote pinned near the
+  bottom. Right panel is the projected page content (`<ng-content>`), centered in a column whose
+  width is configurable via `[maxWidth]` (Login: default `26rem`; Register: `34rem`, to fit the
+  Seller form's 2–3 column field rows).
+- **Mobile**: the photo panel is hidden entirely (`display: none` below `lg`) — a centered
+  wordmark sits above the form instead. Prioritize the form over the atmosphere on small screens.
+- Shared chrome classes (`.auth-lead`, `.auth-form`, `.auth-form__row[--three]`, `.auth-submit`,
+  `.auth-switch`, `.auth-note`, `.account-type-toggle`) live in the global `styles.scss`, not
+  per-component — both pages need identical spacing/typography for these, so duplicating them
+  per component would just be two copies to keep in sync.
+- Material's button-toggle (the Customer/Seller switch) needed its own token overrides —
+  `--mat-sys-secondary-container`/`--mat-sys-tertiary-container` control its selected-state fill,
+  separately from `--mat-sys-primary-container` which controls buttons/inputs. Both are mapped to
+  the gold tint so the toggle doesn't default to Material's stock salmon/orange.
+
 ## Imagery
 
 Real, curated, royalty-free photography only — **never** a gray placeholder box or lorem-picsum

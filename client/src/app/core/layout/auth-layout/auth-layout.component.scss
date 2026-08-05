@@ -1,0 +1,94 @@
+.auth-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 5fr 6fr;
+  }
+}
+
+.auth-layout__visual {
+  position: relative;
+  display: none;
+  background-size: cover;
+  background-position: center;
+
+  @media (min-width: 1024px) {
+    display: block;
+    // Sticky so a long form (the Seller register form especially) scrolls
+    // past a fixed image instead of stretching it into an odd aspect ratio.
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+}
+
+.auth-layout__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(26, 24, 22, 0.35) 0%, rgba(26, 24, 22, 0.15) 40%, rgba(26, 24, 22, 0.75) 100%);
+}
+
+.auth-layout__logo {
+  position: absolute;
+  top: 2.5rem;
+  left: 2.5rem;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.08em;
+  color: var(--color-charcoal-ink);
+  text-decoration: none;
+
+  span {
+    color: var(--color-gold);
+  }
+
+  &--mobile {
+    position: static;
+    display: block;
+    text-align: center;
+    color: var(--color-ink);
+    margin-bottom: 2.5rem;
+
+    @media (min-width: 1024px) {
+      display: none;
+    }
+  }
+}
+
+.auth-layout__quote {
+  position: absolute;
+  z-index: 1;
+  left: 2.5rem;
+  right: 2.5rem;
+  bottom: 3rem;
+  margin: 0;
+
+  p {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-xl);
+    color: var(--color-charcoal-ink);
+    max-width: 26rem;
+    line-height: 1.4;
+  }
+}
+
+.auth-layout__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: 3rem 1.5rem;
+
+  @media (min-width: 768px) {
+    padding: 4rem;
+  }
+}
+
+.auth-layout__content-inner {
+  width: 100%;
+  margin: 0 auto;
+}

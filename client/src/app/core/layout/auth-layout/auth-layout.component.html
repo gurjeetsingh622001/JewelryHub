@@ -1,0 +1,16 @@
+<div class="auth-layout">
+  <div class="auth-layout__visual" [style.background-image]="'url(' + image + ')'">
+    <div class="auth-layout__scrim"></div>
+    <a routerLink="/" class="auth-layout__logo">Jewelry<span>Hub</span></a>
+    <blockquote class="auth-layout__quote">
+      <p>&ldquo;{{ quote }}&rdquo;</p>
+    </blockquote>
+  </div>
+
+  <div class="auth-layout__content">
+    <a routerLink="/" class="auth-layout__logo auth-layout__logo--mobile">Jewelry<span>Hub</span></a>
+    <div class="auth-layout__content-inner" [style.max-width]="maxWidth">
+      <ng-content />
+    </div>
+  </div>
+</div>

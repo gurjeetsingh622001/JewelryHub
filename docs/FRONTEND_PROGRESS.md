@@ -1,13 +1,13 @@
 # Frontend Progress
 
-## Status: Foundation + Design System + Home Page Complete
+## Status: Foundation + Design System + Home Page + Auth Pages Complete
 
 Last updated 2026-08-05. An Angular workspace exists at `client/` (sibling to `src/`, not part of
-`JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing shell, a full
-premium design system, and the public Home page (navbar, footer, hero, categories, featured
-pieces, brand story) are built and verified against a live dev server. Product browsing, cart,
-checkout, and the Seller/Admin/Union dashboards don't exist yet — see
-[ROADMAP.md](ROADMAP.md) Phase 13b onward.
+`JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
+premium design system, the public Home page (navbar, footer, hero, categories, featured pieces,
+brand story), and redesigned Login/Register pages are built and verified against a live dev
+server. Product browsing, cart, checkout, and the Seller/Admin/Union dashboards don't exist yet —
+see [ROADMAP.md](ROADMAP.md) Phase 13b onward.
 
 ## Design System
 
@@ -78,8 +78,14 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   a 4-tile category grid (`id`-anchored for the nav's fragment links), a 3-up featured-pieces
   grid, and a brand-story split section with stats. Illustrative content only — Products/
   Categories APIs exist on the backend but the Customer UI isn't wired to them yet (Phase 13b).
+- `core/layout/auth-layout/` — shared split-screen layout for Login/Register (see
+  [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) § Auth Pages). Both pages are top-level routes outside the
+  storefront Shell (`app.routes.ts` nests Home/Forbidden under a `ShellComponent` parent route
+  instead) — no Navbar/Footer on auth pages by design.
 - `features/auth/login/`, `features/auth/register/` (Customer/Seller toggle now a
-  `MatButtonToggleGroup`), `features/home/`, `features/forbidden/`.
+  `MatButtonToggleGroup`) — redesigned to the design system: serif headline, eyebrow label,
+  editorial photo + quote panel, no more generic `mat-card`.
+- `features/home/`, `features/forbidden/`.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 

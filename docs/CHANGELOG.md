@@ -5,6 +5,37 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-05 — Login/Register Redesign + Auth Pages Moved Outside Shell
+
+**Module**: Frontend (`client/`)
+
+**Files modified**:
+- `client/src/app/core/layout/auth-layout/` (new) — shared split-screen layout for auth pages
+- `client/src/app/app.routes.ts` — Login/Register are now top-level routes; Home/Forbidden nest
+  under a `ShellComponent` parent route instead of Shell wrapping every route unconditionally
+- `client/src/app/app.ts`, `client/src/app/app.html` — App is now a bare `<router-outlet>` host;
+  Shell is a routed layout component, not something App renders directly
+- `client/src/app/features/auth/login/*`, `client/src/app/features/auth/register/*` — redesigned
+  to the design system (serif headline, eyebrow, editorial photo+quote panel, no `mat-card`)
+- `client/src/styles.scss` — shared `.auth-*` classes, `--mat-sys-secondary-container`/
+  `--mat-sys-tertiary-container` overrides so the button-toggle's selected state uses gold instead
+  of Material's default salmon/orange
+- `docs/DESIGN_SYSTEM.md`, `docs/FRONTEND_PROGRESS.md`
+
+**Summary**: The user flagged two things after using the app: they didn't like the generic
+Material-card look of Login/Register (built before the design system existed), and asked why the
+storefront Navbar/Footer appeared on those pages. The latter was an architecture gap — `App`
+rendered `ShellComponent` unconditionally, so every route got the same chrome regardless of
+whether it made sense there. Fixed by moving Login/Register to top-level routes outside Shell,
+and gave them a proper premium split-screen treatment (full-bleed photo + editorial quote on
+desktop, centered form on mobile) via a new shared `AuthLayoutComponent`. Caught and fixed a
+Vite dev-server dependency-cache issue (`504 Outdated Optimize Dep`) that surfaced while verifying
+the Register page live — a new Material import added after the dev server had already optimized
+its dependency graph; fixed by clearing `.angular/cache` and restarting. Verified live: Home still
+has Navbar/Footer, Login/Register don't, zero console errors, both light and mobile viewports.
+
+---
+
 ## 2026-08-05 — Design System + Home Page (Angular); PrimeNG Removed
 
 **Module**: Frontend (`client/`)

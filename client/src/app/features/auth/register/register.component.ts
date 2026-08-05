@@ -3,10 +3,10 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthLayoutComponent } from '../../../core/layout/auth-layout/auth-layout.component';
 import { AuthService } from '../../../core/auth/auth.service';
 
 type AccountType = 'Customer' | 'Seller';
@@ -19,10 +19,10 @@ type AccountType = 'Customer' | 'Seller';
     RouterLink,
     MatButtonModule,
     MatButtonToggleModule,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    AuthLayoutComponent,
   ],
   templateUrl: './register.component.html',
 })
@@ -32,6 +32,9 @@ export class RegisterComponent {
   private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
+
+  // Free tier (Unsplash License), verified — see docs/DESIGN_SYSTEM.md § Imagery.
+  protected readonly image = 'https://images.unsplash.com/photo-1640724390912-4d92d9a985fe?q=80&w=1200&auto=format&fit=crop';
   protected readonly accountType = signal<AccountType>('Customer');
   protected readonly accountTypeOptions: { label: string; value: AccountType }[] = [
     { label: 'Customer', value: 'Customer' },

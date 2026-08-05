@@ -2,10 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthLayoutComponent } from '../../../core/layout/auth-layout/auth-layout.component';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
@@ -14,10 +14,10 @@ import { AuthService } from '../../../core/auth/auth.service';
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
-    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    AuthLayoutComponent,
   ],
   templateUrl: './login.component.html',
 })
@@ -27,6 +27,9 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
+
+  // Free tier (Unsplash License), verified — see docs/DESIGN_SYSTEM.md § Imagery.
+  protected readonly image = 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?q=80&w=1200&auto=format&fit=crop';
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
