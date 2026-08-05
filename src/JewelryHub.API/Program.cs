@@ -110,12 +110,23 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<JewelryHubDbContext>();
     await DbSeeder.SeedAsync(dbContext);
+
+    // Local-only bootstrap: there's no self-service "register as Admin"
+    // endpoint, so a fresh dev database otherwise has zero way to reach
+    // any Admin-gated route. See DbSeeder.SeedDevAdminAsync for the
+    // (deliberately well-known, dev-only) credentials.
+    if (app.Environment.IsDevelopment())
+    {
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await DbSeeder.SeedDevAdminAsync(dbContext, passwordHasher);
+    }
 }
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 
 app.UseMiddleware<JewelryHub.API.Middleware.ExceptionHandlingMiddleware>();

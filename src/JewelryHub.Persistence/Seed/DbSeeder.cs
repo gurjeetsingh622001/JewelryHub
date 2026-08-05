@@ -1,3 +1,4 @@
+using JewelryHub.Application.Common.Interfaces;
 using JewelryHub.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,12 @@ public static class DbSeeder
         ("Seller", "Jewelry business account — manages products, orders, and union membership."),
         ("Customer", "Buyer account — browses, purchases, and reviews jewelry."),
     };
+
+    // Local-dev-only bootstrap credentials — see SeedDevAdminAsync. There is
+    // no self-service "register as Admin" endpoint by design, so a fresh
+    // database otherwise has zero way to reach any Admin-gated endpoint.
+    public const string DevAdminEmail = "admin@jewelryhub.local";
+    public const string DevAdminPassword = "Admin@12345";
 
     public static async Task SeedAsync(JewelryHubDbContext context, CancellationToken cancellationToken = default)
     {
@@ -36,6 +43,35 @@ public static class DbSeeder
             });
         }
 
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Creates a single Admin-role user (DevAdminEmail/DevAdminPassword) if
+    /// one doesn't already exist. Call only in Development — this is a
+    /// convenience bootstrap for local testing, not something a real
+    /// deployment should ever run with a well-known password.
+    /// </summary>
+    public static async Task SeedDevAdminAsync(JewelryHubDbContext context, IPasswordHasher passwordHasher, CancellationToken cancellationToken = default)
+    {
+        var alreadyExists = await context.Users.AnyAsync(u => u.Email == DevAdminEmail, cancellationToken);
+        if (alreadyExists) return;
+
+        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.NormalizedName == "ADMIN", cancellationToken)
+            ?? throw new InvalidOperationException("The 'Admin' role is not seeded. Run SeedAsync before SeedDevAdminAsync.");
+
+        var user = new User
+        {
+            Email = DevAdminEmail,
+            PasswordHash = passwordHasher.Hash(DevAdminPassword),
+            SecurityStamp = Guid.NewGuid().ToString("N"),
+            FirstName = "Dev",
+            LastName = "Admin",
+            EmailConfirmed = true,
+        };
+        user.UserRoles.Add(new UserRole { RoleId = adminRole.Id, User = user });
+
+        context.Users.Add(user);
         await context.SaveChangesAsync(cancellationToken);
     }
 }
