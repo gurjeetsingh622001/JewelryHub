@@ -24,6 +24,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
       },
       {
+        path: 'products',
+        loadComponent: () => import('./features/products/product-list/product-list.component').then((m) => m.ProductListComponent),
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () =>
+          import('./features/products/product-detail/product-detail.component').then((m) => m.ProductDetailComponent),
+      },
+      {
         // Public storefront home — a luxury retail site's landing page is
         // browsable without an account, same as Cartier/Tiffany/Blue Nile.
         // authGuard is reserved for account-specific pages (orders, wishlist).

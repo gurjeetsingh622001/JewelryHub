@@ -1,0 +1,101 @@
+<div class="product-list mx-auto max-w-7xl px-4 py-12 md:px-8">
+  <header class="product-list__header">
+    <p class="eyebrow">Shop</p>
+    <h1>Fine Jewelry</h1>
+  </header>
+
+  <div class="product-list__filters">
+    <mat-form-field appearance="outline" class="product-list__search">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [ngModel]="searchInput()"
+        (ngModelChange)="searchInput.set($event)"
+        (keyup.enter)="submitSearch()"
+        placeholder="Search by name..."
+      />
+      <button matSuffix mat-icon-button type="button" (click)="submitSearch()" aria-label="Search">
+        <lucide-icon name="Search" [size]="18" [strokeWidth]="1.5" />
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select [value]="filters().categoryId" (selectionChange)="updateFilters({ categoryId: $event.value })">
+        <mat-option [value]="undefined">All Categories</mat-option>
+        @for (category of categoriesResource.value(); track category.id) {
+          <mat-option [value]="category.id">{{ category.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Metal</mat-label>
+      <mat-select [value]="filters().metalType" (selectionChange)="updateFilters({ metalType: $event.value })">
+        <mat-option [value]="undefined">All Metals</mat-option>
+        @for (option of metalTypeOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Min Price</mat-label>
+      <input matInput type="number" [value]="filters().minPrice ?? ''" (change)="updateFilters({ minPrice: $any($event.target).value || undefined })" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Max Price</mat-label>
+      <input matInput type="number" [value]="filters().maxPrice ?? ''" (change)="updateFilters({ maxPrice: $any($event.target).value || undefined })" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sort By</mat-label>
+      <mat-select [value]="filters().sort" (selectionChange)="updateFilters({ sort: $event.value })">
+        @for (option of sortOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button type="button" (click)="clearFilters()" class="product-list__clear">Clear</button>
+  </div>
+
+  @if (productsResource.isLoading()) {
+    <div class="product-list__loading">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else if (productsResource.error()) {
+    <p class="product-list__empty">Something went wrong loading products. Please try again.</p>
+  } @else if (productsResource.value()?.items?.length === 0) {
+    <p class="product-list__empty">No pieces match your filters — try broadening your search.</p>
+  } @else {
+    <div class="product-list__grid">
+      @for (product of productsResource.value()?.items; track product.id) {
+        <app-product-card [product]="product" />
+      }
+    </div>
+
+    @if ((productsResource.value()?.totalPages ?? 0) > 1) {
+      <div class="product-list__pagination">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!productsResource.value()?.hasPreviousPage"
+          (click)="goToPage(filters().pageNumber! - 1)"
+        >
+          Previous
+        </button>
+        <span>Page {{ filters().pageNumber }} of {{ productsResource.value()?.totalPages }}</span>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!productsResource.value()?.hasNextPage"
+          (click)="goToPage(filters().pageNumber! + 1)"
+        >
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>

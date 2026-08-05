@@ -1,13 +1,14 @@
 # Frontend Progress
 
-## Status: Foundation + Design System + Home Page + Auth Pages Complete
+## Status: Foundation + Design System + Home + Auth Pages + Product Browsing Complete
 
 Last updated 2026-08-05. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
-premium design system, the public Home page (navbar, footer, hero, categories, featured pieces,
-brand story), and redesigned Login/Register pages are built and verified against a live dev
-server. Product browsing, cart, checkout, and the Seller/Admin/Union dashboards don't exist yet —
-see [ROADMAP.md](ROADMAP.md) Phase 13b onward.
+premium design system, the public Home page, redesigned Login/Register pages, and real product
+browsing (list + detail, wired to the live Products/Categories APIs) are built. **This is the
+first slice verified against an actual running backend + database**, not just a build — see
+below. Cart, checkout, order history, reviews, and the Seller/Admin/Union dashboards don't exist
+yet — see [ROADMAP.md](ROADMAP.md) Phase 13b onward.
 
 ## Design System
 
@@ -86,6 +87,21 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   `MatButtonToggleGroup`) — redesigned to the design system: serif headline, eyebrow label,
   editorial photo + quote panel, no more generic `mat-card`.
 - `features/home/`, `features/forbidden/`.
+- `features/products/` — `models.ts` (mirrors `ProductListItemDto`/`ProductDto`/`CategoryDto`
+  field-for-field, including numeric `MetalType`/`PurityType`/`ProductStatus`/`ProductSortOption`
+  enums — the backend has no `JsonStringEnumConverter`, so `System.Text.Json`'s default applies:
+  enums serialize as their ordinal, not a string; these must stay in exact sync with the C# enum
+  definitions), `products.service.ts` (`getProducts`/`getProductById`/`getCategories`),
+  `product-list/` (URL-driven filters via `rxResource` + `toSignal(route.queryParamMap)` — search,
+  category, metal type, min/max price, sort, pagination — so the page is bookmarkable/shareable
+  and Navbar/Home's category links drive it directly), `product-detail/` (gallery with thumbnail
+  strip, spec table, gemstone list, Add to Cart/Wishlist as honest "coming soon" snack bars since
+  Cart isn't built yet).
+- `shared/product-card/` — the reusable listing card (discount badge, out-of-stock badge,
+  wishlist button, rating, price with strikethrough original), used by the Product List grid and
+  intended for any future "you may also like"/search-result surface.
+- `core/models/paged-result.ts` — mirrors the backend's `PagedResult<T>`, generic across every
+  paged endpoint.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 
@@ -98,17 +114,29 @@ photo, which was replaced before shipping). See `HomeComponent` for the exact CD
 
 ## Not Yet Wired Up / Known Gaps
 
-- **Not tested against a live backend** — verified via a live `ng serve` + headless-Chromium pass
-  (fonts, colors, layout, fragment scrolling, mobile menu, console errors all confirmed clean),
-  but no SQL Server was available in this environment, so the actual login/register HTTP round
-  trip has not been exercised end-to-end.
+- **Verified against a live backend for the first time (2026-08-05).** The API and a real SQL
+  Server database were both running; verification included registering a seller, completing the
+  KYC approve flow as the dev admin, creating a category, and creating three real products via
+  the live API, then confirming the Product List/Detail pages render them correctly end-to-end
+  (filters, category dropdown, discount badge, gallery, spec table, "coming soon" snack bars) with
+  zero console errors. Login/Register still haven't been round-tripped this way (only Products/
+  Categories were exercised) — worth doing next.
+- **Demo data was created directly against the live database** as part of this verification: a
+  seller account (`seller.demo@jewelryhub.local`), a "Rings" category, and three products
+  ("Aurelia Solitaire Ring", "Meera Diamond Necklace", "Zara Gold Hoop Earrings"). Decide whether
+  to keep this as sample data or remove it before real use.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
 - Testing is a placeholder smoke test only (`app.spec.ts`) — matches the backend's stance of
   deferring real test coverage until more functionality exists.
-- Home page content (categories, featured pieces, brand-story copy) is illustrative — not backed
-  by the real Products/Categories APIs yet.
+- Home page's category tiles and hero CTA now link to real `/products` routes, but the "This
+  Season's Edit" featured-pieces section and brand-story copy are still illustrative, not backed
+  by live data.
+- The Navbar/Home category links (Rings/Necklaces/Earrings/Bracelets) filter products via a text
+  **search** match against the product name, not a real `categoryId` — there's no seeded mapping
+  from "the four jewelry types" to actual admin-created Category rows yet. Revisit once category
+  data is established.
 
 ## Per-Module Frontend Status
 
@@ -116,8 +144,10 @@ photo, which was replaced before shipping). See `HomeComponent` for the exact CD
 |---|---|
 | Foundation (auth, routing, HTTP, shell) | ✅ Complete |
 | Design system (`docs/DESIGN_SYSTEM.md`) | ✅ Complete |
-| Customer UI — Home page | ✅ Complete (illustrative content) |
-| Customer UI — product browsing, cart, checkout, orders, reviews | ❌ Missing |
+| Customer UI — Home page | ✅ Complete (illustrative content, real nav) |
+| Customer UI — Login/Register | ✅ Complete |
+| Customer UI — Product browsing (list + detail) | ✅ Complete, verified live |
+| Customer UI — Cart, checkout, orders, reviews | ❌ Missing |
 | Seller UI | ❌ Missing |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |

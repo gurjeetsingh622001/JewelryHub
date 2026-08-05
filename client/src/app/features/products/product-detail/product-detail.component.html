@@ -1,0 +1,134 @@
+@if (productResource.isLoading()) {
+  <div class="product-detail__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (productResource.error()) {
+  <div class="product-detail__empty">
+    <p>We couldn't find that piece.</p>
+    <a routerLink="/products">Back to Shop</a>
+  </div>
+} @else {
+  @let product = productResource.value()!;
+  <div class="product-detail mx-auto max-w-7xl px-4 py-12 md:px-8">
+    <a routerLink="/products" class="product-detail__back">
+      <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+      Back to Shop
+    </a>
+
+    <div class="product-detail__layout">
+      <div class="product-detail__gallery">
+        @if (product.images.length > 0) {
+          <div class="product-detail__main-image" [style.background-image]="'url(' + product.images[selectedImageIndex()].url + ')'"></div>
+          @if (product.images.length > 1) {
+            <div class="product-detail__thumbs">
+              @for (image of product.images; track image.id; let i = $index) {
+                <button
+                  type="button"
+                  class="product-detail__thumb"
+                  [class.product-detail__thumb--active]="i === selectedImageIndex()"
+                  (click)="selectImage(i)"
+                >
+                  <img [src]="image.url" [alt]="image.altText || product.name" />
+                </button>
+              }
+            </div>
+          }
+        } @else {
+          <div class="product-detail__main-image product-detail__main-image--empty">
+            <lucide-icon name="Gem" [size]="64" [strokeWidth]="1" />
+          </div>
+        }
+      </div>
+
+      <div class="product-detail__info">
+        <span class="eyebrow">{{ product.categoryName }}</span>
+        <h1>{{ product.name }}</h1>
+
+        @if (product.reviewCount > 0) {
+          <div class="product-detail__rating">
+            <lucide-icon name="Star" [size]="16" [strokeWidth]="1.5" />
+            <span>{{ product.averageRating.toFixed(1) }} ({{ product.reviewCount }} review{{ product.reviewCount === 1 ? '' : 's' }})</span>
+          </div>
+        }
+
+        <p class="product-detail__price">
+          @if (product.discountPercentage) {
+            <span class="product-detail__price-original">{{ product.basePrice | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+          }
+          {{ effectivePrice(product.basePrice, product.discountPercentage) | currency: 'INR' : 'symbol' : '1.0-0' }}
+          @if (product.discountPercentage) {
+            <span class="product-detail__discount-badge">-{{ product.discountPercentage }}%</span>
+          }
+        </p>
+
+        @if (product.description) {
+          <p class="product-detail__description">{{ product.description }}</p>
+        }
+
+        <dl class="product-detail__specs">
+          <div>
+            <dt>Metal</dt>
+            <dd>{{ metalTypeLabels[product.metalType] }}</dd>
+          </div>
+          <div>
+            <dt>Purity</dt>
+            <dd>{{ purityTypeLabels[product.purity] }}</dd>
+          </div>
+          <div>
+            <dt>Gross Weight</dt>
+            <dd>{{ product.grossWeightGrams }}g</dd>
+          </div>
+          @if (product.size) {
+            <div>
+              <dt>Size</dt>
+              <dd>{{ product.size }}{{ product.sizeUnit ? ' ' + product.sizeUnit : '' }}</dd>
+            </div>
+          }
+          @if (product.isHallmarked) {
+            <div>
+              <dt>Hallmark</dt>
+              <dd>{{ product.hallmarkUniqueId || 'Certified' }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (product.gemstones.length > 0) {
+          <div class="product-detail__gemstones">
+            <h3>Gemstones</h3>
+            @for (gem of product.gemstones; track gem.id) {
+              <p>{{ gem.quantity }}&times; {{ gem.gemstoneType }} ({{ gem.weightCarats }}ct{{ gem.clarityGrade ? ', ' + gem.clarityGrade : '' }})</p>
+            }
+          </div>
+        }
+
+        <p class="product-detail__stock" [class.product-detail__stock--out]="product.quantityAvailable === 0">
+          @if (product.quantityAvailable > 0) {
+            <lucide-icon name="ShieldCheck" [size]="16" [strokeWidth]="1.5" />
+            In Stock
+          } @else {
+            Out of Stock
+          }
+        </p>
+
+        <div class="product-detail__actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="addToCart()"
+            [disabled]="product.quantityAvailable === 0"
+            class="product-detail__add-to-cart"
+          >
+            <lucide-icon name="ShoppingBag" [size]="18" [strokeWidth]="1.5" />
+            Add to Cart
+          </button>
+          <button mat-stroked-button type="button" (click)="addToWishlist()" aria-label="Add to wishlist">
+            <lucide-icon name="Heart" [size]="18" [strokeWidth]="1.5" />
+          </button>
+        </div>
+
+        <p class="product-detail__seller">Sold by <strong>{{ product.sellerBusinessName }}</strong></p>
+      </div>
+    </div>
+  </div>
+}

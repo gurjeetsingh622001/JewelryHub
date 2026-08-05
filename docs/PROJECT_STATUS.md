@@ -1,7 +1,8 @@
 # Project Status
 
 Last updated: **2026-08-05** (Jewelry Union module + Orders shipping/rollup TODOs resolved +
-Angular frontend foundation + design system + Home page). This file, along with the rest of
+Angular frontend foundation + design system + Home page + Login/Register redesign + product
+browsing, the first slice verified against a live backend). This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -59,10 +60,19 @@ any chat history. See the Maintenance Rule at the bottom.
   verified gate, not a bug — found via an actual browser check, not just a build). Uninstalled
   entirely; every usage (`Toast`, `SelectButton`) replaced with a Material equivalent
   (`MatSnackBar`, `MatButtonToggleGroup`).
-- ✔ Verified against a live `ng serve` + headless-Chromium pass (not just a production build):
-  fonts, colors, layout, fragment-scroll nav links, mobile hamburger menu, and zero console errors
-  all confirmed. **Not** yet tested against a live backend (no database available in the
-  environment this was built in).
+- ✔ Login/Register redesigned to the design system via a shared `AuthLayoutComponent`
+  (split-screen photo+quote / centered form), and moved to top-level routes outside the storefront
+  Shell — no Navbar/Footer on auth pages by design. Fixed a real architecture gap in the process:
+  `App` had been rendering Shell unconditionally, so every route got the same chrome regardless of
+  whether it belonged there.
+- ✔ Real product browsing (list + detail), wired to the live Products/Categories APIs — URL-driven
+  filters (search/category/metal/price/sort/pagination) via `rxResource`, a reusable
+  `ProductCardComponent`, image gallery + spec table on the detail page.
+- ✔ **First slice verified against a genuinely live backend + database (2026-08-05).** Registered
+  a seller, ran it through the KYC approval flow as the dev admin, created a category and three
+  real products via the live API, then confirmed the Product List/Detail pages render everything
+  correctly — filters, category dropdown, discount badges, gallery — with zero console errors.
+  Login/Register have not yet been round-tripped live (only Products/Categories were exercised).
 
 ## In Progress
 
@@ -84,11 +94,14 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Customer UI — product browsing, cart, checkout, order history, reviews (Home page itself is
+- ❌ Customer UI — cart, checkout, order history, reviews (Home, auth, and product browsing are
   done — see Completed above)
 - ❌ Seller UI (dashboard, product/inventory management, fulfillment queue, KYC submission)
 - ❌ Admin UI
 - ❌ Union UI
+- ⚠️ Demo data sitting in the live DB from verification (a seller, a "Rings" category, three
+  products) — decide whether to keep as sample data or clean it up; see
+  [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
 (The Angular foundation exists — see above and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) —
 but no feature screens are built on top of it yet.)

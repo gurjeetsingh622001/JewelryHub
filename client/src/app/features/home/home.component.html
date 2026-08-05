@@ -8,7 +8,7 @@
       not just a season.
     </p>
     <div class="hero__actions">
-      <a class="btn btn--primary" href="#featured">
+      <a class="btn btn--primary" routerLink="/products">
         Explore Collection
         <lucide-icon name="ArrowRight" [size]="18" [strokeWidth]="1.5" />
       </a>
@@ -22,8 +22,8 @@
   <h2 class="section-title text-center">Find Your Piece</h2>
 
   <div class="categories__grid">
-    @for (category of categories; track category.id) {
-      <a [id]="category.id" class="category-card" href="#featured">
+    @for (category of categories; track category.name) {
+      <a class="category-card" routerLink="/products" [queryParams]="{ search: category.searchTerm }">
         <div class="category-card__image" [style.background-image]="'url(' + category.image + ')'"></div>
         <h3>{{ category.name }}</h3>
         <p>{{ category.description }}</p>

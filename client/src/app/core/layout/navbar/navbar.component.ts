@@ -7,7 +7,9 @@ import { AuthService } from '../../auth/auth.service';
 
 interface NavLink {
   label: string;
-  fragment: string;
+  route: string[];
+  queryParams?: Record<string, string>;
+  fragment?: string;
 }
 
 @Component({
@@ -24,15 +26,16 @@ export class NavbarComponent {
   protected readonly scrolled = signal(false);
   protected readonly mobileMenuOpen = signal(false);
 
-  // Category browsing pages don't exist yet (Customer UI Phase 13b) — these
-  // scroll to the Home page's own category section in the meantime, so the
-  // nav is fully functional today rather than pointing at dead routes.
+  // Real Category-based filtering needs actual seeded Category data (an
+  // admin/seller concern) — until then, a plain text search against the
+  // product name is a reasonable, honest stand-in for "browse by type"
+  // rather than fabricating category IDs that don't exist in the DB.
   protected readonly navLinks: NavLink[] = [
-    { label: 'Rings', fragment: 'category-rings' },
-    { label: 'Necklaces', fragment: 'category-necklaces' },
-    { label: 'Earrings', fragment: 'category-earrings' },
-    { label: 'Bracelets', fragment: 'category-bracelets' },
-    { label: 'The Atelier', fragment: 'brand-story' },
+    { label: 'Rings', route: ['/products'], queryParams: { search: 'ring' } },
+    { label: 'Necklaces', route: ['/products'], queryParams: { search: 'necklace' } },
+    { label: 'Earrings', route: ['/products'], queryParams: { search: 'earring' } },
+    { label: 'Bracelets', route: ['/products'], queryParams: { search: 'bracelet' } },
+    { label: 'The Atelier', route: ['/'], fragment: 'brand-story' },
   ];
 
   @HostListener('window:scroll')

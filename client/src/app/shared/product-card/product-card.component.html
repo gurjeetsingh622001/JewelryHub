@@ -1,0 +1,41 @@
+<a class="product-card" [routerLink]="['/products', product.id]">
+  <div class="product-card__image-wrap">
+    @if (product.primaryImageUrl) {
+      <div class="product-card__image" [style.background-image]="'url(' + product.primaryImageUrl + ')'"></div>
+    } @else {
+      <div class="product-card__image product-card__image--empty">
+        <lucide-icon name="Gem" [size]="32" [strokeWidth]="1.25" />
+      </div>
+    }
+
+    @if (product.discountPercentage) {
+      <span class="product-card__badge">-{{ product.discountPercentage }}%</span>
+    }
+    @if (!product.inStock) {
+      <span class="product-card__badge product-card__badge--muted">Out of Stock</span>
+    }
+
+    <button type="button" class="product-card__wishlist" (click)="addToWishlist($event)" aria-label="Add to wishlist">
+      <lucide-icon name="Heart" [size]="18" [strokeWidth]="1.5" />
+    </button>
+  </div>
+
+  <div class="product-card__body">
+    <span class="eyebrow">{{ product.categoryName }}</span>
+    <h3>{{ product.name }}</h3>
+
+    @if (product.reviewCount > 0) {
+      <div class="product-card__rating">
+        <lucide-icon name="Star" [size]="14" [strokeWidth]="1.5" />
+        <span>{{ product.averageRating.toFixed(1) }} ({{ product.reviewCount }})</span>
+      </div>
+    }
+
+    <p class="product-card__price">
+      @if (product.discountPercentage) {
+        <span class="product-card__price-original">{{ product.basePrice | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+      }
+      {{ effectivePrice(product.basePrice, product.discountPercentage) | currency: 'INR' : 'symbol' : '1.0-0' }}
+    </p>
+  </div>
+</a>

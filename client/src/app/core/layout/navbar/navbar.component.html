@@ -9,8 +9,8 @@
     </button>
 
     <nav class="navbar__links hidden lg:flex">
-      @for (link of navLinks; track link.fragment) {
-        <a [routerLink]="['/']" [fragment]="link.fragment">{{ link.label }}</a>
+      @for (link of navLinks; track link.label) {
+        <a [routerLink]="link.route" [queryParams]="link.queryParams" [fragment]="link.fragment">{{ link.label }}</a>
       }
     </nav>
 
@@ -57,8 +57,8 @@
   </button>
 
   <nav class="navbar__mobile-links">
-    @for (link of navLinks; track link.fragment) {
-      <a [routerLink]="['/']" [fragment]="link.fragment" (click)="closeMobileMenu()">{{ link.label }}</a>
+    @for (link of navLinks; track link.label) {
+      <a [routerLink]="link.route" [queryParams]="link.queryParams" [fragment]="link.fragment" (click)="closeMobileMenu()">{{ link.label }}</a>
     }
   </nav>
 

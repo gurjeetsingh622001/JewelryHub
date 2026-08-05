@@ -75,21 +75,33 @@ actions too and should follow whichever pattern is chosen here.
 tried and removed, see Phase 13a), JWT auth with dedup'd refresh-and-retry, route guards,
 login/register pages, app shell. See [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
-## Phase 13a — Design System + Home Page (Angular)
+## Phase 13a — Design System + Home Page + Auth Redesign (Angular)
 **Completed (2026-08-05).** Permanent design system (`docs/DESIGN_SYSTEM.md`) — premium editorial
 jewelry-boutique direction, warm ivory/gold/charcoal palette, Playfair Display + Inter type,
 Lucide icons, curated Unsplash imagery. Built Navbar, Footer, and the Home page (hero, category
-grid, featured pieces, brand story) to it. **Also discovered and resolved mid-build**: the
-installed PrimeNG version (22.x) requires a paid PrimeUI license or it shows an "Invalid PrimeUI
-License" banner on every page — found via an actual `ng serve` + headless-Chromium check, not
-just a build pass. PrimeNG was removed; `Toast`/`SelectButton` usages replaced with
-`MatSnackBar`/`MatButtonToggleGroup`. Verified live (fonts, colors, fragment-scroll nav, mobile
-menu, zero console errors) — still not tested against a live backend.
+grid, featured pieces, brand story) to it, then redesigned Login/Register (shared
+`AuthLayoutComponent`, split-screen photo+quote) and moved them outside the storefront Shell — no
+Navbar/Footer on auth pages by design; fixed an architecture gap where `App` had rendered Shell
+unconditionally on every route. **Also discovered and resolved mid-build**: the installed PrimeNG
+version (22.x) requires a paid PrimeUI license or it shows an "Invalid PrimeUI License" banner on
+every page — found via an actual `ng serve` + headless-Chromium check, not just a build pass.
+PrimeNG was removed; `Toast`/`SelectButton` usages replaced with `MatSnackBar`/
+`MatButtonToggleGroup`. Verified live (fonts, colors, fragment-scroll nav, mobile menu, zero
+console errors).
 
-## Phase 13b — Customer UI: Browsing, Cart, Checkout (Angular)
-**Pending.** Product browsing (wired to the real Products/Categories APIs — Home page content is
-currently illustrative), cart, checkout, order history, reviews. Builds directly on the Phase
-13/13a foundation (auth, HTTP layer, routing, design system already in place).
+## Phase 13b — Customer UI: Product Browsing (Angular)
+**Completed (2026-08-05).** Product list (URL-driven search/category/metal/price/sort/pagination
+filters via `rxResource`) and detail pages, wired to the live Products/Categories APIs; a reusable
+`ProductCardComponent`; Navbar/Home category links now navigate to real `/products` routes
+(filtered by a text-search stand-in until real Category-to-type data exists). **First frontend
+slice verified against an actual running backend + database**, not just a build — registered a
+seller, ran the KYC approval flow as the dev admin, created a category and three real products via
+the live API, and confirmed everything renders correctly end-to-end with zero console errors. See
+[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) for the demo data left in the DB from this.
+
+## Phase 13c — Customer UI: Cart, Checkout, Orders, Reviews (Angular)
+**Pending.** Builds directly on Phase 13b (Products API integration, shared components, design
+system already in place). Natural next step now that there are real products to add to a cart.
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Pending.**

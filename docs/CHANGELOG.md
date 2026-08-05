@@ -5,6 +5,40 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-05 — Customer UI: Product Browsing (List + Detail), Verified Live
+
+**Module**: Frontend (`client/`) + demo data in the live DB
+
+**Files modified**:
+- `client/src/app/core/models/paged-result.ts` (new) — mirrors backend `PagedResult<T>`
+- `client/src/app/features/products/models.ts` (new) — `ProductListItem`/`Product`/`Category`,
+  numeric `MetalType`/`PurityType`/`ProductStatus`/`ProductSortOption` enums (no
+  `JsonStringEnumConverter` on the backend, so enums are numeric on the wire, not strings)
+- `client/src/app/features/products/products.service.ts` (new)
+- `client/src/app/features/products/product-list/`, `client/src/app/features/products/product-detail/` (new)
+- `client/src/app/shared/product-card/` (new) — reusable listing card
+- `client/src/app/app.routes.ts` — added `/products` and `/products/:id` under the storefront Shell
+- `client/src/app/core/layout/navbar/navbar.component.ts` — category links now navigate to
+  `/products?search=...` instead of scrolling to a Home anchor
+- `client/src/app/features/home/home.component.ts`, `.html` — hero CTA and category tiles now
+  link to real `/products` routes instead of same-page fragments
+- `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Summary**: Built real product browsing — a filterable, paginated list page and a detail page,
+both wired to the live `GetProductsQuery`/`GetProductByIdQuery`/`GetCategoriesQuery` endpoints,
+using Angular's `rxResource` with the URL's query params as the single source of truth for
+filters (bookmarkable/shareable). This is the first Customer UI slice verified against a
+genuinely running backend + SQL Server database rather than just a production build: registered a
+seller account via the live API, completed the KYC document-review and approval flow as the dev
+admin, created a "Rings" category, and created three real products (with real Unsplash imagery),
+then confirmed the list/detail pages render everything correctly — filters, category dropdown,
+discount badges and strikethrough pricing, image gallery, gemstone/spec details, and the Add to
+Cart/Wishlist "coming soon" snack bars — with zero console errors. That demo data (one seller, one
+category, three products) is now sitting in the live database; a decision on keeping vs. removing
+it is still open.
+
+---
+
 ## 2026-08-05 — Login/Register Redesign + Auth Pages Moved Outside Shell
 
 **Module**: Frontend (`client/`)

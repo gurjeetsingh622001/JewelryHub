@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
 interface CategoryTile {
-  id: string;
   name: string;
   description: string;
   image: string;
+  /** No real Category data is seeded yet — a text search against product name is an honest stand-in for "browse by type" (see NavbarComponent). */
+  searchTerm: string;
 }
 
 interface FeaturedPiece {
@@ -30,28 +31,28 @@ interface FeaturedPiece {
 export class HomeComponent {
   protected readonly categories: CategoryTile[] = [
     {
-      id: 'category-rings',
       name: 'Rings',
       description: 'Solitaires, bands & statement pieces',
       image: 'https://images.unsplash.com/photo-1640724390912-4d92d9a985fe?q=80&w=800&auto=format&fit=crop',
+      searchTerm: 'ring',
     },
     {
-      id: 'category-necklaces',
       name: 'Necklaces',
       description: 'Pendants, chains & bridal sets',
       image: 'https://images.unsplash.com/photo-1744369382892-eb5b6a2fdc6f?q=80&w=800&auto=format&fit=crop',
+      searchTerm: 'necklace',
     },
     {
-      id: 'category-earrings',
       name: 'Earrings',
       description: 'Studs, hoops & drop earrings',
       image: 'https://images.unsplash.com/photo-1605035184674-1ee3fa430b7e?q=80&w=800&auto=format&fit=crop',
+      searchTerm: 'earring',
     },
     {
-      id: 'category-bracelets',
       name: 'Bracelets',
       description: 'Bangles, cuffs & tennis bracelets',
       image: 'https://images.unsplash.com/photo-1731441326417-01b7dbbdc144?q=80&w=800&auto=format&fit=crop',
+      searchTerm: 'bracelet',
     },
   ];
 
