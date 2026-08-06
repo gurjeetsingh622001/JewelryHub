@@ -38,7 +38,11 @@ is the most fully-built module in the codebase.
 **Catalog (Categories + Products)**: full CRUD, category tree via self-referencing
 `ParentCategoryId`, inventory adjustment, product status transitions (admin-gated).
 
-**Cart / Wishlist**: standard add/update/remove/clear/get — nothing missing for v1.
+**Cart / Wishlist**: standard add/update/remove/clear/get. `AddToCartCommand` had a real bug
+(no-tracking/tracking entity mismatch causing a 500 on every call) that went unnoticed until the
+Angular Cart feature exercised it live on 2026-08-06 — fixed, see
+[API_PROGRESS.md](API_PROGRESS.md). A reminder that "builds and passes review" isn't the same as
+"verified against a real database."
 
 **Reviews**: product and seller review listing, review creation (tied to a specific
 `OrderItemId`, so only actual purchasers can review), seller responses, admin moderation.

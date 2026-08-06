@@ -1,8 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-05** (Jewelry Union module + Orders shipping/rollup TODOs resolved +
-Angular frontend foundation + design system + Home page + Login/Register redesign + product
-browsing, the first slice verified against a live backend). This file, along with the rest of
+Last updated: **2026-08-06** (Angular Cart feature, verified live — which surfaced and fixed a
+real backend bug in `AddToCartCommand`). This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -40,6 +39,11 @@ any chat history. See the Maintenance Rule at the bottom.
   site, and a missing ASP.NET Core `FrameworkReference` in Infrastructure — the solution did not
   compile before this pass; it now builds with 0 warnings/errors.
 - ✔ Documentation set (this `docs/` folder)
+- ✔ **Fixed a real `AddToCartCommand` bug (2026-08-06)** — it loaded `Product` via a no-tracking
+  query then attached it to a new `CartItem` saved through the same tracked `DbContext`, so EF
+  Core tried to `INSERT` the already-existing product again (primary-key violation, 500 on every
+  add-to-cart call). Found the moment the Angular Cart feature was tested against a real database
+  — see [API_PROGRESS.md](API_PROGRESS.md). Fixed by loading it `QueryTracking()` instead.
 
 **Frontend**
 
@@ -72,7 +76,16 @@ any chat history. See the Maintenance Rule at the bottom.
   a seller, ran it through the KYC approval flow as the dev admin, created a category and three
   real products via the live API, then confirmed the Product List/Detail pages render everything
   correctly — filters, category dropdown, discount badges, gallery — with zero console errors.
-  Login/Register have not yet been round-tripped live (only Products/Categories were exercised).
+- ✔ Real shopping cart (2026-08-06): `CartService` (signals, auto-refresh on auth change), a live
+  item-count badge in the Navbar, a quantity stepper + real Add to Cart on Product Detail, and a
+  `/cart` page (line items, quantity update, remove, subtotal, empty state). Verified live
+  end-to-end (add → badge → view → update → remove) with a freshly-registered customer — this run
+  is what surfaced the `AddToCartCommand` backend bug above, plus a frontend one (three Lucide
+  icons used in the new UI were never added to the app's icon registry, so they silently failed to
+  render — fixed). Login/Register have not yet been round-tripped live.
+- ✔ Demo data expanded (2026-08-06): a second seller, 3 more categories (Necklaces/Earrings/
+  Bracelets), and 4 more products — 7 products total across 2 sellers and 4 categories. Kept
+  intentionally as ongoing sample data per the user's decision, not cleaned up.
 
 ## In Progress
 
@@ -94,14 +107,11 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Customer UI — cart, checkout, order history, reviews (Home, auth, and product browsing are
+- ❌ Customer UI — checkout, order history, reviews (Home, auth, product browsing, and cart are
   done — see Completed above)
 - ❌ Seller UI (dashboard, product/inventory management, fulfillment queue, KYC submission)
 - ❌ Admin UI
 - ❌ Union UI
-- ⚠️ Demo data sitting in the live DB from verification (a seller, a "Rings" category, three
-  products) — decide whether to keep as sample data or clean it up; see
-  [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
 (The Angular foundation exists — see above and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) —
 but no feature screens are built on top of it yet.)

@@ -185,6 +185,45 @@
   }
 }
 
+.product-detail__quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 0.5rem;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: transparent;
+    color: var(--color-ink);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--color-gold-tint);
+      color: var(--color-gold-deep);
+    }
+
+    &:disabled {
+      color: var(--color-ink-faint);
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    min-width: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+  }
+}
+
 .product-detail__actions {
   display: flex;
   gap: 0.75rem;

@@ -5,6 +5,52 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-06 — Customer UI: Cart (Verified Live, Found + Fixed a Real Backend Bug)
+
+**Module**: Frontend (`client/`) + backend bug fix + demo data in the live DB
+
+**Files modified**:
+- `client/src/app/features/cart/models.ts` (new) — mirrors `CartDto`/`CartItemDto`
+- `client/src/app/features/cart/cart.service.ts` (new) — signal-based state, `effect()`
+  auto-refreshes on auth state change
+- `client/src/app/features/cart/cart-page/` (new) — the `/cart` page
+- `client/src/app/core/layout/navbar/navbar.component.ts`, `.html`, `.scss` — real cart icon +
+  live item-count badge, replacing the "coming soon" placeholder
+- `client/src/app/features/products/product-detail/product-detail.component.ts`, `.html`, `.scss`
+  — quantity stepper + real Add to Cart, replacing the "coming soon" placeholder
+- `client/src/app/app.routes.ts` — added `/cart`, guarded by `roleGuard(['Customer'])`
+- `client/src/app/app.config.ts` — registered the `Minus`/`Plus`/`Trash2` Lucide icons (see bug
+  below)
+- `src/JewelryHub.Application/Features/Cart/Commands/AddToCart/AddToCartCommand.cs` — backend bug
+  fix, see below
+- `docs/API_PROGRESS.md`, `docs/BACKEND_PROGRESS.md`, `docs/FRONTEND_PROGRESS.md`,
+  `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Backend bug found and fixed**: `AddToCartCommand` loaded `Product` via `Query()`
+(`AsNoTracking()`), then attached it to a brand-new `CartItem` saved through the same, separately
+tracked `DbContext`. EF Core didn't recognize the no-tracking `Product` as already existing and
+tried to `INSERT` it again on `SaveChangesAsync`, throwing a primary-key-violation
+`DbUpdateException` (HTTP 500) on **every single add-to-cart call**. This had been marked
+"✅ Complete" in the docs for weeks without ever being exercised against a real database — caught
+the moment the new Angular Cart UI was tested live. Fixed by loading `Product` via
+`QueryTracking()` instead. The other three Cart handlers don't have this issue.
+
+**Frontend bug found and fixed**: the new Cart UI used three Lucide icons (`Minus`, `Plus`,
+`Trash2`) that were never added to `app.config.ts`'s central icon registry — Angular silently
+threw "icon has not been provided by any available icon providers" at runtime instead of failing
+the build. Also required a Vite dev-server cache clear (`.angular/cache`) to pick up the newly
+imported icon chunks.
+
+**Summary**: Built a complete shopping cart — service, Navbar badge, Product Detail quantity
+picker, and a full `/cart` page — then verified the entire flow live with a freshly-registered
+customer (add → badge updates → view cart → update quantity → remove → empty state), catching and
+fixing both bugs above in the process. Also expanded demo data: a second seller ("Ananya Gems &
+Co."), three more categories (Necklaces/Earrings/Bracelets), and four more products (7 total
+across 2 sellers/4 categories) — kept intentionally as ongoing sample data per the user's explicit
+decision, not cleaned up.
+
+---
+
 ## 2026-08-05 — Customer UI: Product Browsing (List + Detail), Verified Live
 
 **Module**: Frontend (`client/`) + demo data in the live DB

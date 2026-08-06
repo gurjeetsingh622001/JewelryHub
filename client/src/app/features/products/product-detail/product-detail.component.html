@@ -110,17 +110,38 @@
           }
         </p>
 
+        @if (product.quantityAvailable > 0) {
+          <div class="product-detail__quantity">
+            <button type="button" (click)="decrementQuantity()" [disabled]="quantity() <= 1" aria-label="Decrease quantity">
+              <lucide-icon name="Minus" [size]="16" [strokeWidth]="1.5" />
+            </button>
+            <span>{{ quantity() }}</span>
+            <button
+              type="button"
+              (click)="incrementQuantity(product.quantityAvailable)"
+              [disabled]="quantity() >= product.quantityAvailable"
+              aria-label="Increase quantity"
+            >
+              <lucide-icon name="Plus" [size]="16" [strokeWidth]="1.5" />
+            </button>
+          </div>
+        }
+
         <div class="product-detail__actions">
           <button
             mat-flat-button
             color="primary"
             type="button"
             (click)="addToCart()"
-            [disabled]="product.quantityAvailable === 0"
+            [disabled]="product.quantityAvailable === 0 || addingToCart()"
             class="product-detail__add-to-cart"
           >
-            <lucide-icon name="ShoppingBag" [size]="18" [strokeWidth]="1.5" />
-            Add to Cart
+            @if (addingToCart()) {
+              <mat-spinner diameter="20" class="inline-block" />
+            } @else {
+              <lucide-icon name="ShoppingBag" [size]="18" [strokeWidth]="1.5" />
+              Add to Cart
+            }
           </button>
           <button mat-stroked-button type="button" (click)="addToWishlist()" aria-label="Add to wishlist">
             <lucide-icon name="Heart" [size]="18" [strokeWidth]="1.5" />

@@ -31,7 +31,11 @@ public class AddToCartCommandHandler : IRequestHandler<AddToCartCommand, CartDto
 
     public async Task<CartDto> Handle(AddToCartCommand request, CancellationToken cancellationToken)
     {
-        var product = await _unitOfWork.Products.Query()
+        // Tracked, not Query()'s AsNoTracking() — this product may end up
+        // attached to a brand-new CartItem below. If it were untracked, EF
+        // Core wouldn't recognize it as already existing when the graph is
+        // saved, and would try to INSERT it again (primary key violation).
+        var product = await _unitOfWork.Products.QueryTracking()
             .Include(p => p.Inventory)
             .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken)
             ?? throw new NotFoundException("Product", request.ProductId);

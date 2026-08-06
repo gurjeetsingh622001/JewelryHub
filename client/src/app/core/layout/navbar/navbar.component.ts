@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
+import { CartService } from '../../../features/cart/cart.service';
 import { AuthService } from '../../auth/auth.service';
 
 interface NavLink {
@@ -20,6 +21,7 @@ interface NavLink {
 })
 export class NavbarComponent {
   protected readonly auth = inject(AuthService);
+  protected readonly cart = inject(CartService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 

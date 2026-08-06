@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from './core/auth/auth.guard';
 import { ShellComponent } from './core/layout/shell.component';
 
 export const routes: Routes = [
@@ -31,6 +32,13 @@ export const routes: Routes = [
         path: 'products/:id',
         loadComponent: () =>
           import('./features/products/product-detail/product-detail.component').then((m) => m.ProductDetailComponent),
+      },
+      {
+        // The backend's CartController is [Authorize(Roles = "Customer")] —
+        // Sellers/Admins have no cart of their own.
+        path: 'cart',
+        canActivate: [roleGuard(['Customer'])],
+        loadComponent: () => import('./features/cart/cart-page/cart-page.component').then((m) => m.CartPageComponent),
       },
       {
         // Public storefront home — a luxury retail site's landing page is

@@ -1,14 +1,16 @@
 # Frontend Progress
 
-## Status: Foundation + Design System + Home + Auth Pages + Product Browsing Complete
+## Status: Foundation + Design System + Home + Auth Pages + Product Browsing + Cart Complete
 
-Last updated 2026-08-05. An Angular workspace exists at `client/` (sibling to `src/`, not part of
+Last updated 2026-08-06. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
-premium design system, the public Home page, redesigned Login/Register pages, and real product
-browsing (list + detail, wired to the live Products/Categories APIs) are built. **This is the
-first slice verified against an actual running backend + database**, not just a build — see
-below. Cart, checkout, order history, reviews, and the Seller/Admin/Union dashboards don't exist
-yet — see [ROADMAP.md](ROADMAP.md) Phase 13b onward.
+premium design system, the public Home page, redesigned Login/Register pages, real product
+browsing (list + detail), and a real shopping cart (add/update/remove, live navbar badge) are
+built — all wired to the live backend APIs and verified against an actual running backend +
+database, not just a build. **Verifying Cart live surfaced a genuine backend bug** (see Known
+Gaps) — worth remembering that "builds and looks right" isn't the same as "actually works."
+Checkout, order history, reviews, and the Seller/Admin/Union dashboards don't exist yet — see
+[ROADMAP.md](ROADMAP.md) Phase 13c onward.
 
 ## Design System
 
@@ -67,9 +69,9 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
 - `core/layout/navbar/` — gold-tint announcement strip (real backend fact: free shipping over
   ₹5,000, matching `FlatRateShippingCalculator`'s threshold) + a sticky main bar (nav links,
   centered serif wordmark, search/wishlist/cart/account icon cluster) that gains a shadow on
-  scroll, plus a charcoal off-canvas mobile panel. Search/wishlist/cart aren't built yet, so they
-  surface an honest "coming soon" `MatSnackBar` instead of a dead link or a route to a page that
-  doesn't exist.
+  scroll, plus a charcoal off-canvas mobile panel. The cart icon is a real `routerLink="/cart"`
+  with a live item-count badge (`CartService.itemCount()`); search/wishlist aren't built yet, so
+  they still surface an honest "coming soon" `MatSnackBar`.
 - `core/layout/footer/` — trust-signal row (shipping/security/craftsmanship/sourcing), brand +
   social links, sitemap columns, a newsletter form (also "coming soon" — no backend endpoint for
   it), copyright bar.
@@ -95,36 +97,49 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   `product-list/` (URL-driven filters via `rxResource` + `toSignal(route.queryParamMap)` — search,
   category, metal type, min/max price, sort, pagination — so the page is bookmarkable/shareable
   and Navbar/Home's category links drive it directly), `product-detail/` (gallery with thumbnail
-  strip, spec table, gemstone list, Add to Cart/Wishlist as honest "coming soon" snack bars since
-  Cart isn't built yet).
+  strip, spec table, gemstone list, a quantity stepper, and a real Add to Cart — Wishlist is still
+  an honest "coming soon" snack bar).
 - `shared/product-card/` — the reusable listing card (discount badge, out-of-stock badge,
   wishlist button, rating, price with strikethrough original), used by the Product List grid and
   intended for any future "you may also like"/search-result surface.
 - `core/models/paged-result.ts` — mirrors the backend's `PagedResult<T>`, generic across every
   paged endpoint.
+- `features/cart/` — `models.ts` (mirrors `CartDto`/`CartItemDto`), `cart.service.ts` (signal-based
+  state; an `effect()` refreshes the cart the moment `AuthService` reports an authenticated
+  Customer, and clears it on logout/role change — the backend's `CartController` is
+  `[Authorize(Roles = "Customer")]`, so Sellers/Admins never have one), `cart-page/` (line items
+  with an inline quantity stepper and remove button, order summary sidebar, empty state, "Proceed
+  to Checkout" as an honest "coming soon" snack bar since Checkout isn't built). The Navbar's cart
+  badge and Product Detail's Add to Cart both read/write through this same service, so every
+  surface stays in sync without manual event wiring.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 
 ## Imagery
 
-7 curated Unsplash photos (free tier, Unsplash License, verified individually — several
+10 curated Unsplash photos total (free tier, Unsplash License, verified individually — several
 candidates were rejected either for being Unsplash+ paid photos or, in one case, for visibly
 showing a real jewelry brand's name ("dinh van") printed on the display risers in the source
-photo, which was replaced before shipping). See `HomeComponent` for the exact CDN URLs in use.
+photo, which was replaced before shipping). 7 are used across Home/Login/Register (see
+`HomeComponent` for the exact CDN URLs); 3 more were sourced for the demo products seeded
+2026-08-06 (gold hoop earrings, diamond stud earrings, a pair of gold bangles).
 
 ## Not Yet Wired Up / Known Gaps
 
-- **Verified against a live backend for the first time (2026-08-05).** The API and a real SQL
-  Server database were both running; verification included registering a seller, completing the
-  KYC approve flow as the dev admin, creating a category, and creating three real products via
-  the live API, then confirming the Product List/Detail pages render them correctly end-to-end
-  (filters, category dropdown, discount badge, gallery, spec table, "coming soon" snack bars) with
-  zero console errors. Login/Register still haven't been round-tripped this way (only Products/
-  Categories were exercised) — worth doing next.
-- **Demo data was created directly against the live database** as part of this verification: a
-  seller account (`seller.demo@jewelryhub.local`), a "Rings" category, and three products
-  ("Aurelia Solitaire Ring", "Meera Diamond Necklace", "Zara Gold Hoop Earrings"). Decide whether
-  to keep this as sample data or remove it before real use.
+- **Verified against a live backend across two passes.** 2026-08-05: registered a seller,
+  completed the KYC approve flow as the dev admin, created a category, and created three real
+  products via the live API, then confirmed Product List/Detail render correctly end-to-end. 
+  2026-08-06: exercised the full Cart flow live (add → navbar badge → view → update quantity →
+  remove → empty state) with a freshly-registered customer — **this run caught a real backend bug**
+  (`AddToCartCommand` threw a 500 on every add, a no-tracking/tracking EF Core mismatch; see
+  [API_PROGRESS.md](API_PROGRESS.md)) and a frontend one (the `Minus`/`Plus`/`Trash2` Lucide icons
+  were used in the new Cart UI but never added to `app.config.ts`'s icon registry, so they
+  silently failed to render). Both fixed and re-verified with zero console errors. Login/Register
+  still haven't been round-tripped live (only Products/Categories/Cart were exercised).
+- **Demo data was created directly against the live database**, across both verification passes:
+  two seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`), four
+  categories (Rings, Necklaces, Earrings, Bracelets), and seven products spread across them. Kept
+  intentionally as ongoing sample data (user's decision, 2026-08-06) rather than cleaned up.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -147,7 +162,8 @@ photo, which was replaced before shipping). See `HomeComponent` for the exact CD
 | Customer UI — Home page | ✅ Complete (illustrative content, real nav) |
 | Customer UI — Login/Register | ✅ Complete |
 | Customer UI — Product browsing (list + detail) | ✅ Complete, verified live |
-| Customer UI — Cart, checkout, orders, reviews | ❌ Missing |
+| Customer UI — Cart | ✅ Complete, verified live |
+| Customer UI — Checkout, order history, reviews | ❌ Missing |
 | Seller UI | ❌ Missing |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |

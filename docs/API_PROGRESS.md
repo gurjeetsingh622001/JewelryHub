@@ -23,10 +23,22 @@ controllers: `api/v1/`.
 | Verb | Route | Handler | Status |
 |---|---|---|---|
 | GET | `` | `GetCartQuery` | ✅ Complete |
-| POST | `items` | `AddToCartCommand` | ✅ Complete |
+| POST | `items` | `AddToCartCommand` | ✅ Complete (fixed 2026-08-06 — see note below) |
 | PUT | `items/{productId}` | `UpdateCartItemQuantityCommand` | ✅ Complete |
 | DELETE | `items/{productId}` | `RemoveFromCartCommand` | ✅ Complete |
 | DELETE | `` | `ClearCartCommand` | ✅ Complete |
+
+**Bug found and fixed (2026-08-06)**: `AddToCartCommand` loaded `Product` via `Query()`
+(`AsNoTracking()`), then attached it to a brand-new `CartItem` saved through the same, separately
+tracked `DbContext`. EF Core didn't recognize the no-tracking `Product` instance as already
+existing and tried to `INSERT` it again on `SaveChangesAsync`, throwing a primary-key-violation
+`DbUpdateException` (500) on **every** add-to-cart call. This had been marked "✅ Complete" for
+weeks without ever actually being exercised against a real database — found the moment the
+Angular Cart feature was tested live. Fixed by loading `Product` via `QueryTracking()` instead, so
+it participates in the same change-tracking graph as the `Cart` it's being attached to. The other
+three Cart handlers (`UpdateCartItemQuantity`, `RemoveFromCart`, `ClearCart`) don't have this
+issue — they only mutate entities already loaded through the same tracked query, never attach a
+separately-queried entity to a new one.
 
 **Missing**: nothing obvious for a v1 cart — this module is complete.
 

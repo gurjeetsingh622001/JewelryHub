@@ -94,6 +94,28 @@
       color: var(--color-gold-deep);
     }
   }
+
+  &__cart {
+    position: relative;
+  }
+}
+
+.navbar__cart-badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-gold);
+  color: var(--color-bg);
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  line-height: 1;
 }
 
 .navbar__scrim {

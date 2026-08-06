@@ -99,9 +99,21 @@ seller, ran the KYC approval flow as the dev admin, created a category and three
 the live API, and confirmed everything renders correctly end-to-end with zero console errors. See
 [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) for the demo data left in the DB from this.
 
-## Phase 13c — Customer UI: Cart, Checkout, Orders, Reviews (Angular)
-**Pending.** Builds directly on Phase 13b (Products API integration, shared components, design
-system already in place). Natural next step now that there are real products to add to a cart.
+## Phase 13c — Customer UI: Cart (Angular)
+**Completed (2026-08-06).** `CartService` (signals, auto-refreshes on auth state change since the
+backend's cart is Customer-only), a live item-count badge in the Navbar, a quantity stepper + real
+Add to Cart on Product Detail, and a `/cart` page (line items, quantity update, remove, subtotal,
+empty state — "Proceed to Checkout" is an honest "coming soon" snack bar since Checkout doesn't
+exist yet). **Verifying this live caught a real backend bug**: `AddToCartCommand` threw a 500 on
+every single add-to-cart call (a no-tracking/tracking EF Core entity mismatch — see
+[API_PROGRESS.md](API_PROGRESS.md)), plus a frontend one (three Lucide icons used in the new UI
+were never registered in `app.config.ts`, so they silently failed to render). Both fixed and
+re-verified end-to-end with zero console errors. Demo data expanded in the process: a second
+seller, 3 more categories, 4 more products (7 total) — kept intentionally as ongoing sample data.
+
+## Phase 13d — Customer UI: Checkout, Order History, Reviews (Angular)
+**Pending.** Builds directly on Phase 13c (Cart is what checkout actually checks out). Natural
+next step — there's now a working cart with real items to convert into an order.
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Pending.**
