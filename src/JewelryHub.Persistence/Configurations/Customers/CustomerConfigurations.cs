@@ -30,5 +30,14 @@ public class CustomerAddressConfiguration : IEntityTypeConfiguration<CustomerAdd
 
         // Speeds up the CGST/SGST vs IGST lookup done at checkout time.
         b.HasIndex(x => x.State);
+
+        // Deliberately NO global HasQueryFilter here, unlike most other
+        // ISoftDelete entities: Order.ShippingAddress/BillingAddress are
+        // live navigations (OrderMapper reads o.ShippingAddress.AddressLine1
+        // directly, not a stored snapshot), and a global filter would null
+        // out that navigation via Include() the moment a customer deletes
+        // an address a past order used — breaking exactly the historical
+        // orders this soft-delete exists to protect. Callers that need
+        // "my active addresses" (GetMyAddressesQuery) filter explicitly.
     }
 }

@@ -1,8 +1,8 @@
 # Database
 
-Generated from `src/JewelryHub.Persistence/Migrations/20260804130625_InitialCreate.cs` and
-`JewelryHubDbContext.cs` — this is the schema as of that migration. **Regenerate this file
-whenever a new migration is added.**
+Generated from `src/JewelryHub.Persistence/Migrations/20260804130625_InitialCreate.cs`,
+`20260806043949_AddCustomerAddressSoftDelete.cs`, and `JewelryHubDbContext.cs` — this is the
+schema as of those migrations. **Regenerate this file whenever a new migration is added.**
 
 ## Conventions
 
@@ -16,10 +16,16 @@ whenever a new migration is added.**
 - **Auditing**: entities inheriting `AuditableEntity` get `CreatedAtUtc`, `CreatedBy`,
   `ModifiedAtUtc`, `ModifiedBy`, stamped automatically by
   `AuditableEntitySaveChangesInterceptor` — never set these by hand.
-- **Soft delete**: entities implementing `ISoftDelete` get an `IsDeleted` column and a global
-  `HasQueryFilter(x => !x.IsDeleted)` — deleted rows never appear in a normal query without an
-  explicit `IgnoreQueryFilters()`. A hard `Remove()` is converted into a soft-delete update by the
-  interceptor.
+- **Soft delete**: entities implementing `ISoftDelete` get an `IsDeleted` column, and *usually* a
+  global `HasQueryFilter(x => !x.IsDeleted)` so deleted rows never appear without an explicit
+  `IgnoreQueryFilters()`. A hard `Remove()` is converted into a soft-delete update by the
+  interceptor regardless of whether a filter exists — that conversion is driven by the
+  `ISoftDelete` interface, not the filter. **Exception**: `CustomerAddresses` deliberately has no
+  global filter, added 2026-08-06 — `Order.ShippingAddress`/`BillingAddress` are live navigations
+  (`OrderMapper` reads `order.ShippingAddress.AddressLine1` directly, not a stored snapshot), so a
+  global filter would null out that navigation via `Include()` the moment a customer deletes an
+  address a past order used. Callers that need "my active addresses"
+  (`GetMyAddressesQuery`) filter `!IsDeleted` explicitly instead.
 - **Indexes**: EF Core auto-creates an index on every FK column; unique indexes are added
   explicitly where uniqueness matters (e.g. `Users.Email`).
 - Totals for this migration: **41 tables**, **61 foreign keys**, **78 indexes**.
@@ -160,3 +166,4 @@ erDiagram
 | Migration | Notes |
 |---|---|
 | `20260804130625_InitialCreate` | First migration — full schema for every entity that existed in Domain at the time. Generated 2026-08-04 as part of the onboarding/documentation pass; no migrations existed in the repo before this. |
+| `20260806043949_AddCustomerAddressSoftDelete` | Adds `IsDeleted`/`DeletedAtUtc`/`DeletedBy` to `CustomerAddresses`, completing the `ISoftDelete` implementation an existing code comment on `OrderConfigurations` had already assumed existed ("CustomerAddress rows are never hard-deleted, only soft-deleted") but the entity never actually had. Needed to safely let a Checkout customer delete a saved address without breaking past orders that reference it. No global query filter added — see the Soft delete convention note above. |

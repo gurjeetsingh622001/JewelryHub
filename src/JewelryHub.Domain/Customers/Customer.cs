@@ -27,8 +27,14 @@ public class Customer : AuditableEntity, ISoftDelete
     public Guid? DeletedBy { get; set; }
 }
 
-/// <summary>Reusable shipping/billing address, since a customer may have several.</summary>
-public class CustomerAddress : AuditableEntity
+/// <summary>
+/// Reusable shipping/billing address, since a customer may have several.
+/// Soft-deleted rather than hard-deleted (see OrderConfigurations' remarks
+/// on Order.ShippingAddress/BillingAddress) so a historical Order can
+/// always resolve the address it was placed with, even after the customer
+/// removes it from their saved list.
+/// </summary>
+public class CustomerAddress : AuditableEntity, ISoftDelete
 {
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; } = default!;
@@ -42,4 +48,8 @@ public class CustomerAddress : AuditableEntity
     public string Country { get; set; } = "India";
     public string? ContactPhone { get; set; }
     public bool IsDefault { get; set; }
+
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAtUtc { get; set; }
+    public Guid? DeletedBy { get; set; }
 }

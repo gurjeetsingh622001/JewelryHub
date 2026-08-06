@@ -1,0 +1,135 @@
+.order-detail__loading {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.order-detail__empty {
+  text-align: center;
+  padding: 6rem 1rem;
+
+  a {
+    color: var(--color-gold-deep);
+    font-weight: 600;
+  }
+}
+
+.order-detail__success {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--color-emerald-tint);
+  color: var(--color-emerald);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: 2rem;
+}
+
+.order-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin-top: 0.35rem;
+  }
+}
+
+.order-detail__date {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  margin-top: 0.5rem;
+}
+
+.order-detail__section {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: var(--text-base);
+    margin-bottom: 1rem;
+  }
+}
+
+.order-detail__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-detail__item-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+}
+
+.order-detail__item-meta {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-top: 0.25rem;
+}
+
+.order-detail__item-total {
+  font-family: var(--font-display);
+  color: var(--color-gold-deep);
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+.order-detail__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.order-detail__address {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+}
+
+.order-detail__summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.order-detail__summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  padding: 0.4rem 0;
+
+  &--total {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: var(--text-lg);
+    color: var(--color-gold-deep);
+    font-family: var(--font-display);
+  }
+}
+
+.order-detail__continue {
+  display: inline-block;
+  color: var(--color-gold-deep);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

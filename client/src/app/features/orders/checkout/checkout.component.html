@@ -1,0 +1,155 @@
+<div class="checkout mx-auto max-w-7xl px-4 py-12 md:px-8">
+  <header class="checkout__header">
+    <p class="eyebrow">Almost There</p>
+    <h1>Checkout</h1>
+  </header>
+
+  @if (!cart() || cart()!.items.length === 0) {
+    <div class="checkout__empty">
+      <p>Your cart is empty.</p>
+      <a routerLink="/products" class="btn btn--primary">Browse Jewelry</a>
+    </div>
+  } @else {
+    <div class="checkout__layout">
+      <div class="checkout__main">
+        <section class="checkout__section">
+          <h2>Shipping Address</h2>
+
+          @if (addressesResource.isLoading()) {
+            <mat-spinner diameter="28" />
+          } @else {
+            @if ((addressesResource.value()?.length ?? 0) > 0) {
+              <div class="checkout__address-list">
+                @for (address of addressesResource.value(); track address.id) {
+                  <button
+                    type="button"
+                    class="address-card"
+                    [class.address-card--selected]="selectedAddressId() === address.id"
+                    (click)="selectAddress(address.id)"
+                  >
+                    <span class="address-card__label"
+                      >{{ address.label }}
+                      @if (address.isDefault) {
+                        <em>(Default)</em>
+                      }
+                    </span>
+                    <span
+                      >{{ address.addressLine1 }}
+                      @if (address.addressLine2) {
+                        , {{ address.addressLine2 }}
+                      }
+                    </span>
+                    <span>{{ address.city }}, {{ address.state }} {{ address.postalCode }}</span>
+                  </button>
+                }
+              </div>
+            }
+
+            @if (!showNewAddressForm()) {
+              <button type="button" class="checkout__add-address" (click)="showNewAddressForm.set(true)">
+                <lucide-icon name="Plus" [size]="16" [strokeWidth]="1.5" />
+                Add a new address
+              </button>
+            }
+          }
+
+          @if (showNewAddressForm()) {
+            <form [formGroup]="newAddressForm" (ngSubmit)="saveNewAddress()" class="checkout__new-address-form">
+              <div class="auth-form__row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Label</mat-label>
+                  <input matInput formControlName="label" placeholder="Home, Office..." />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Contact Phone</mat-label>
+                  <input matInput formControlName="contactPhone" />
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Address Line 1</mat-label>
+                <input matInput formControlName="addressLine1" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Address Line 2 (optional)</mat-label>
+                <input matInput formControlName="addressLine2" />
+              </mat-form-field>
+
+              <div class="auth-form__row auth-form__row--three">
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <input matInput formControlName="city" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>State</mat-label>
+                  <input matInput formControlName="state" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Postal Code</mat-label>
+                  <input matInput formControlName="postalCode" />
+                </mat-form-field>
+              </div>
+
+              <button mat-stroked-button type="submit" [disabled]="savingAddress()">
+                @if (savingAddress()) {
+                  <mat-spinner diameter="18" class="inline-block" />
+                } @else {
+                  Save Address
+                }
+              </button>
+            </form>
+          }
+        </section>
+
+        <section class="checkout__section">
+          <h2>Payment Method</h2>
+          <div class="checkout__payment-options">
+            @for (option of paymentMethodOptions; track option.value) {
+              <button
+                type="button"
+                class="payment-option"
+                [class.payment-option--selected]="paymentMethod() === option.value"
+                (click)="paymentMethod.set(option.value)"
+              >
+                {{ option.label }}
+              </button>
+            }
+          </div>
+        </section>
+      </div>
+
+      <aside class="checkout__summary">
+        <h2>Order Summary</h2>
+
+        @for (item of cart()!.items; track item.id) {
+          <div class="checkout__summary-item">
+            <span>{{ item.productName }} &times; {{ item.quantity }}</span>
+            <span>{{ item.lineTotal | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+          </div>
+        }
+
+        <div class="checkout__summary-row">
+          <span>Subtotal</span>
+          <span>{{ cart()!.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
+        </div>
+        <p class="checkout__summary-note">Shipping and taxes are calculated when your order is placed.</p>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="checkout__place-order"
+          (click)="placeOrder()"
+          [disabled]="placingOrder() || !selectedAddressId()"
+        >
+          @if (placingOrder()) {
+            <mat-spinner diameter="20" class="inline-block" />
+          } @else {
+            Place Order
+          }
+        </button>
+      </aside>
+    </div>
+  }
+</div>

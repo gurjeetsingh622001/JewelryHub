@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from './core/auth/auth.guard';
+import { authGuard, roleGuard } from './core/auth/auth.guard';
 import { ShellComponent } from './core/layout/shell.component';
 
 export const routes: Routes = [
@@ -39,6 +39,19 @@ export const routes: Routes = [
         path: 'cart',
         canActivate: [roleGuard(['Customer'])],
         loadComponent: () => import('./features/cart/cart-page/cart-page.component').then((m) => m.CartPageComponent),
+      },
+      {
+        path: 'checkout',
+        canActivate: [roleGuard(['Customer'])],
+        loadComponent: () => import('./features/orders/checkout/checkout.component').then((m) => m.CheckoutComponent),
+      },
+      {
+        // Just needs to be logged in, not a specific role — ownership is
+        // enforced server-side (GetOrderByIdQuery checks the caller is the
+        // order's Customer, an involved Seller, or Admin).
+        path: 'orders/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/orders/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
       },
       {
         // Public storefront home — a luxury retail site's landing page is

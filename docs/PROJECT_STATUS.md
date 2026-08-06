@@ -1,7 +1,8 @@
 # Project Status
 
-Last updated: **2026-08-06** (Angular Cart feature, verified live — which surfaced and fixed a
-real backend bug in `AddToCartCommand`). This file, along with the rest of
+Last updated: **2026-08-06** (Angular Checkout flow, verified live — which required building a
+whole missing backend feature, `CustomerAddressesController`, before it could even be attempted).
+This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -44,6 +45,12 @@ any chat history. See the Maintenance Rule at the bottom.
   Core tried to `INSERT` the already-existing product again (primary-key violation, 500 on every
   add-to-cart call). Found the moment the Angular Cart feature was tested against a real database
   — see [API_PROGRESS.md](API_PROGRESS.md). Fixed by loading it `QueryTracking()` instead.
+- ✔ **`CustomerAddressesController` added (2026-08-06)** — closed a hard blocker: `CreateOrderCommand`
+  requires a `ShippingAddressId`/`BillingAddressId` that must already exist, but no endpoint
+  anywhere let a customer create one. Full CRUD (create/update/soft-delete/list), plus made
+  `CustomerAddress` actually implement `ISoftDelete` (a comment elsewhere had assumed it already
+  did) — new migration `AddCustomerAddressSoftDelete`. See [API_PROGRESS.md](API_PROGRESS.md) and
+  [DATABASE.md](DATABASE.md) for why this entity deliberately has no global query filter.
 
 **Frontend**
 
@@ -83,9 +90,17 @@ any chat history. See the Maintenance Rule at the bottom.
   is what surfaced the `AddToCartCommand` backend bug above, plus a frontend one (three Lucide
   icons used in the new UI were never added to the app's icon registry, so they silently failed to
   render — fixed). Login/Register have not yet been round-tripped live.
+- ✔ Full checkout flow (2026-08-06): address book (select saved / add new inline), payment method
+  selection, place order, auto-confirm payment (stands in for a real gateway webhook — every
+  method except Cash on Delivery), and an order confirmation/detail page. Verified live end to
+  end with a real customer: add to cart → checkout → order confirmed with the correct items,
+  address, payment, and cost breakdown (including the free-shipping threshold and $0 tax, both
+  correctly reflecting existing, documented backend behavior, not bugs) → cart empties. Zero
+  console errors.
 - ✔ Demo data expanded (2026-08-06): a second seller, 3 more categories (Necklaces/Earrings/
-  Bracelets), and 4 more products — 7 products total across 2 sellers and 4 categories. Kept
-  intentionally as ongoing sample data per the user's decision, not cleaned up.
+  Bracelets), 4 more products (7 total across 2 sellers/4 categories), and — from Checkout
+  verification — a test customer with a saved address and one placed, payment-confirmed order.
+  Kept intentionally as ongoing sample data per the user's decision, not cleaned up.
 
 ## In Progress
 
@@ -107,8 +122,8 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Customer UI — checkout, order history, reviews (Home, auth, product browsing, and cart are
-  done — see Completed above)
+- ❌ Customer UI — order history (a list of past orders; single-order detail already exists) and
+  reviews (Home, auth, product browsing, cart, and checkout are done — see Completed above)
 - ❌ Seller UI (dashboard, product/inventory management, fulfillment queue, KYC submission)
 - ❌ Admin UI
 - ❌ Union UI

@@ -79,10 +79,10 @@
           <span>{{ cart.subtotal | currency: 'INR' : 'symbol' : '1.0-0' }}</span>
         </div>
         <p class="cart-page__summary-note">Shipping and taxes calculated at checkout.</p>
-        <button mat-flat-button color="primary" type="button" class="cart-page__checkout" (click)="checkout()">
+        <a mat-flat-button color="primary" routerLink="/checkout" class="cart-page__checkout">
           Proceed to Checkout
           <lucide-icon name="ArrowRight" [size]="18" [strokeWidth]="1.5" />
-        </button>
+        </a>
         <a routerLink="/products" class="cart-page__continue">Continue Shopping</a>
       </aside>
     </div>

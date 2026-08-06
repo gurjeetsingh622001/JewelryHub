@@ -46,6 +46,7 @@ public interface IUnitOfWork
     IRepository<Domain.Identity.Role> Roles { get; }
     IRepository<Domain.Identity.RefreshToken> RefreshTokens { get; }
     IRepository<Domain.Customers.Customer> Customers { get; }
+    IRepository<Domain.Customers.CustomerAddress> CustomerAddresses { get; }
     IRepository<Domain.Sellers.Seller> Sellers { get; }
     IRepository<Domain.Sellers.SellerDocument> SellerDocuments { get; }
     IRepository<Domain.Catalog.Category> Categories { get; }

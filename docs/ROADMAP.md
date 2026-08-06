@@ -111,9 +111,24 @@ were never registered in `app.config.ts`, so they silently failed to render). Bo
 re-verified end-to-end with zero console errors. Demo data expanded in the process: a second
 seller, 3 more categories, 4 more products (7 total) — kept intentionally as ongoing sample data.
 
-## Phase 13d — Customer UI: Checkout, Order History, Reviews (Angular)
-**Pending.** Builds directly on Phase 13c (Cart is what checkout actually checks out). Natural
-next step — there's now a working cart with real items to convert into an order.
+## Phase 13d — Customer UI: Checkout + Order Confirmation (Angular)
+**Completed (2026-08-06).** Address book (select a saved address or add a new one inline —
+auto-shown if the customer has none yet), payment method selection, place order, and
+auto-confirmation of payment (stands in for a real gateway webhook for every method except Cash
+on Delivery, which is collected on delivery instead), landing on an order confirmation/detail
+page. **Building this surfaced a hard backend blocker before any frontend verification was even
+possible**: `CreateOrderCommand` requires a `ShippingAddressId`/`BillingAddressId`, but no
+endpoint anywhere let a customer create a `CustomerAddress` — checkout was structurally
+impossible. Closed by adding `CustomerAddressesController` (full CRUD) and completing
+`CustomerAddress`'s `ISoftDelete` implementation — see [API_PROGRESS.md](API_PROGRESS.md) and
+[DATABASE.md](DATABASE.md). Verified live end-to-end with a real customer (add to cart → checkout
+→ confirmed order with correct items/address/payment/totals → cart empties), zero console errors.
+
+## Phase 13e — Customer UI: Order History (List) + Reviews (Angular)
+**Pending.** Builds directly on Phase 13d — `GetMyOrdersQuery`/`OrdersService.getMyOrders` already
+exist on both sides, this is "just" a list page linking into the `order-detail` page Phase 13d
+already built. Reviews (`ReviewsController`) is fully built on the backend and has no frontend
+yet either.
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Pending.**

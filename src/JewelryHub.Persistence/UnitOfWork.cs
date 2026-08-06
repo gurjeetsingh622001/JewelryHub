@@ -24,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Role>? _roles;
     private IRepository<RefreshToken>? _refreshTokens;
     private IRepository<Customer>? _customers;
+    private IRepository<CustomerAddress>? _customerAddresses;
     private IRepository<Seller>? _sellers;
     private IRepository<SellerDocument>? _sellerDocuments;
     private IRepository<Category>? _categories;
@@ -61,6 +62,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Role> Roles => _roles ??= new Repository<Role>(_context);
     public IRepository<RefreshToken> RefreshTokens => _refreshTokens ??= new Repository<RefreshToken>(_context);
     public IRepository<Customer> Customers => _customers ??= new Repository<Customer>(_context);
+    public IRepository<CustomerAddress> CustomerAddresses => _customerAddresses ??= new Repository<CustomerAddress>(_context);
     public IRepository<Seller> Sellers => _sellers ??= new Repository<Seller>(_context);
     public IRepository<SellerDocument> SellerDocuments => _sellerDocuments ??= new Repository<SellerDocument>(_context);
     public IRepository<Category> Categories => _categories ??= new Repository<Category>(_context);

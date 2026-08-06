@@ -1,16 +1,19 @@
 # Frontend Progress
 
-## Status: Foundation + Design System + Home + Auth Pages + Product Browsing + Cart Complete
+## Status: Foundation Through Checkout Complete
 
 Last updated 2026-08-06. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
 premium design system, the public Home page, redesigned Login/Register pages, real product
-browsing (list + detail), and a real shopping cart (add/update/remove, live navbar badge) are
-built — all wired to the live backend APIs and verified against an actual running backend +
-database, not just a build. **Verifying Cart live surfaced a genuine backend bug** (see Known
-Gaps) — worth remembering that "builds and looks right" isn't the same as "actually works."
-Checkout, order history, reviews, and the Seller/Admin/Union dashboards don't exist yet — see
-[ROADMAP.md](ROADMAP.md) Phase 13c onward.
+browsing (list + detail), a real shopping cart, and a full checkout flow (address book, payment
+method, place order, confirmation) are built — all wired to the live backend APIs and verified end
+to end against an actual running backend + database, not just a build. **Building Checkout
+surfaced a hard backend blocker** (no way to ever create a `CustomerAddress`, so `CreateOrderCommand`
+could never actually be called) **and verifying Cart live surfaced a real backend bug** — see
+Known Gaps. Worth remembering: "the spec says it's done" and "builds and looks right" are both
+different from "someone actually tried to use it end to end." Order history (a list of past
+orders) and reviews don't exist yet, nor do the Seller/Admin/Union dashboards — see
+[ROADMAP.md](ROADMAP.md) Phase 13d onward.
 
 ## Design System
 
@@ -109,9 +112,24 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   Customer, and clears it on logout/role change — the backend's `CartController` is
   `[Authorize(Roles = "Customer")]`, so Sellers/Admins never have one), `cart-page/` (line items
   with an inline quantity stepper and remove button, order summary sidebar, empty state, "Proceed
-  to Checkout" as an honest "coming soon" snack bar since Checkout isn't built). The Navbar's cart
-  badge and Product Detail's Add to Cart both read/write through this same service, so every
-  surface stays in sync without manual event wiring.
+  to Checkout" now a real `routerLink="/checkout"`). The Navbar's cart badge and Product Detail's
+  Add to Cart both read/write through this same service, so every surface stays in sync without
+  manual event wiring.
+- `features/addresses/` — `models.ts` (mirrors `CustomerAddressDto`), `addresses.service.ts`
+  (`getMyAddresses`/`create` — Update/Delete exist on the backend but have no frontend caller yet,
+  since Checkout only ever needs to list and add).
+- `features/orders/` — `models.ts` (mirrors `OrderDto`/`OrderItemDto`/etc. plus numeric
+  `OrderStatus`/`PaymentMethod`/`PaymentStatus`/`ShipmentStatus` enums, same no-`JsonStringEnumConverter`
+  reasoning as Products), `orders.service.ts` (`checkout`/`getById`/`getMyOrders`/`confirmPayment`/
+  `cancel`), `checkout/` (address picker with an inline "add new address" form that appears
+  automatically when the customer has none yet, a payment-method pill selector, an order summary
+  sidebar, defaults billing to the same address as shipping — no separate billing-address UI in
+  v1), `order-detail/` (doubles as the post-checkout confirmation page via a `?placed=true` query
+  param and as a general order lookup — items, shipping address, payment, cost breakdown, a Cancel
+  Order button shown only when the order's status is actually cancellable). Checkout calls
+  `OrdersService.confirmPayment` immediately after placing an order for every payment method
+  except Cash on Delivery, standing in for a real payment gateway webhook (see
+  `ConfirmPaymentCommand`'s backend remarks) since there's no real gateway to redirect to yet.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 
@@ -126,20 +144,31 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 
 ## Not Yet Wired Up / Known Gaps
 
-- **Verified against a live backend across two passes.** 2026-08-05: registered a seller,
+- **Verified against a live backend across three passes.** 2026-08-05: registered a seller,
   completed the KYC approve flow as the dev admin, created a category, and created three real
-  products via the live API, then confirmed Product List/Detail render correctly end-to-end. 
-  2026-08-06: exercised the full Cart flow live (add → navbar badge → view → update quantity →
-  remove → empty state) with a freshly-registered customer — **this run caught a real backend bug**
-  (`AddToCartCommand` threw a 500 on every add, a no-tracking/tracking EF Core mismatch; see
-  [API_PROGRESS.md](API_PROGRESS.md)) and a frontend one (the `Minus`/`Plus`/`Trash2` Lucide icons
-  were used in the new Cart UI but never added to `app.config.ts`'s icon registry, so they
-  silently failed to render). Both fixed and re-verified with zero console errors. Login/Register
-  still haven't been round-tripped live (only Products/Categories/Cart were exercised).
-- **Demo data was created directly against the live database**, across both verification passes:
-  two seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`), four
-  categories (Rings, Necklaces, Earrings, Bracelets), and seven products spread across them. Kept
-  intentionally as ongoing sample data (user's decision, 2026-08-06) rather than cleaned up.
+  products via the live API, then confirmed Product List/Detail render correctly end-to-end.
+  2026-08-06 (Cart): exercised the full Cart flow live (add → navbar badge → view → update
+  quantity → remove → empty state) with a freshly-registered customer — **this run caught a real
+  backend bug** (`AddToCartCommand` threw a 500 on every add, a no-tracking/tracking EF Core
+  mismatch) and a frontend one (three Lucide icons used in the new UI were never registered).
+  2026-08-06 (Checkout): building Checkout surfaced a **hard backend blocker** before any UI
+  verification was even possible — there was no endpoint anywhere to create a `CustomerAddress`,
+  and `CreateOrderCommand` requires one. Built `CustomerAddressesController` (see
+  [API_PROGRESS.md](API_PROGRESS.md)) to unblock it, then verified the full flow live: add to
+  cart → checkout (auto-selected the customer's default address, defaulted to UPI) → place order
+  → auto-confirm payment → land on the order confirmation page with the correct status, items,
+  address, and cost breakdown → cart empties. Zero console errors throughout. Login/Register
+  still haven't been round-tripped live (only Products/Categories/Cart/Checkout were exercised).
+- **Demo data was created directly against the live database**, across all three verification
+  passes: two seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`),
+  four categories (Rings, Necklaces, Earrings, Bracelets), seven products, and — from Checkout
+  verification — a test customer (`checkout.smoke@example.com`) with one saved address and one
+  placed (and payment-confirmed) order. Kept intentionally as ongoing sample data (user's
+  decision, 2026-08-06) rather than cleaned up.
+- **Checkout simplifications for v1**: billing address always equals shipping address (no separate
+  billing UI); there's no way to edit or delete a saved address from the frontend yet (the backend
+  supports both — see `AddressesService`); "confirm payment" is a client-side stand-in for a real
+  gateway webhook, not an actual payment integration.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -163,7 +192,8 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Customer UI — Login/Register | ✅ Complete |
 | Customer UI — Product browsing (list + detail) | ✅ Complete, verified live |
 | Customer UI — Cart | ✅ Complete, verified live |
-| Customer UI — Checkout, order history, reviews | ❌ Missing |
+| Customer UI — Checkout + order confirmation | ✅ Complete, verified live |
+| Customer UI — Order history (list), reviews | ❌ Missing |
 | Seller UI | ❌ Missing |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |

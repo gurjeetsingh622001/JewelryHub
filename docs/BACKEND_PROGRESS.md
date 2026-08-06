@@ -1,14 +1,15 @@
 # Backend Progress
 
 Per-module completion status across all four layers (Domain → Persistence → Application → API).
-Derived directly from source inspection, last updated 2026-08-04 (Jewelry Union module added) —
-see [API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the Application/API
-columns here.
+Derived directly from source inspection, last updated 2026-08-06 (Customer Addresses added —
+closed a hard blocker for Checkout) — see [API_PROGRESS.md](API_PROGRESS.md) for the
+endpoint-level detail behind the Application/API columns here.
 
 | Module | Domain | Persistence | Application | API | Overall |
 |---|---|---|---|---|---|
 | Auth / Identity | ✅ | ✅ | ✅ (5 use cases) | ✅ (5 endpoints) | **Complete** |
-| Customers | ✅ | ✅ | — (touched via other features only) | — | **Complete for current needs** (no standalone CRUD, none required yet) |
+| Customers — profile | ✅ | ✅ | — (touched via other features only) | — | **Complete for current needs** (no standalone CRUD, none required yet) |
+| Customers — addresses | ✅ | ✅ | ✅ (4 use cases) | ✅ (4 endpoints) | **Complete** (added 2026-08-06 — was a hard blocker for Checkout, see below) |
 | Sellers (incl. KYC) | ✅ | ✅ | ✅ (6 use cases) | ✅ (7 endpoints) | **Complete** |
 | Catalog — Categories | ✅ | ✅ | ✅ (4 use cases) | ✅ (4 endpoints) | **Complete** |
 | Catalog — Products | ✅ | ✅ | ✅ (6 use cases) | ✅ (6 endpoints) | **Complete** |
@@ -43,6 +44,15 @@ is the most fully-built module in the codebase.
 Angular Cart feature exercised it live on 2026-08-06 — fixed, see
 [API_PROGRESS.md](API_PROGRESS.md). A reminder that "builds and passes review" isn't the same as
 "verified against a real database."
+
+**Customer Addresses** (added 2026-08-06): full CRUD via `CustomerAddressesController` —
+create/update/(soft-)delete/list. This didn't exist at all until Checkout was built on the
+frontend and it became clear `CreateOrderCommand`'s required `ShippingAddressId`/
+`BillingAddressId` had **no way to ever be created** — a hard blocker discovered by building the
+feature that needed it, not by reading the spec. Also required making `CustomerAddress` actually
+implement `ISoftDelete` (a comment elsewhere had assumed it already did). See
+[DATABASE.md](DATABASE.md) for why this entity deliberately has no global query filter, unlike
+most other soft-deletable entities.
 
 **Reviews**: product and seller review listing, review creation (tied to a specific
 `OrderItemId`, so only actual purchasers can review), seller responses, admin moderation.

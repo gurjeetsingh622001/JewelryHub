@@ -5,6 +5,58 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-06 — Customer UI: Checkout (Closed a Hard Backend Blocker, Verified Live)
+
+**Module**: Backend (new `CustomerAddresses` feature + migration) + Frontend (`client/`) + demo
+data in the live DB
+
+**Files modified**:
+- `src/JewelryHub.Domain/Customers/Customer.cs` — `CustomerAddress` now implements `ISoftDelete`
+- `src/JewelryHub.Persistence/Configurations/Customers/CustomerConfigurations.cs` — deliberately
+  no global query filter (see summary)
+- `src/JewelryHub.Persistence/Migrations/20260806043949_AddCustomerAddressSoftDelete.cs` (new)
+- `src/JewelryHub.Application/Common/Interfaces/IUnitOfWork.cs`,
+  `src/JewelryHub.Persistence/UnitOfWork.cs` — added `CustomerAddresses` repository
+- `src/JewelryHub.Application/Features/Customers/Addresses/` (new) — `CustomerAddressDto`,
+  `CreateAddressCommand`, `UpdateAddressCommand`, `DeleteAddressCommand`, `GetMyAddressesQuery`
+- `src/JewelryHub.API/Controllers/CustomerAddressesController.cs` (new)
+- `client/src/app/features/addresses/` (new) — `models.ts`, `addresses.service.ts`
+- `client/src/app/features/orders/` (new) — `models.ts`, `orders.service.ts`, `checkout/`,
+  `order-detail/`
+- `client/src/app/app.routes.ts` — added `/checkout` (Customer-guarded) and `/orders/:id`
+  (auth-guarded)
+- `client/src/app/features/cart/cart-page/` — "Proceed to Checkout" is now a real link
+- `docs/API_PROGRESS.md`, `docs/BACKEND_PROGRESS.md`, `docs/DATABASE.md`,
+  `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Backend gap found and closed**: building Checkout revealed that `CreateOrderCommand` requires a
+`ShippingAddressId`/`BillingAddressId` that must already exist as a `CustomerAddress` row — and
+there was **no endpoint anywhere** to create one. Checkout was structurally impossible before this
+pass, not just unbuilt. Closed by adding a full `CustomerAddressesController` (create/update/
+soft-delete/list). Doing this correctly also required making `CustomerAddress` implement
+`ISoftDelete` — a comment on `OrderConfigurations` had already assumed it did ("CustomerAddress
+rows are never hard-deleted, only soft-deleted, so historical orders can always resolve them"),
+but the entity never actually declared the interface. Deliberately did **not** add the usual
+global `HasQueryFilter` for it, though: `Order.ShippingAddress`/`BillingAddress` are live
+navigations (`OrderMapper` reads `order.ShippingAddress.AddressLine1` directly, not a stored
+snapshot), so a global filter would have nulled out that navigation via `Include()` the moment a
+customer deleted an address a past order used — breaking exactly the historical-order guarantee
+the comment described. `GetMyAddressesQuery` filters `!IsDeleted` explicitly instead.
+
+**Summary**: Built the full Checkout experience — an address book (select a saved address or add
+one inline, auto-shown when the customer has none), payment method selection, place order, and
+automatic payment confirmation (standing in for a real gateway webhook, for every method except
+Cash on Delivery) — landing on an order confirmation/detail page that doubles as a general order
+lookup. Verified live end-to-end with a real customer: registered, added a saved address via the
+API, added a product to cart through the UI, checked out (address and payment method both
+defaulted sensibly), landed on a correct confirmation page (right items, address, payment, and
+cost breakdown — including ₹0 tax and free shipping, both correct given no `TaxRate` rows are
+seeded and the order exceeded the free-shipping threshold, not bugs), and confirmed the cart
+emptied afterward. Zero console errors. Order history (a list of past orders) and Reviews are the
+remaining pieces of Customer UI.
+
+---
+
 ## 2026-08-06 — Customer UI: Cart (Verified Live, Found + Fixed a Real Backend Bug)
 
 **Module**: Frontend (`client/`) + backend bug fix + demo data in the live DB

@@ -1,7 +1,7 @@
 # API Progress
 
-Ground truth as of 2026-08-04 (Jewelry Union module added): 12 controllers, 77 endpoints, all
-backed by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every
+Ground truth as of 2026-08-06 (`CustomerAddressesController` added): 13 controllers, 81 endpoints,
+all backed by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every
 Application handler has exactly one controller action calling it) and zero dangling references
 (every controller action points at a command/query that exists). Route prefix for all
 controllers: `api/v1/`.
@@ -41,6 +41,26 @@ issue — they only mutate entities already loaded through the same tracked quer
 separately-queried entity to a new one.
 
 **Missing**: nothing obvious for a v1 cart — this module is complete.
+
+## CustomerAddressesController — `api/v1/customer-addresses` (Customer) — added 2026-08-06
+
+| Verb | Route | Handler | Status |
+|---|---|---|---|
+| GET | `` | `GetMyAddressesQuery` | ✅ Complete |
+| POST | `` | `CreateAddressCommand` | ✅ Complete (first address is always forced default) |
+| PUT | `{id}` | `UpdateAddressCommand` | ✅ Complete |
+| DELETE | `{id}` | `DeleteAddressCommand` | ✅ Complete (soft-delete — see [DATABASE.md](DATABASE.md)) |
+
+**Gap found and closed (2026-08-06)**: this controller didn't exist at all until Checkout was
+built. `CreateOrderCommand` requires a `ShippingAddressId`/`BillingAddressId` that must already
+exist, but there was **no endpoint anywhere** to create a `CustomerAddress` — Checkout was
+literally impossible to complete before this. Completing it also required making
+`CustomerAddress` implement `ISoftDelete` (a comment on `OrderConfigurations` had already assumed
+it did, but the entity never actually declared the interface) — see the migration note in
+[DATABASE.md](DATABASE.md).
+
+**Missing**: no "set as default" endpoint separate from `Update` (toggle `IsDefault` via a full
+update instead); no address-book management UI beyond what Checkout itself offers.
 
 ## CategoriesController — `api/v1/categories`
 
@@ -195,8 +215,10 @@ expected to already point at an uploaded file).
 - **TaxController** — `TaxRate` is a real entity, applied during checkout via
   `Common/Services/GstTaxCalculator`, but there's no CRUD endpoint to manage tax rates — they can
   only be seeded or edited directly in the database today.
-- **CustomersController** — `Customer` has no standalone CRUD surface; it's only touched
-  indirectly through Cart/Orders/Reviews/Wishlist via `ICurrentUserService`.
+- **CustomersController** — `Customer` itself (profile fields like `DateOfBirth`,
+  `ProfileImageUrl`) still has no standalone CRUD surface; it's only touched indirectly through
+  Cart/Orders/Reviews/Wishlist via `ICurrentUserService`. Its `Addresses` sub-resource *does* now
+  have a full surface — see `CustomerAddressesController` above.
 - **Users/Roles management** — no endpoint to list/manage users or assign roles beyond what
   happens automatically at registration.
 
