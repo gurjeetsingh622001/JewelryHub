@@ -54,6 +54,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/orders/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
       },
       {
+        path: 'seller',
+        canActivate: [roleGuard(['Seller'])],
+        children: [
+          { path: '', loadComponent: () => import('./features/seller/dashboard/seller-dashboard.component').then((m) => m.SellerDashboardComponent) },
+          { path: 'kyc', loadComponent: () => import('./features/seller/kyc/seller-kyc.component').then((m) => m.SellerKycComponent) },
+          { path: 'products', loadComponent: () => import('./features/seller/products/seller-products.component').then((m) => m.SellerProductsComponent) },
+          {
+            path: 'products/new',
+            loadComponent: () => import('./features/seller/products/product-form/seller-product-form.component').then((m) => m.SellerProductFormComponent),
+          },
+          {
+            path: 'products/:id/edit',
+            loadComponent: () => import('./features/seller/products/product-form/seller-product-form.component').then((m) => m.SellerProductFormComponent),
+          },
+          { path: 'orders', loadComponent: () => import('./features/seller/orders/seller-orders.component').then((m) => m.SellerOrdersComponent) },
+        ],
+      },
+      {
         // Public storefront home — a luxury retail site's landing page is
         // browsable without an account, same as Cartier/Tiffany/Blue Nile.
         // authGuard is reserved for account-specific pages (orders, wishlist).

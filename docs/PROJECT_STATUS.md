@@ -1,7 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-06** (Angular Checkout flow, verified live — which required building a
-whole missing backend feature, `CustomerAddressesController`, before it could even be attempted).
+Last updated: **2026-08-06** (Angular Seller module — Dashboard, KYC, Product management, Order
+Fulfillment — verified live, which surfaced and fixed a real `UpdateOrderItemStatusCommand` bug).
 This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
@@ -51,6 +51,13 @@ any chat history. See the Maintenance Rule at the bottom.
   `CustomerAddress` actually implement `ISoftDelete` (a comment elsewhere had assumed it already
   did) — new migration `AddCustomerAddressSoftDelete`. See [API_PROGRESS.md](API_PROGRESS.md) and
   [DATABASE.md](DATABASE.md) for why this entity deliberately has no global query filter.
+- ✔ **Fixed a real `UpdateOrderItemStatusCommand` bug (2026-08-06)** — marking an order item
+  `Shipped` threw a `DbUpdateConcurrencyException` (500) on every call, because the new `Shipment`
+  was attached to the tracked `OrderItem` only via navigation assignment and EF Core's change
+  tracker mistook its client-generated `Guid` key for an existing entity, issuing an `UPDATE`
+  instead of an `INSERT`. Found live while building the Angular Seller Order Fulfillment queue —
+  see [API_PROGRESS.md](API_PROGRESS.md). Fixed by adding a `Shipments` repository to
+  `IUnitOfWork` and calling `AddAsync` explicitly.
 
 **Frontend**
 
@@ -101,6 +108,20 @@ any chat history. See the Maintenance Rule at the bottom.
   Bracelets), 4 more products (7 total across 2 sellers/4 categories), and — from Checkout
   verification — a test customer with a saved address and one placed, payment-confirmed order.
   Kept intentionally as ongoing sample data per the user's decision, not cleaned up.
+- ✔ Seller module (2026-08-06): a `/seller` area (role-guarded) with a Dashboard (KYC status
+  banner, revenue/orders/rating stats, quick links), a KYC page (submit a document, see status of
+  previously submitted ones), My Products (list + a combined create/edit form covering pricing,
+  metal/purity/weight, hallmark, and a plain inventory-adjust control), and an Order Fulfillment
+  queue (status filter, advance Confirmed → Processing → Shipped → Delivered, with an inline
+  Carrier/Tracking Number form for the Shipped step since the backend requires both). Verified
+  live end-to-end with a real seller account: registered → KYC submitted → admin-approved → listed
+  a product → a test customer bought it → advanced it through every fulfillment status → the
+  Dashboard's revenue/orders-fulfilled stats updated correctly. This run is what surfaced the
+  `UpdateOrderItemStatusCommand` backend bug above — fixed and re-verified with zero console
+  errors. Also fixed two smaller frontend bugs found in the process: a `GET /products/null` request
+  on the "new product" route (an `rxResource` `null`-vs-`undefined` params pitfall) and the KYC
+  form showing every required field as invalid immediately after a successful submit (`form.reset()`
+  doesn't clear `FormGroupDirective`'s submitted flag — fixed via `resetForm()`).
 
 ## In Progress
 
@@ -124,9 +145,11 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 - ❌ Customer UI — order history (a list of past orders; single-order detail already exists) and
   reviews (Home, auth, product browsing, cart, and checkout are done — see Completed above)
-- ❌ Seller UI (dashboard, product/inventory management, fulfillment queue, KYC submission)
 - ❌ Admin UI
 - ❌ Union UI
+
+(Seller UI — dashboard, product/inventory management, fulfillment queue, KYC submission — is now
+done, see Completed above.)
 
 (The Angular foundation exists — see above and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) —
 but no feature screens are built on top of it yet.)

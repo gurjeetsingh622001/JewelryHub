@@ -1,19 +1,20 @@
 # Frontend Progress
 
-## Status: Foundation Through Checkout Complete
+## Status: Foundation Through Seller Module Complete
 
 Last updated 2026-08-06. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
 premium design system, the public Home page, redesigned Login/Register pages, real product
-browsing (list + detail), a real shopping cart, and a full checkout flow (address book, payment
-method, place order, confirmation) are built — all wired to the live backend APIs and verified end
-to end against an actual running backend + database, not just a build. **Building Checkout
-surfaced a hard backend blocker** (no way to ever create a `CustomerAddress`, so `CreateOrderCommand`
-could never actually be called) **and verifying Cart live surfaced a real backend bug** — see
-Known Gaps. Worth remembering: "the spec says it's done" and "builds and looks right" are both
-different from "someone actually tried to use it end to end." Order history (a list of past
-orders) and reviews don't exist yet, nor do the Seller/Admin/Union dashboards — see
-[ROADMAP.md](ROADMAP.md) Phase 13d onward.
+browsing (list + detail), a real shopping cart, a full checkout flow (address book, payment
+method, place order, confirmation), and a full Seller module (dashboard, KYC, product/inventory
+management, order fulfillment) are built — all wired to the live backend APIs and verified end to
+end against an actual running backend + database, not just a build. **Building Checkout surfaced a
+hard backend blocker** (no way to ever create a `CustomerAddress`), **verifying Cart live surfaced
+a real backend bug**, and **verifying the Seller Order Fulfillment queue live surfaced another
+real backend bug** (marking an item Shipped always 500'd) — see Known Gaps. Worth remembering:
+"the spec says it's done" and "builds and looks right" are both different from "someone actually
+tried to use it end to end." Order history (a list of past orders) and reviews don't exist yet for
+Customers, nor do the Admin/Union dashboards — see [ROADMAP.md](ROADMAP.md) Phase 13e onward.
 
 ## Design System
 
@@ -130,6 +131,27 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   `OrdersService.confirmPayment` immediately after placing an order for every payment method
   except Cash on Delivery, standing in for a real payment gateway webhook (see
   `ConfirmPaymentCommand`'s backend remarks) since there's no real gateway to redirect to yet.
+- `features/seller/` — `models.ts` (mirrors `SellerDto`/`SellerDocumentDto`/`SellerOrderItemDto`
+  plus numeric `SellerVerificationStatus`/`DocumentVerificationStatus` enums), `seller.service.ts`
+  (`getMyProfile`/`submitDocument`/`createProduct`/`updateProduct`/`adjustInventory`/
+  `getOrderQueue`/`updateItemStatus`). Routed under `/seller` (`roleGuard(['Seller'])`):
+  - `dashboard/` — KYC status badge + banner (links to the KYC page when not yet Approved),
+    revenue/orders-fulfilled/rating stat cards, quick-link cards to Products/Orders/KYC.
+  - `kyc/` — a document-type + URL submission form and a list of previously submitted documents
+    with their review status.
+  - `products/` — a list of the seller's own products (via `ProductsService.getProducts({ sellerId
+    })`, since `CreateProductCommand` always sets `Status = Active` there's no draft/pending state
+    to filter around yet) with an "Add Product" entry point; `product-form/` is one component
+    serving both `/seller/products/new` (full `CreateProductCommand` field set — category, SKU,
+    metal/purity/weights/pricing, hallmark, one optional image URL; gemstones aren't exposed in v1)
+    and `/seller/products/:id/edit` (the `UpdateProductCommand` subset, plus a plain quantity-delta
+    inventory adjuster calling `AdjustInventoryCommand` directly, no dedicated stock-history view).
+  - `orders/` (`seller-orders.component`) — the fulfillment queue (`GetSellerOrderItemsQuery`),
+    a status filter, and one action button per row that advances the item to the next status. The
+    Shipped transition opens an inline Carrier + Tracking Number form instead of firing
+    immediately, since the backend's `UpdateOrderItemStatusCommand` validator requires both fields
+    only for that transition.
+  - Navbar's account menu gains a "Seller Dashboard" link when `auth.hasRole('Seller')`.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 
@@ -159,16 +181,36 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   → auto-confirm payment → land on the order confirmation page with the correct status, items,
   address, and cost breakdown → cart empties. Zero console errors throughout. Login/Register
   still haven't been round-tripped live (only Products/Categories/Cart/Checkout were exercised).
-- **Demo data was created directly against the live database**, across all three verification
-  passes: two seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`),
-  four categories (Rings, Necklaces, Earrings, Bracelets), seven products, and — from Checkout
-  verification — a test customer (`checkout.smoke@example.com`) with one saved address and one
-  placed (and payment-confirmed) order. Kept intentionally as ongoing sample data (user's
-  decision, 2026-08-06) rather than cleaned up.
+  2026-08-06 (Seller module): registered a fresh seller account, submitted a KYC document,
+  approved both the document and the seller as the dev admin, listed a product, had a separately
+  registered test customer buy and pay for it, then advanced the order through every fulfillment
+  status (Processing → Shipped → Delivered) as the seller — the Dashboard's revenue/orders-
+  fulfilled stats updated correctly afterward. **This run caught a real backend bug**
+  (`UpdateOrderItemStatusCommand` 500'd on the Shipped transition — see
+  [API_PROGRESS.md](API_PROGRESS.md)) and two frontend ones: a `GET /products/null` request fired
+  on the "new product" route because `rxResource`'s `params` only skips its loader on `undefined`,
+  not `null` (the route's id param is legitimately `null` in create mode); and the KYC form showed
+  every required field as invalid immediately after a successful submit, because `form.reset()`
+  clears values but not `FormGroupDirective`'s internal "submitted" flag — Material's default
+  `ErrorStateMatcher` then treats every empty required field as touched-and-invalid. Fixed via
+  `resetForm()` on the directive instead of `form.reset()` on the `FormGroup`.
+- **Demo data was created directly against the live database**, across four verification passes:
+  three seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`,
+  `seller-test-verify@example.com`), four categories (Rings, Necklaces, Earrings, Bracelets), eight
+  products, a test customer (`checkout.smoke@example.com`) with one saved address and one placed
+  order, and a second test customer (`customer-order-verify@example.com`) whose order was carried
+  all the way through Delivered during Seller module verification. Kept intentionally as ongoing
+  sample data (user's decision, 2026-08-06) rather than cleaned up.
 - **Checkout simplifications for v1**: billing address always equals shipping address (no separate
   billing UI); there's no way to edit or delete a saved address from the frontend yet (the backend
   supports both — see `AddressesService`); "confirm payment" is a client-side stand-in for a real
   gateway webhook, not an actual payment integration.
+- **Seller module simplifications for v1**: product creation supports one image URL and no
+  gemstones (the backend's `CreateProductCommand` supports full gemstone/multi-image lists);
+  inventory adjustment is a single quantity-delta input with no adjustment history view; My
+  Products has no pagination (fine at today's per-seller product counts, would need one before a
+  seller has more than ~100 listings); there's no seller-facing analytics/reporting beyond the
+  three Dashboard stat cards.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -194,7 +236,7 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Customer UI — Cart | ✅ Complete, verified live |
 | Customer UI — Checkout + order confirmation | ✅ Complete, verified live |
 | Customer UI — Order history (list), reviews | ❌ Missing |
-| Seller UI | ❌ Missing |
+| Seller UI — Dashboard, KYC, Products, Order Fulfillment | ✅ Complete, verified live |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |
 

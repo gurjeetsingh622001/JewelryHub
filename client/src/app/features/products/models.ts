@@ -32,6 +32,35 @@ export enum ProductStatus {
   Archived = 5,
 }
 
+/** High-level jewelry category grouping, separate from the seller-managed Category tree. */
+export enum ProductType {
+  Ring = 0,
+  Necklace = 1,
+  Earring = 2,
+  Bracelet = 3,
+  Bangle = 4,
+  Pendant = 5,
+  Chain = 6,
+  Anklet = 7,
+  Nosepin = 8,
+  Coin = 9,
+  Other = 10,
+}
+
+export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
+  [ProductType.Ring]: 'Ring',
+  [ProductType.Necklace]: 'Necklace',
+  [ProductType.Earring]: 'Earring',
+  [ProductType.Bracelet]: 'Bracelet',
+  [ProductType.Bangle]: 'Bangle',
+  [ProductType.Pendant]: 'Pendant',
+  [ProductType.Chain]: 'Chain',
+  [ProductType.Anklet]: 'Anklet',
+  [ProductType.Nosepin]: 'Nosepin',
+  [ProductType.Coin]: 'Coin',
+  [ProductType.Other]: 'Other',
+};
+
 // Mirrors GetProductsQuery's ProductSortOption.
 export enum ProductSortOption {
   Newest = 0,

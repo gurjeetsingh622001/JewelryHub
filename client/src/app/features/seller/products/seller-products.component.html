@@ -1,0 +1,51 @@
+<div class="seller-products mx-auto max-w-6xl px-4 py-12 md:px-8">
+  <header class="seller-products__header">
+    <div>
+      <p class="eyebrow">Seller Dashboard</p>
+      <h1>My Products</h1>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/seller/products/new">
+      <lucide-icon name="PackagePlus" [size]="18" [strokeWidth]="1.5" />
+      Add Product
+    </a>
+  </header>
+
+  @if (productsResource.isLoading()) {
+    <div class="seller-products__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if (productsResource.error()) {
+    <div class="seller-products__empty">
+      <p>We couldn't load your products.</p>
+    </div>
+  } @else if ((productsResource.value()?.items?.length ?? 0) === 0) {
+    <div class="seller-products__empty">
+      <lucide-icon name="Package" [size]="40" [strokeWidth]="1" />
+      <p>You haven't listed any products yet.</p>
+      <a mat-flat-button color="primary" routerLink="/seller/products/new">List Your First Product</a>
+    </div>
+  } @else {
+    <div class="seller-products__list">
+      @for (product of productsResource.value()!.items; track product.id) {
+        <div class="seller-products__row">
+          <div class="seller-products__thumb" [style.background-image]="product.primaryImageUrl ? 'url(' + product.primaryImageUrl + ')' : null">
+            @if (!product.primaryImageUrl) {
+              <lucide-icon name="Gem" [size]="24" [strokeWidth]="1" />
+            }
+          </div>
+          <div class="seller-products__info">
+            <p class="seller-products__name">{{ product.name }}</p>
+            <p class="seller-products__meta">{{ product.categoryName }}</p>
+          </div>
+          <p class="seller-products__price">{{ product.basePrice | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+          <span class="seller-products__stock" [class.seller-products__stock--out]="!product.inStock">
+            {{ product.inStock ? 'In Stock' : 'Out of Stock' }}
+          </span>
+          <a [routerLink]="['/seller/products', product.id, 'edit']" class="seller-products__edit" aria-label="Edit product">
+            <lucide-icon name="Pencil" [size]="18" [strokeWidth]="1.5" />
+          </a>
+        </div>
+      }
+    </div>
+  }
+</div>

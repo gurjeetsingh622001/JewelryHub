@@ -1,0 +1,86 @@
+@if (profileResource.isLoading()) {
+  <div class="seller-dashboard__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (profileResource.error()) {
+  <div class="seller-dashboard__empty">
+    <p>We couldn't load your seller profile.</p>
+  </div>
+} @else {
+  @let profile = profileResource.value()!;
+  <div class="seller-dashboard mx-auto max-w-6xl px-4 py-12 md:px-8">
+    <header class="seller-dashboard__header">
+      <div>
+        <p class="eyebrow">Seller Dashboard</p>
+        <h1>{{ profile.businessName }}</h1>
+      </div>
+      <span class="seller-dashboard__status" [class]="'seller-dashboard__status--' + profile.verificationStatus">
+        {{ statusLabels[profile.verificationStatus] }}
+      </span>
+    </header>
+
+    @if (!isApproved(profile.verificationStatus)) {
+      <div class="seller-dashboard__banner">
+        <lucide-icon name="AlertCircle" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          @if (profile.verificationStatus === VerificationStatus.Rejected) {
+            <p><strong>Your seller application was rejected.</strong> {{ profile.rejectionReason }}</p>
+          } @else {
+            <p><strong>Your account is awaiting admin approval.</strong> You can't list products until your KYC documents are verified.</p>
+          }
+          <a routerLink="/seller/kyc">Manage KYC Documents &rarr;</a>
+        </div>
+      </div>
+    }
+
+    <div class="seller-dashboard__stats">
+      <div class="seller-dashboard__stat">
+        <lucide-icon name="TrendingUp" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="seller-dashboard__stat-value">{{ profile.totalRevenue | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+          <p class="seller-dashboard__stat-label">Total Revenue</p>
+        </div>
+      </div>
+      <div class="seller-dashboard__stat">
+        <lucide-icon name="Truck" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="seller-dashboard__stat-value">{{ profile.totalOrdersFulfilled }}</p>
+          <p class="seller-dashboard__stat-label">Orders Fulfilled</p>
+        </div>
+      </div>
+      <div class="seller-dashboard__stat">
+        <lucide-icon name="Star" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="seller-dashboard__stat-value">
+            {{ profile.reviewCount > 0 ? profile.averageRating.toFixed(1) : '—' }}
+          </p>
+          <p class="seller-dashboard__stat-label">{{ profile.reviewCount }} review{{ profile.reviewCount === 1 ? '' : 's' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="seller-dashboard__actions">
+      <a routerLink="/seller/products" class="seller-dashboard__action-card">
+        <lucide-icon name="Package" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>My Products</h3>
+          <p>Manage your listings and inventory.</p>
+        </div>
+      </a>
+      <a routerLink="/seller/orders" class="seller-dashboard__action-card">
+        <lucide-icon name="ClipboardList" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>Order Queue</h3>
+          <p>Fulfill orders and update shipment status.</p>
+        </div>
+      </a>
+      <a routerLink="/seller/kyc" class="seller-dashboard__action-card">
+        <lucide-icon name="FileCheck" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>KYC Documents</h3>
+          <p>Submit or review your verification documents.</p>
+        </div>
+      </a>
+    </div>
+  </div>
+}

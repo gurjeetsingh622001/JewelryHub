@@ -131,7 +131,17 @@ already built. Reviews (`ReviewsController`) is fully built on the backend and h
 yet either.
 
 ## Phase 14 — Seller Dashboard (Angular)
-**Pending.**
+**Completed (2026-08-06).** `/seller` area (`roleGuard(['Seller'])`) with a Dashboard (KYC status,
+revenue/orders-fulfilled/rating stats, quick links), KYC document submission + status list, My
+Products (list + a combined create/edit form, plus a plain quantity-delta inventory adjuster), and
+an Order Fulfillment queue (status filter, advance Confirmed → Processing → Shipped → Delivered,
+Carrier/Tracking Number collected inline for the Shipped step). Verified live end-to-end: a real
+seller account registered → KYC submitted → admin-approved → product listed → bought by a test
+customer → fulfilled through every status → Dashboard stats updated correctly, zero console
+errors. **Surfaced and fixed a real backend bug** (`UpdateOrderItemStatusCommand` 500 on marking an
+item Shipped) and two frontend bugs (a stray `GET /products/null` request on the "new product"
+route; the KYC form showing false validation errors right after a successful submit) — see
+[API_PROGRESS.md](API_PROGRESS.md) and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
 ## Phase 15 — Admin Dashboard (Angular)
 **Pending.** Depends on Phase 12's decision about whether a dedicated Admin API exists to back it.

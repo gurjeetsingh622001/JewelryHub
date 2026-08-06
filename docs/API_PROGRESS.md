@@ -1,10 +1,10 @@
 # API Progress
 
-Ground truth as of 2026-08-06 (`CustomerAddressesController` added): 13 controllers, 81 endpoints,
-all backed by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every
-Application handler has exactly one controller action calling it) and zero dangling references
-(every controller action points at a command/query that exists). Route prefix for all
-controllers: `api/v1/`.
+Ground truth as of 2026-08-06 (a real `UpdateOrderItemStatusCommand` bug fixed while building the
+Angular Seller module): 13 controllers, 81 endpoints, all backed by a real MediatR handler with
+EF-Core-backed logic. Zero orphaned commands (every Application handler has exactly one controller
+action calling it) and zero dangling references (every controller action points at a command/query
+that exists). Route prefix for all controllers: `api/v1/`.
 
 ## AuthController — `api/v1/auth` (class-level `[AllowAnonymous]`)
 
@@ -94,6 +94,20 @@ polling API and the live push never disagree.
 | POST | `{id}/payments/{paymentId}/confirm` | Customer | `ConfirmPaymentCommand` | ⚠️ Complete logic, but stands in for a real gateway webhook — nothing calls it from an actual payment provider |
 | GET | `seller/queue` | Seller | `GetSellerOrderItemsQuery` | ✅ Complete |
 | PATCH | `items/{orderItemId}/status` | Seller, Admin | `UpdateOrderItemStatusCommand` | ✅ Complete (rolls the parent Order to Delivered once every item is; updates the fulfilling seller's revenue/count rollups) |
+
+**Bug found and fixed (2026-08-06)**: marking an item `Shipped` threw a `DbUpdateConcurrencyException`
+(500, "expected to affect 1 row(s), but actually affected 0") on every call. The handler created the
+new `Shipment` via `item.Shipment ??= new Shipment { OrderItemId = item.Id }` and relied on EF Core's
+navigation-fixup to detect it as `Added` — but `Shipment.Id` (like every `BaseEntity`) is a
+client-generated `Guid` set in a property initializer *before* EF ever sees the instance, so the
+change tracker had no default-value signal to tell "brand new, client-set key" apart from "existing,
+unchanged-key entity," and issued an `UPDATE ... WHERE Id = @p` instead of an `INSERT` — which
+naturally matched zero rows. Confirmed via the actual generated SQL (`sys.dm_exec_query_stats`), not
+guessed. Fixed by adding an `IRepository<Shipment> Shipments` to `IUnitOfWork`/`UnitOfWork` (same
+pattern as every other aggregate) and routing the new `Shipment` through
+`_unitOfWork.Shipments.AddAsync(...)` explicitly instead of relying on graph fixup alone. Found while
+building and live-testing the Angular Seller Order Fulfillment queue — see
+[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
 **Shipping** (added 2026-08-04): `IShippingCalculator` (`Application/Common/Interfaces/ITaxCalculator.cs`)
 + `FlatRateShippingCalculator` — flat base rate, an inter-state surcharge, and a per-gram

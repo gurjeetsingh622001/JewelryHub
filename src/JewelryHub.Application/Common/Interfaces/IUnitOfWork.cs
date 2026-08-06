@@ -55,6 +55,7 @@ public interface IUnitOfWork
     IRepository<Domain.Cart.Cart> Carts { get; }
     IRepository<Domain.Wishlist.Wishlist> Wishlists { get; }
     IRepository<Domain.Orders.Order> Orders { get; }
+    IRepository<Domain.Orders.Shipment> Shipments { get; }
     IRepository<Domain.Payments.Payment> Payments { get; }
     IRepository<Domain.Tax.TaxRate> TaxRates { get; }
     IRepository<Domain.Reviews.Review> Reviews { get; }

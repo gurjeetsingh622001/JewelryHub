@@ -1,9 +1,10 @@
 # Backend Progress
 
 Per-module completion status across all four layers (Domain → Persistence → Application → API).
-Derived directly from source inspection, last updated 2026-08-06 (Customer Addresses added —
-closed a hard blocker for Checkout) — see [API_PROGRESS.md](API_PROGRESS.md) for the
-endpoint-level detail behind the Application/API columns here.
+Derived directly from source inspection, last updated 2026-08-06 (a real `UpdateOrderItemStatusCommand`
+bug — marking an item Shipped always 500'd — found and fixed while building the Angular Seller
+module) — see [API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the
+Application/API columns here.
 
 | Module | Domain | Persistence | Application | API | Overall |
 |---|---|---|---|---|---|
@@ -71,6 +72,15 @@ resolved:
   see Tax below for the shape a follow-up DB-driven version would take.
 - `UpdateOrderItemStatusCommand` now rolls the parent `Order` to `Delivered` once every
   `OrderItem` reaches that status, and updates the fulfilling seller's `TotalOrdersFulfilled`/
+  `TotalRevenue` rollups the moment *their* item is delivered. **A real bug here was found and
+  fixed 2026-08-06**: marking an item `Shipped` always threw a `DbUpdateConcurrencyException` (500)
+  — the new `Shipment` was attached only via `item.Shipment ??= new Shipment {...}` and relied on
+  EF Core's navigation-fixup to mark it `Added`, but its client-generated `Guid` key (every
+  `BaseEntity` sets `Id` in a property initializer) meant EF's change tracker issued an `UPDATE`
+  instead of an `INSERT`, matching zero rows. Fixed by adding a `Shipments` repository to
+  `IUnitOfWork` and routing the insert through `AddAsync` explicitly. Found live while building the
+  Angular Seller Order Fulfillment queue — see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) and
+  [API_PROGRESS.md](API_PROGRESS.md).
   `TotalRevenue` rollups the moment *their* item is delivered (independent of other sellers on a
   multi-seller order).
 

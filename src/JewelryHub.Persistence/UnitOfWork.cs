@@ -33,6 +33,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Cart>? _carts;
     private IRepository<Wishlist>? _wishlists;
     private IRepository<Order>? _orders;
+    private IRepository<Shipment>? _shipments;
     private IRepository<Payment>? _payments;
     private IRepository<TaxRate>? _taxRates;
     private IRepository<Review>? _reviews;
@@ -71,6 +72,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Cart> Carts => _carts ??= new Repository<Cart>(_context);
     public IRepository<Wishlist> Wishlists => _wishlists ??= new Repository<Wishlist>(_context);
     public IRepository<Order> Orders => _orders ??= new Repository<Order>(_context);
+    public IRepository<Shipment> Shipments => _shipments ??= new Repository<Shipment>(_context);
     public IRepository<Payment> Payments => _payments ??= new Repository<Payment>(_context);
     public IRepository<TaxRate> TaxRates => _taxRates ??= new Repository<TaxRate>(_context);
     public IRepository<Review> Reviews => _reviews ??= new Repository<Review>(_context);

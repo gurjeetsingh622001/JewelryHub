@@ -1,0 +1,78 @@
+<div class="seller-orders mx-auto max-w-6xl px-4 py-12 md:px-8">
+  <header class="seller-orders__header">
+    <div>
+      <p class="eyebrow">Seller Dashboard</p>
+      <h1>Order Fulfillment Queue</h1>
+    </div>
+    <mat-form-field appearance="outline" class="seller-orders__filter">
+      <mat-label>Status</mat-label>
+      <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+        @for (opt of statusFilterOptions; track opt.label) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </header>
+
+  @if (queueResource.isLoading()) {
+    <div class="seller-orders__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((queueResource.value()?.items?.length ?? 0) === 0) {
+    <div class="seller-orders__empty">
+      <lucide-icon name="ClipboardList" [size]="40" [strokeWidth]="1" />
+      <p>No orders in this view.</p>
+    </div>
+  } @else {
+    <div class="seller-orders__list">
+      @for (item of queueResource.value()!.items; track item.orderItemId) {
+        <div class="seller-orders__row-group">
+          <div class="seller-orders__row">
+            <div class="seller-orders__info">
+              <p class="seller-orders__name">{{ item.productNameSnapshot }}</p>
+              <p class="seller-orders__meta">
+                Order {{ item.orderNumber }} &middot; Qty {{ item.quantity }} &middot;
+                {{ item.orderCreatedAtUtc | date: 'mediumDate' }}
+              </p>
+            </div>
+            <p class="seller-orders__total">{{ item.lineTotal | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+            <span class="seller-orders__status">{{ orderStatusLabels[item.itemStatus] }}</span>
+            @if (nextStatus[item.itemStatus] !== undefined) {
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="updatingItemId() === item.orderItemId"
+                (click)="advanceStatus(item.orderItemId, item.itemStatus)"
+              >
+                {{ actionLabel(item.itemStatus) }}
+              </button>
+            }
+          </div>
+
+          @if (shippingItemId() === item.orderItemId) {
+            <div class="seller-orders__ship-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Carrier</mat-label>
+                <input matInput [ngModel]="carrierInput()" (ngModelChange)="carrierInput.set($event)" placeholder="e.g. BlueDart" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tracking Number</mat-label>
+                <input matInput [ngModel]="trackingNumberInput()" (ngModelChange)="trackingNumberInput.set($event)" />
+              </mat-form-field>
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                [disabled]="!carrierInput().trim() || !trackingNumberInput().trim() || updatingItemId() === item.orderItemId"
+                (click)="confirmShipment(item.orderItemId)"
+              >
+                Confirm Shipment
+              </button>
+              <button mat-button type="button" (click)="cancelShipmentForm()">Cancel</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

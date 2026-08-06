@@ -1,0 +1,68 @@
+<div class="seller-kyc mx-auto max-w-3xl px-4 py-12 md:px-8">
+  <header class="seller-kyc__header">
+    <p class="eyebrow">Seller Account</p>
+    <h1>KYC Documents</h1>
+    <p class="seller-kyc__intro">
+      Submit your business verification documents below. An administrator reviews each document individually — once
+      every required document is verified, your account is approved to list products.
+    </p>
+  </header>
+
+  @if (profileResource.value(); as profile) {
+    @if (profile.documents.length > 0) {
+      <section class="seller-kyc__list">
+        <h2>Submitted Documents</h2>
+        @for (doc of profile.documents; track doc.id) {
+          <div class="seller-kyc__doc">
+            <div>
+              <p class="seller-kyc__doc-type">{{ doc.documentType }}</p>
+              <p class="seller-kyc__doc-meta">Submitted {{ doc.createdAtUtc | date: 'mediumDate' }}</p>
+              @if (doc.reviewerNote) {
+                <p class="seller-kyc__doc-note">{{ doc.reviewerNote }}</p>
+              }
+            </div>
+            <span class="seller-kyc__doc-status" [class]="'seller-kyc__doc-status--' + doc.status">
+              {{ statusLabels[doc.status] }}
+            </span>
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <section class="seller-kyc__form-section">
+    <h2>Submit a New Document</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="seller-kyc__form">
+      <mat-form-field appearance="outline">
+        <mat-label>Document Type</mat-label>
+        <mat-select formControlName="documentType">
+          @for (type of documentTypes; track type) {
+            <mat-option [value]="type">{{ type }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Document URL</mat-label>
+        <input matInput formControlName="fileUrl" placeholder="https://..." />
+        <mat-hint>Link to the scanned/photographed document (hosted file URL).</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>File Name (optional)</mat-label>
+        <input matInput formControlName="fileName" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" class="inline-block" />
+        } @else {
+          <ng-container>
+            <lucide-icon name="FileCheck" [size]="18" [strokeWidth]="1.5" />
+            Submit Document
+          </ng-container>
+        }
+      </button>
+    </form>
+  </section>
+</div>

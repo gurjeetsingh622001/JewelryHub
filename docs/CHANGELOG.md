@@ -5,6 +5,77 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-06 — Seller UI: Dashboard, KYC, Products, Order Fulfillment (Fixed a Real Backend Bug, Verified Live)
+
+**Module**: Backend (`Shipments` repository + `UpdateOrderItemStatusCommand` fix) + Frontend
+(`client/`, new `features/seller/`) + demo data in the live DB
+
+**Files modified**:
+- `src/JewelryHub.Application/Common/Interfaces/IUnitOfWork.cs`,
+  `src/JewelryHub.Persistence/UnitOfWork.cs` — added a `Shipments` repository
+- `src/JewelryHub.Application/Features/Orders/Commands/UpdateOrderItemStatus/UpdateOrderItemStatusCommand.cs`
+  — routes the new `Shipment` through `_unitOfWork.Shipments.AddAsync(...)` explicitly instead of
+  relying on EF Core navigation-fixup to detect it as `Added`
+- `client/src/app/features/seller/` (new) — `models.ts`, `seller.service.ts`, `dashboard/`,
+  `kyc/`, `products/` (list + `product-form/` for create and edit), `orders/`
+  (`seller-orders.component`)
+- `client/src/app/features/products/models.ts` — added `ProductType` enum + labels (needed for the
+  seller product-creation form's Product Type select)
+- `client/src/app/app.routes.ts` — added `/seller` (and children) guarded by
+  `roleGuard(['Seller'])`
+- `client/src/app/core/layout/navbar/navbar.component.html` — "Seller Dashboard" link in the
+  account menu when `auth.hasRole('Seller')`
+- `client/src/app/app.config.ts` — registered new Lucide icons (`AlertCircle`, `ClipboardList`,
+  `FileCheck`, `LayoutDashboard`, `PackagePlus`, `Pencil`, `TrendingUp`)
+- `docs/API_PROGRESS.md`, `docs/BACKEND_PROGRESS.md`, `docs/FRONTEND_PROGRESS.md`,
+  `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Backend bug found and fixed**: verifying the Order Fulfillment queue live surfaced a real,
+100%-reproducible bug — marking an order item `Shipped` threw a `DbUpdateConcurrencyException`
+(500, "expected to affect 1 row(s), but actually affected 0") on every single call.
+`UpdateOrderItemStatusCommand` created the new `Shipment` via `item.Shipment ??= new Shipment {
+OrderItemId = item.Id }` and relied on EF Core's navigation-fixup to mark it `Added` on `SaveChanges`.
+That doesn't reliably work when the child entity's primary key is a client-generated `Guid` set in
+a property initializer (every `BaseEntity.Id` is): EF Core's change tracker has no default-value
+signal to distinguish "brand new, client-set key" from "existing, unchanged-key entity" reached
+purely by graph traversal, so it issued an `UPDATE ... WHERE Id = @p` instead of an `INSERT` —
+which naturally matched zero rows. Root-caused by reading the actual generated SQL from
+`sys.dm_exec_query_stats` rather than guessing from the exception message (which points at
+optimistic-concurrency RowVersion mismatches, a red herring here — `OrderItem.RowVersion` isn't
+even configured as a concurrency token). Fixed by giving `Shipment` its own `IRepository<Shipment>`
+on `IUnitOfWork` (matching every other aggregate) and calling `AddAsync` explicitly instead of
+trusting fixup alone.
+
+**Frontend bugs found and fixed during the same verification pass**:
+- A stray `GET /products/null` request fired every time `/seller/products/new` loaded.
+  `SellerProductFormComponent` serves both the create and edit routes from one component;
+  `rxResource`'s `params` function only skips its loader when it returns `undefined`, not `null` —
+  but the create route's `paramMap.get('id')` legitimately returns `null`. Fixed by mapping
+  `productId() ?? undefined` before handing it to the resource.
+- The KYC document form showed every required field as invalid immediately after a successful
+  submit. `form.reset()` clears control values but not `FormGroupDirective`'s internal "submitted"
+  flag, and Angular Material's default `ErrorStateMatcher` treats `control.invalid && (touched ||
+  form.submitted)` as an error state — so a freshly-reset-but-still-"submitted" form immediately
+  flags every empty required field. Fixed by calling `resetForm()` on a `@ViewChild(FormGroupDirective)`
+  instead of `form.reset()` on the `FormGroup` itself.
+- The Order Fulfillment queue's "Mark Shipped" action also needed a genuine design fix, not just a
+  bug fix: the backend's validator requires non-empty `Carrier`/`TrackingNumber` only for the
+  Shipped transition, but the original one-click action never collected them. Replaced with an
+  inline Carrier/Tracking Number form that appears only for that specific transition.
+
+**Verified live end-to-end**: registered a new seller account → submitted a KYC document → logged
+in as the dev admin (`admin@jewelryhub.local` — its `IsLockedOut` flag was found `true` with a
+stale `AccessFailedCount`/`LockoutEndUtc` mismatch from earlier session activity and was reset
+directly in the local dev database, since there's no self-service admin unlock endpoint by design)
+→ approved the document and the seller → listed a product with a real image, pricing, and initial
+inventory → a separately registered test customer added it to cart, created an address, checked
+out, and confirmed payment → back as the seller, advanced the resulting order item through
+Processing → Shipped (via the new inline form) → Delivered → confirmed the Dashboard's Total
+Revenue and Orders Fulfilled stats updated correctly. Zero console errors and zero unexpected HTTP
+error responses on the final run.
+
+---
+
 ## 2026-08-06 — Customer UI: Checkout (Closed a Hard Backend Blocker, Verified Live)
 
 **Module**: Backend (new `CustomerAddresses` feature + migration) + Frontend (`client/`) + demo

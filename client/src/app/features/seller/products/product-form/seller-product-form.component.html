@@ -1,0 +1,243 @@
+<div class="product-form mx-auto max-w-3xl px-4 py-12 md:px-8">
+  <a routerLink="/seller/products" class="product-form__back">
+    <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+    Back to Products
+  </a>
+
+  @if (isEditMode()) {
+    <header class="product-form__header">
+      <p class="eyebrow">Seller Dashboard</p>
+      <h1>Edit Product</h1>
+    </header>
+
+    @if (productResource.isLoading()) {
+      <div class="product-form__loading">
+        <mat-spinner diameter="40" />
+      </div>
+    } @else if (productResource.value(); as product) {
+      <section class="product-form__inventory">
+        <h2>Inventory</h2>
+        <p class="product-form__inventory-current">
+          <lucide-icon name="Package" [size]="18" [strokeWidth]="1.5" />
+          {{ product.quantityAvailable }} unit{{ product.quantityAvailable === 1 ? '' : 's' }} available
+        </p>
+        <div class="product-form__inventory-controls">
+          <input
+            type="number"
+            [ngModel]="inventoryDelta()"
+            (ngModelChange)="inventoryDelta.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="e.g. 5 or -2"
+          />
+          <button mat-stroked-button type="button" [disabled]="adjustingInventory()" (click)="adjustInventory(inventoryDelta())">
+            Apply Adjustment
+          </button>
+        </div>
+      </section>
+
+      <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="product-form__form">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="4"></textarea>
+        </mat-form-field>
+
+        <div class="product-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Gross Weight (g)</mat-label>
+            <input matInput type="number" formControlName="grossWeightGrams" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Net Weight (g)</mat-label>
+            <input matInput type="number" formControlName="netWeightGrams" />
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Metal Rate per Gram (&#8377;)</mat-label>
+          <input matInput type="number" formControlName="metalRatePerGramAtListing" />
+        </mat-form-field>
+
+        <div class="product-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Size</mat-label>
+            <input matInput formControlName="size" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Size Unit</mat-label>
+            <input matInput formControlName="sizeUnit" />
+          </mat-form-field>
+        </div>
+
+        <div class="product-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Making Charges</mat-label>
+            <input matInput type="number" formControlName="makingCharges" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Wastage Charges (&#8377;)</mat-label>
+            <input matInput type="number" formControlName="wastageCharges" />
+          </mat-form-field>
+        </div>
+
+        <mat-checkbox formControlName="makingChargesArePercentage">Making charges are a percentage of metal value</mat-checkbox>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Discount % (optional)</mat-label>
+          <input matInput type="number" formControlName="discountPercentage" />
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20" class="inline-block" />
+          } @else {
+            Save Changes
+          }
+        </button>
+      </form>
+    }
+  } @else {
+    <header class="product-form__header">
+      <p class="eyebrow">Seller Dashboard</p>
+      <h1>List a New Product</h1>
+    </header>
+
+    <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="product-form__form">
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="categoryId">
+            @for (category of categoriesResource.value(); track category.id) {
+              <mat-option [value]="category.id">{{ category.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Product Type</mat-label>
+          <mat-select formControlName="productType">
+            @for (opt of productTypeOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>SKU</mat-label>
+          <input matInput formControlName="sku" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="4"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Image URL (optional)</mat-label>
+        <input matInput formControlName="imageUrl" placeholder="https://..." />
+      </mat-form-field>
+
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Metal Type</mat-label>
+          <mat-select formControlName="metalType">
+            @for (opt of metalTypeOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Purity</mat-label>
+          <mat-select formControlName="purity">
+            @for (opt of purityTypeOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Gross Weight (g)</mat-label>
+          <input matInput type="number" formControlName="grossWeightGrams" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Net Weight (g)</mat-label>
+          <input matInput type="number" formControlName="netWeightGrams" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Metal Rate per Gram (&#8377;)</mat-label>
+        <input matInput type="number" formControlName="metalRatePerGramAtListing" />
+      </mat-form-field>
+
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Size (optional)</mat-label>
+          <input matInput formControlName="size" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Size Unit (optional)</mat-label>
+          <input matInput formControlName="sizeUnit" />
+        </mat-form-field>
+      </div>
+
+      <div class="product-form__row">
+        <mat-form-field appearance="outline">
+          <mat-label>Making Charges</mat-label>
+          <input matInput type="number" formControlName="makingCharges" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Wastage Charges (&#8377;)</mat-label>
+          <input matInput type="number" formControlName="wastageCharges" />
+        </mat-form-field>
+      </div>
+
+      <mat-checkbox formControlName="makingChargesArePercentage">Making charges are a percentage of metal value</mat-checkbox>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Discount % (optional)</mat-label>
+        <input matInput type="number" formControlName="discountPercentage" />
+      </mat-form-field>
+
+      <mat-checkbox formControlName="isHallmarked">This item is hallmarked/certified</mat-checkbox>
+
+      @if (createForm.value.isHallmarked) {
+        <div class="product-form__row">
+          <mat-form-field appearance="outline">
+            <mat-label>Hallmark ID</mat-label>
+            <input matInput formControlName="hallmarkUniqueId" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Certification Authority</mat-label>
+            <input matInput formControlName="certificationAuthority" />
+          </mat-form-field>
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Initial Quantity</mat-label>
+        <input matInput type="number" formControlName="initialQuantity" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+        @if (saving()) {
+          <mat-spinner diameter="20" class="inline-block" />
+        } @else {
+          List Product
+        }
+      </button>
+    </form>
+  }
+</div>

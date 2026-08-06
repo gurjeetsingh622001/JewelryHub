@@ -1,0 +1,98 @@
+.product-form__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+
+  &:hover {
+    color: var(--color-gold-deep);
+  }
+}
+
+.product-form__header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin-top: 0.35rem;
+  }
+}
+
+.product-form__loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.product-form__inventory {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+
+  h2 {
+    font-size: var(--text-base);
+    margin-bottom: 0.75rem;
+  }
+}
+
+.product-form__inventory-current {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  margin-bottom: 1rem;
+
+  lucide-icon {
+    color: var(--color-gold-deep);
+  }
+}
+
+.product-form__inventory-controls {
+  display: flex;
+  gap: 0.75rem;
+
+  input {
+    width: 8rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-sm);
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+}
+
+.product-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  mat-checkbox {
+    margin: 0.5rem 0;
+  }
+
+  button {
+    align-self: flex-start;
+    margin-top: 1rem;
+  }
+}
+
+.product-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}

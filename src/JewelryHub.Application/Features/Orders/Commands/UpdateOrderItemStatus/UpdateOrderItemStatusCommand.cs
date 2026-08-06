@@ -77,7 +77,18 @@ public class UpdateOrderItemStatusCommandHandler : IRequestHandler<UpdateOrderIt
 
         if (request.NewStatus == OrderStatus.Shipped)
         {
-            item.Shipment ??= new Shipment { OrderItemId = item.Id };
+            if (item.Shipment is null)
+            {
+                // Assigning a brand-new entity to a navigation on an already-tracked
+                // parent isn't reliably picked up as an Added entity by EF Core's
+                // change tracker when the entity's Guid key is client-generated
+                // (BaseEntity sets Id in its property initializer) — it can be
+                // mistaken for an existing, unchanged-key entity and issued as an
+                // UPDATE instead of an INSERT (0 rows affected). Routing it through
+                // the repository's AddAsync explicitly marks it Added.
+                item.Shipment = new Shipment { OrderItemId = item.Id };
+                await _unitOfWork.Shipments.AddAsync(item.Shipment, cancellationToken);
+            }
             item.Shipment.Status = ShipmentStatus.Shipped;
             item.Shipment.Carrier = request.Carrier;
             item.Shipment.TrackingNumber = request.TrackingNumber;
