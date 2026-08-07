@@ -1,0 +1,51 @@
+<div class="union-create mx-auto max-w-2xl px-4 py-12 md:px-8">
+  <header class="union-create__header">
+    <p class="eyebrow">Jewelry Trade Unions</p>
+    <h1>Start a Union</h1>
+    <p class="union-create__intro">
+      As the founder, you become the union's first officer (President). An administrator reviews and approves every new
+      union before it appears in the public directory or accepts new members.
+    </p>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="union-create__form">
+    <mat-form-field appearance="outline">
+      <mat-label>Union Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Description (optional)</mat-label>
+      <textarea matInput formControlName="description" rows="4"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Logo URL (optional)</mat-label>
+      <input matInput formControlName="logoUrl" placeholder="https://..." />
+    </mat-form-field>
+
+    <div class="union-create__row">
+      <mat-form-field appearance="outline">
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>State</mat-label>
+        <input matInput formControlName="state" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Annual Membership Fee (optional, &#8377;)</mat-label>
+      <input matInput type="number" formControlName="annualMembershipFee" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+      @if (submitting()) {
+        <mat-spinner diameter="20" class="inline-block" />
+      } @else {
+        Create Union
+      }
+    </button>
+  </form>
+</div>

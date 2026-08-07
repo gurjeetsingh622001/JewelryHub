@@ -1,0 +1,256 @@
+.union-detail__loading,
+.union-detail__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 0;
+  gap: 1rem;
+
+  a {
+    color: var(--color-gold-deep);
+    font-weight: 600;
+  }
+}
+
+.union-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+
+  &:hover {
+    color: var(--color-gold-deep);
+  }
+}
+
+.union-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.union-detail__logo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-full, 999px);
+  background-color: var(--color-surface);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold-deep);
+  flex-shrink: 0;
+}
+
+.union-detail__title {
+  flex: 1;
+  min-width: 0;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin-top: 0.25rem;
+  }
+}
+
+.union-detail__members-count {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  margin-top: 0.35rem;
+}
+
+.union-detail__actions {
+  flex-shrink: 0;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.union-detail__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+
+  &--officer {
+    background: var(--color-gold-tint);
+    color: var(--color-gold-deep);
+  }
+}
+
+.union-detail__tabs {
+  ::ng-deep .mdc-tab__text-label {
+    font-family: var(--font-body);
+  }
+}
+
+.union-detail__panel {
+  padding: 2rem 0;
+}
+
+.union-detail__description {
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  max-width: 55ch;
+}
+
+.union-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  max-width: 40rem;
+
+  div {
+    padding: 1rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+  }
+
+  dt {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  dd {
+    margin: 0.25rem 0 0;
+    font-family: var(--font-display);
+  }
+}
+
+.union-detail__section {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: var(--text-base);
+    margin-bottom: 0.75rem;
+  }
+}
+
+.union-detail__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+
+  &--link {
+    text-decoration: none;
+    color: var(--color-ink);
+    justify-content: flex-start;
+
+    &:hover {
+      color: var(--color-gold-deep);
+    }
+  }
+}
+
+.union-detail__doc-title {
+  flex: 1;
+}
+
+.union-detail__row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.union-detail__role-badge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted);
+  background: var(--color-surface);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full, 999px);
+  white-space: nowrap;
+}
+
+.union-detail__no-items {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  padding: 1.5rem 0;
+
+  a {
+    color: var(--color-gold-deep);
+    font-weight: 600;
+  }
+}
+
+.union-detail__inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 28rem;
+  margin: 1rem 0 2rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.union-detail__inline-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.union-detail__card {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.union-detail__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.union-detail__card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+
+  lucide-icon {
+    color: var(--color-gold-deep);
+  }
+}
+
+.union-detail__card-body {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+.union-detail__card-meta {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+  margin-top: 0.5rem;
+}

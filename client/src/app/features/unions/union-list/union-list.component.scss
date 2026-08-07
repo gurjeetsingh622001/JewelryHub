@@ -1,0 +1,112 @@
+.union-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin: 0.35rem 0 0.5rem;
+  }
+}
+
+.union-list__intro {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  max-width: 40ch;
+}
+
+.union-list__seller-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.union-list__search {
+  margin-bottom: 2rem;
+  max-width: 24rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.union-list__loading {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.union-list__empty {
+  text-align: center;
+  color: var(--color-ink-muted);
+  padding: 4rem 0;
+}
+
+.union-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.union-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    margin-bottom: 0.25rem;
+  }
+
+  &:hover {
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+  }
+}
+
+.union-card__logo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full, 999px);
+  background-color: var(--color-surface);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold-deep);
+  margin-bottom: 1rem;
+}
+
+.union-card__location {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.union-card__members {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+  margin-top: 0.75rem;
+}
+
+.union-list__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}

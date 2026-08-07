@@ -156,7 +156,41 @@ route; the KYC form showing false validation errors right after a successful sub
 **Pending.** Depends on Phase 12's decision about whether a dedicated Admin API exists to back it.
 
 ## Phase 16 — Union Dashboard (Angular)
-**Pending.** Depends on Phase 11.
+**Core union scope completed (2026-08-07)** — scoped down by explicit user decision to keep this
+pass sized like the Seller module: browse/create/join unions, membership management, and
+officer-gated announcements/documents/events. **Meetings (agenda/RSVP/minutes/action items) and
+Governance Polls (create/open/close/vote) are deliberately deferred to a follow-up phase** — see
+Phase 16a below; their backend (`UnionMeetingsController`, `UnionPollsController`, 22 endpoints)
+is already complete and unconsumed by any frontend.
+
+Built: a public `/unions` directory (search by name, admin-approved unions only —
+`GetUnionsQuery` already filters this server-side), `/unions/new` (Seller-only creation form —
+founder becomes President, union starts unapproved), `/unions/mine` (a seller's own memberships,
+joining membership rows to their union's name/city via a `forkJoin` since `UnionMemberDto` doesn't
+carry it), and `/unions/:id` (public detail page, `MatTabsModule` tabs for Overview/Members/
+Announcements/Documents/Events). Officer-gated actions (create announcement/document/event,
+approve/reject pending membership requests) are shown only when the caller's own membership role
+is President/VicePresident/Secretary — computed client-side from `GetMyMembershipsQuery`, mirroring
+the backend's `UnionAuthorization.OfficerRoles` set exactly.
+
+**Found and fixed a real bug during verification**: `members`, `announcements`, and `documents`
+are backend `[Authorize]` endpoints (any logged-in user, but not anonymous) — only `events` is
+`[AllowAnonymous]`. The page fetched all four unconditionally regardless of login state, so an
+anonymous visitor correctly got 401s on three of them, which in turn triggered a spurious
+refresh-token attempt for a session that never existed (`AuthService.refresh()` throwing "No
+refresh token available"). Fixed by gating those three resources on `auth.isAuthenticated()` and
+showing a "Log in to view this" prompt instead. (Initially misdiagnosed as a concurrent-refresh
+race — ruled that out by directly firing 5 concurrent authenticated requests at the backend via
+curl, which all succeeded cleanly, before finding the real cause in the actual request/response
+log.) Verified live end-to-end: created a union as a KYC-approved seller → admin-approved it → a
+second seller requested to join → approved as the founding President → published an announcement,
+uploaded a document, and scheduled an event as an officer → confirmed all of it renders correctly
+for both a signed-in officer and an anonymous visitor, zero console errors.
+
+## Phase 16a — Union Meetings + Governance Polls (Angular)
+**Pending.** Deliberately deferred from Phase 16 to keep that pass a reasonable size. Backend is
+complete (`UnionMeetingsController`: create/list/get/status/RSVP/minutes/my-action-items;
+`UnionPollsController`: create/list/get/open/close/vote) — this phase is purely frontend.
 
 ## Phase 17 — Reports / Analytics
 **Pending.** No reporting endpoints exist anywhere yet (sales, seller performance, union

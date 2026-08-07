@@ -1,7 +1,8 @@
 # Project Status
 
-Last updated: **2026-08-07** (Angular Order History + Reviews — the last piece of the Customer UI
-on the roadmap — verified live). This file, along with the rest of
+Last updated: **2026-08-07** (Angular Union module — core scope: browse/create/join, membership
+management, officer-gated announcements/documents/events — verified live). This file, along with
+the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -132,6 +133,21 @@ any chat history. See the Maintenance Rule at the bottom.
   simplification, not a bug). **Found and fixed a real CSS bug**: Lucide's `Star` icon is
   stroke-only by default, so recoloring it gold via CSS `color` alone left every "filled" star
   looking identical to an "unfilled" one — fixed with `::ng-deep svg { fill: currentColor }`.
+- ✔ Union module — core scope (2026-08-07): a public `/unions` directory (search, admin-approved
+  only), `/unions/new` (Seller-only creation — founder becomes President, awaits admin approval),
+  `/unions/mine` (a seller's own memberships), and `/unions/:id` (tabbed detail — Overview/Members/
+  Announcements/Documents/Events) with officer-gated actions (create announcement/document/event,
+  approve/reject pending membership requests) shown only to the union's own President/Vice
+  President/Secretary. **Meetings and Governance Polls are explicitly out of scope for this pass**
+  — a deliberate, user-approved scope cut to keep this sized like the Seller module; their backend
+  is already complete and unconsumed by any frontend, see [ROADMAP.md](ROADMAP.md) Phase 16a.
+  **Found and fixed a real bug**: three of the four detail-page tabs call `[Authorize]` (not
+  anonymous) endpoints, but the page fetched all of them unconditionally — an anonymous visitor
+  therefore got legitimate 401s that then triggered a spurious token-refresh attempt for a session
+  that never existed. Fixed by gating those fetches on `auth.isAuthenticated()`. Verified live
+  end-to-end (create → admin-approve → second seller joins → founder approves the request →
+  publishes an announcement, uploads a document, schedules an event), zero console errors for both
+  a signed-in officer and an anonymous visitor.
 
 ## In Progress
 
@@ -154,11 +170,12 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 **Frontend**
 
 - ❌ Admin UI
-- ❌ Union UI
+- ❌ Union Meetings + Governance Polls UI (core Union UI is done — see Completed above and
+  [ROADMAP.md](ROADMAP.md) Phase 16a)
 
 (The full Customer UI — Home, auth, product browsing, cart, checkout, order history, reviews —
-and the full Seller UI are now done, see Completed above. The Angular foundation these are built
-on is described in [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
+the full Seller UI, and the core Union UI are now done, see Completed above. The Angular
+foundation these are built on is described in [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
 
 ## Explicit Non-Priorities (by decision, not oversight)
 

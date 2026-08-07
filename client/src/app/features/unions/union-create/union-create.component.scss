@@ -1,0 +1,39 @@
+.union-create__header {
+  margin-bottom: 2.5rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin: 0.35rem 0 1rem;
+  }
+}
+
+.union-create__intro {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.union-create__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  button {
+    align-self: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+.union-create__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}

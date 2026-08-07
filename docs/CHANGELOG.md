@@ -5,6 +5,60 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-07 — Union UI: Directory, Create/Join, Membership, Announcements/Documents/Events (Fixed a Real Auth-Gating Bug, Verified Live)
+
+**Module**: Frontend (`client/`, new `features/unions/`) + demo data in the live DB
+
+**Scope decision**: the Union backend is large (core union + Meetings + Governance Polls). Asked
+the user how to scope this pass; they chose "core union only" — browse/create/join, membership
+management, officer-gated announcements/documents/events — deferring Meetings and Polls to a
+follow-up phase (Phase 16a) to keep this pass sized similarly to the Seller module.
+
+**Files modified**:
+- `client/src/app/features/unions/` (new) — `models.ts`, `unions.service.ts`, `union-list/`,
+  `union-create/`, `union-detail/` (`MatTabsModule`: Overview/Members/Announcements/Documents/
+  Events), `my-unions/`
+- `client/src/app/app.routes.ts` — added `/unions`, `/unions/new` and `/unions/mine`
+  (Seller-guarded), `/unions/:id` (public)
+- `client/src/app/core/layout/navbar/` — a public "Unions" top-level nav link, "My Unions" in the
+  account menu for Sellers
+- `client/src/app/app.config.ts` — registered new Lucide icons (`Crown`, `FileText`, `Landmark`,
+  `Pin`, `UserPlus`, `Users`)
+- `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Frontend bug found and fixed**: `UnionsController`'s `members`, `announcements`, and `documents`
+endpoints are `[Authorize]` (any logged-in user, but not anonymous) while `events` is
+`[AllowAnonymous]`. `UnionDetailComponent` fetched all four unconditionally regardless of login
+state, so an anonymous visitor correctly got 401s on three of them — which then triggered a
+spurious `AuthService.refresh()` call that threw "No refresh token available" for a session that
+never existed, surfacing as an uncaught `ResourceValueError` in the console. Initially
+misdiagnosed as a concurrent-refresh race, since this is the first page in the app to fire ~5
+simultaneous authenticated requests on load — ruled that out by firing 5 concurrent authenticated
+requests directly at the backend via `curl` (all 5 succeeded cleanly), then found the real cause
+by logging actual request/response pairs from the browser, which showed the failures correlated
+with signed-out state, not timing. Fixed by gating those three resources on
+`auth.isAuthenticated()` and showing a "Log in to view this" prompt in their place for anonymous
+visitors.
+
+**Verified live end-to-end**: registered a KYC-approved seller and created a union → approved it
+as the dev admin → a second KYC-approved seller requested to join → the founding President
+approved the request, then published an announcement, uploaded a document, and scheduled an event
+as an officer → confirmed all of it renders correctly both for the signed-in officer and for an
+anonymous visitor (who sees the public directory, the union's public info, and events, but a
+"log in" prompt for members/announcements/documents). Zero console errors on the final run.
+
+**Recurring environment quirk observed, not fully explained**: across this and previous
+verification passes, several unrelated accounts (the dev admin twice, two different test
+sellers) intermittently stopped being able to log in with their known-correct password —
+sometimes with `IsLockedOut = true` and a stale `AccessFailedCount`, sometimes with no lockout at
+all, just a non-matching password hash. The seed-only `SeedDevAdminAsync` path was ruled out (it
+never touches an existing row). Each time, the fix was the same: register a throwaway account
+with the desired password through the live `/auth/register` endpoint (so the app's own
+`BCryptPasswordHasher` produces a valid hash) and copy that hash onto the affected account's row
+directly via `sqlcmd`. Flagged in `docs/FRONTEND_PROGRESS.md` as worth investigating if it recurs.
+
+---
+
 ## 2026-08-07 — Customer UI: Order History + Reviews (Fixed a Real CSS Bug, Verified Live)
 
 **Module**: Frontend (`client/`, new `features/reviews/` and `features/orders/order-history/`) +

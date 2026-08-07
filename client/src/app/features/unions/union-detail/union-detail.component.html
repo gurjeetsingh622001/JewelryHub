@@ -1,0 +1,273 @@
+@if (unionResource.isLoading()) {
+  <div class="union-detail__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (unionResource.error()) {
+  <div class="union-detail__empty">
+    <p>We couldn't find that union.</p>
+    <a routerLink="/unions">Back to Directory</a>
+  </div>
+} @else {
+  @let union = unionResource.value()!;
+  <div class="union-detail mx-auto max-w-5xl px-4 py-12 md:px-8">
+    <a routerLink="/unions" class="union-detail__back">
+      <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+      Back to Directory
+    </a>
+
+    <header class="union-detail__header">
+      <div class="union-detail__logo" [style.background-image]="union.logoUrl ? 'url(' + union.logoUrl + ')' : null">
+        @if (!union.logoUrl) {
+          <lucide-icon name="Landmark" [size]="32" [strokeWidth]="1" />
+        }
+      </div>
+      <div class="union-detail__title">
+        <p class="eyebrow">{{ union.city }}, {{ union.state }}</p>
+        <h1>{{ union.name }}</h1>
+        <p class="union-detail__members-count">
+          <lucide-icon name="Users" [size]="14" [strokeWidth]="1.5" />
+          {{ union.activeMemberCount }} member{{ union.activeMemberCount === 1 ? '' : 's' }}
+        </p>
+      </div>
+      <div class="union-detail__actions">
+        @if (isOfficer()) {
+          <span class="union-detail__badge union-detail__badge--officer">
+            <lucide-icon name="Crown" [size]="14" [strokeWidth]="1.5" />
+            {{ roleLabels[myMembership()!.role] }}
+          </span>
+        } @else if (isActiveMember()) {
+          <span class="union-detail__badge">Member</span>
+        } @else if (isPendingMember()) {
+          <span class="union-detail__badge">Request Pending</span>
+        } @else if (canJoin()) {
+          <button mat-flat-button color="primary" type="button" [disabled]="joining()" (click)="join()">
+            @if (joining()) {
+              <mat-spinner diameter="18" class="inline-block" />
+            } @else {
+              <ng-container>
+                <lucide-icon name="UserPlus" [size]="16" [strokeWidth]="1.5" />
+                Request to Join
+              </ng-container>
+            }
+          </button>
+        }
+      </div>
+    </header>
+
+    <mat-tab-group class="union-detail__tabs">
+      <mat-tab label="Overview">
+        <div class="union-detail__panel">
+          @if (union.description) {
+            <p class="union-detail__description">{{ union.description }}</p>
+          }
+          <dl class="union-detail__facts">
+            <div>
+              <dt>Founded by</dt>
+              <dd>{{ union.createdBySellerBusinessName }}</dd>
+            </div>
+            <div>
+              <dt>Established</dt>
+              <dd>{{ union.createdAtUtc | date: 'mediumDate' }}</dd>
+            </div>
+            @if (union.annualMembershipFee) {
+              <div>
+                <dt>Annual Fee</dt>
+                <dd>&#8377;{{ union.annualMembershipFee }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Members">
+        <div class="union-detail__panel">
+          @if (isOfficer() && (pendingMembersResource.value()?.items?.length ?? 0) > 0) {
+            <section class="union-detail__section">
+              <h2>Pending Requests</h2>
+              @for (pending of pendingMembersResource.value()!.items; track pending.id) {
+                <div class="union-detail__row">
+                  <span>{{ pending.sellerBusinessName }}</span>
+                  <div class="union-detail__row-actions">
+                    <button mat-button type="button" (click)="reviewMembership(pending.id, true)">Approve</button>
+                    <button mat-button type="button" (click)="reviewMembership(pending.id, false)">Reject</button>
+                  </div>
+                </div>
+              }
+            </section>
+          }
+
+          <section class="union-detail__section">
+            <h2>Members</h2>
+            @if (!auth.isAuthenticated()) {
+              <p class="union-detail__no-items"><a routerLink="/login">Log in</a> to view the member roster.</p>
+            } @else if (membersResource.isLoading()) {
+              <mat-spinner diameter="30" />
+            } @else {
+              @for (member of membersResource.value()?.items; track member.id) {
+                <div class="union-detail__row">
+                  <span>{{ member.sellerBusinessName }}</span>
+                  <span class="union-detail__role-badge">{{ roleLabels[member.role] }}</span>
+                </div>
+              }
+            }
+          </section>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Announcements">
+        <div class="union-detail__panel">
+          @if (isOfficer()) {
+            @if (!showAnnouncementForm()) {
+              <button mat-stroked-button type="button" (click)="showAnnouncementForm.set(true)">New Announcement</button>
+            } @else {
+              <div class="union-detail__inline-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Title</mat-label>
+                  <input matInput [ngModel]="announcementTitle()" (ngModelChange)="announcementTitle.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Body</mat-label>
+                  <textarea matInput rows="3" [ngModel]="announcementBody()" (ngModelChange)="announcementBody.set($event)"></textarea>
+                </mat-form-field>
+                <div class="union-detail__inline-form-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="submitAnnouncement()">Publish</button>
+                  <button mat-button type="button" (click)="showAnnouncementForm.set(false)">Cancel</button>
+                </div>
+              </div>
+            }
+          }
+
+          @if (!auth.isAuthenticated()) {
+            <p class="union-detail__no-items"><a routerLink="/login">Log in</a> to view announcements.</p>
+          } @else if ((announcementsResource.value()?.items?.length ?? 0) === 0) {
+            <p class="union-detail__no-items">No announcements yet.</p>
+          } @else {
+            @for (a of announcementsResource.value()!.items; track a.id) {
+              <div class="union-detail__card">
+                <div class="union-detail__card-header">
+                  <p class="union-detail__card-title">
+                    @if (a.isPinned) {
+                      <lucide-icon name="Pin" [size]="14" [strokeWidth]="1.5" />
+                    }
+                    {{ a.title }}
+                  </p>
+                  @if (isOfficer()) {
+                    <button mat-icon-button type="button" (click)="deleteAnnouncement(a.id)" aria-label="Delete announcement">
+                      <lucide-icon name="Trash2" [size]="16" [strokeWidth]="1.5" />
+                    </button>
+                  }
+                </div>
+                <p class="union-detail__card-body">{{ a.body }}</p>
+                <p class="union-detail__card-meta">{{ a.publishedByBusinessName }} &middot; {{ a.createdAtUtc | date: 'mediumDate' }}</p>
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Documents">
+        <div class="union-detail__panel">
+          @if (isOfficer()) {
+            @if (!showDocumentForm()) {
+              <button mat-stroked-button type="button" (click)="showDocumentForm.set(true)">Upload Document</button>
+            } @else {
+              <div class="union-detail__inline-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Title</mat-label>
+                  <input matInput [ngModel]="documentTitle()" (ngModelChange)="documentTitle.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>File URL</mat-label>
+                  <input matInput [ngModel]="documentUrl()" (ngModelChange)="documentUrl.set($event)" placeholder="https://..." />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Category (optional)</mat-label>
+                  <input matInput [ngModel]="documentCategory()" (ngModelChange)="documentCategory.set($event)" />
+                </mat-form-field>
+                <div class="union-detail__inline-form-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="submitDocument()">Upload</button>
+                  <button mat-button type="button" (click)="showDocumentForm.set(false)">Cancel</button>
+                </div>
+              </div>
+            }
+          }
+
+          @if (!auth.isAuthenticated()) {
+            <p class="union-detail__no-items"><a routerLink="/login">Log in</a> to view documents.</p>
+          } @else if ((documentsResource.value()?.items?.length ?? 0) === 0) {
+            <p class="union-detail__no-items">No documents yet.</p>
+          } @else {
+            @for (doc of documentsResource.value()!.items; track doc.id) {
+              <a [href]="doc.fileUrl" target="_blank" rel="noopener" class="union-detail__row union-detail__row--link">
+                <lucide-icon name="FileText" [size]="16" [strokeWidth]="1.5" />
+                <span class="union-detail__doc-title">{{ doc.title }}</span>
+                @if (doc.category) {
+                  <span class="union-detail__role-badge">{{ doc.category }}</span>
+                }
+                <span class="union-detail__card-meta">{{ doc.createdAtUtc | date: 'mediumDate' }}</span>
+              </a>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Events">
+        <div class="union-detail__panel">
+          @if (isOfficer()) {
+            @if (!showEventForm()) {
+              <button mat-stroked-button type="button" (click)="showEventForm.set(true)">New Event</button>
+            } @else {
+              <div class="union-detail__inline-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Title</mat-label>
+                  <input matInput [ngModel]="eventTitle()" (ngModelChange)="eventTitle.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Description (optional)</mat-label>
+                  <textarea matInput rows="2" [ngModel]="eventDescription()" (ngModelChange)="eventDescription.set($event)"></textarea>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Location (optional)</mat-label>
+                  <input matInput [ngModel]="eventLocation()" (ngModelChange)="eventLocation.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Starts At</mat-label>
+                  <input matInput type="datetime-local" [ngModel]="eventStartsAt()" (ngModelChange)="eventStartsAt.set($event)" />
+                </mat-form-field>
+                <div class="union-detail__inline-form-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="submitEvent()">Create Event</button>
+                  <button mat-button type="button" (click)="showEventForm.set(false)">Cancel</button>
+                </div>
+              </div>
+            }
+          }
+
+          @if ((eventsResource.value()?.items?.length ?? 0) === 0) {
+            <p class="union-detail__no-items">No events scheduled.</p>
+          } @else {
+            @for (event of eventsResource.value()!.items; track event.id) {
+              <div class="union-detail__card">
+                <div class="union-detail__card-header">
+                  <p class="union-detail__card-title">{{ event.title }}</p>
+                  <span class="union-detail__role-badge">{{ eventStatusLabels[event.status] }}</span>
+                </div>
+                <p class="union-detail__card-meta">
+                  {{ event.startsAtUtc | date: 'medium' }}
+                  @if (event.location) {
+                    &middot; {{ event.location }}
+                  }
+                </p>
+                @if (event.description) {
+                  <p class="union-detail__card-body">{{ event.description }}</p>
+                }
+                @if (isOfficer() && event.status === UnionEventStatus.Upcoming) {
+                  <button mat-button type="button" (click)="cancelEvent(event.id)">Cancel Event</button>
+                }
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+}

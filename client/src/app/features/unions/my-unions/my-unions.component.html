@@ -1,0 +1,35 @@
+<div class="my-unions mx-auto max-w-3xl px-4 py-12 md:px-8">
+  <header class="my-unions__header">
+    <div>
+      <p class="eyebrow">My Account</p>
+      <h1>My Unions</h1>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/unions/new">Start a Union</a>
+  </header>
+
+  @if (membershipsResource.isLoading()) {
+    <div class="my-unions__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((membershipsResource.value()?.length ?? 0) === 0) {
+    <div class="my-unions__empty">
+      <lucide-icon name="Landmark" [size]="40" [strokeWidth]="1" />
+      <p>You haven't joined a union yet.</p>
+      <a mat-flat-button color="primary" routerLink="/unions">Browse Unions</a>
+    </div>
+  } @else {
+    <div class="my-unions__list">
+      @for (row of membershipsResource.value()!; track row.membership.id) {
+        <a [routerLink]="['/unions', row.union.id]" class="my-unions__row">
+          <div>
+            <p class="my-unions__name">{{ row.union.name }}</p>
+            <p class="my-unions__meta">{{ row.union.city }}, {{ row.union.state }} &middot; {{ roleLabels[row.membership.role] }}</p>
+          </div>
+          <span class="my-unions__status" [class]="'my-unions__status--' + row.membership.status">
+            {{ statusLabels[row.membership.status] }}
+          </span>
+        </a>
+      }
+    </div>
+  }
+</div>

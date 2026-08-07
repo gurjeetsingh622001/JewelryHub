@@ -1,19 +1,24 @@
 # Frontend Progress
 
-## Status: Full Customer + Seller UI Complete
+## Status: Full Customer + Seller UI Complete, Core Union UI Complete
 
 Last updated 2026-08-07. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The entire Customer-facing storefront (auth, Home,
-product browsing, cart, checkout, order history, reviews) and the entire Seller module (dashboard,
-KYC, product/inventory management, order fulfillment) are built — all wired to the live backend
-APIs and verified end to end against an actual running backend + database, not just a build.
-**Building Checkout surfaced a hard backend blocker** (no way to ever create a `CustomerAddress`),
-**verifying Cart live surfaced a real backend bug**, **verifying the Seller Order Fulfillment queue
-live surfaced another real backend bug** (marking an item Shipped always 500'd), and **verifying
-Reviews live surfaced a real frontend CSS bug** (Lucide's stroke-only `Star` icon needs an explicit
-`fill` override to actually look "filled") — see Known Gaps. Worth remembering: "the spec says it's
-done" and "builds and looks right" are both different from "someone actually tried to use it end to
-end." Only Admin and Union dashboards remain — see [ROADMAP.md](ROADMAP.md) Phase 15 onward.
+product browsing, cart, checkout, order history, reviews), the entire Seller module (dashboard,
+KYC, product/inventory management, order fulfillment), and the core Union module (directory,
+create/join, membership management, officer-gated announcements/documents/events) are built — all
+wired to the live backend APIs and verified end to end against an actual running backend +
+database, not just a build. **Building Checkout surfaced a hard backend blocker** (no way to ever
+create a `CustomerAddress`), **verifying Cart live surfaced a real backend bug**, **verifying the
+Seller Order Fulfillment queue live surfaced another real backend bug** (marking an item Shipped
+always 500'd), **verifying Reviews live surfaced a real frontend CSS bug** (Lucide's stroke-only
+`Star` icon needs an explicit `fill` override to actually look "filled"), and **verifying the Union
+module live surfaced a real frontend auth-gating bug** (three of its four detail tabs call
+`[Authorize]`-only endpoints, fetched unconditionally regardless of login state) — see Known Gaps.
+Worth remembering: "the spec says it's done" and "builds and looks right" are both different from
+"someone actually tried to use it end to end." Union Meetings + Governance Polls were deliberately
+scoped out of this pass (user decision — see [ROADMAP.md](ROADMAP.md) Phase 16a); only Admin and
+that remain.
 
 ## Design System
 
@@ -166,6 +171,26 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
     immediately, since the backend's `UpdateOrderItemStatusCommand` validator requires both fields
     only for that transition.
   - Navbar's account menu gains a "Seller Dashboard" link when `auth.hasRole('Seller')`.
+- `features/unions/` (added 2026-08-07, core scope) — `models.ts` (mirrors `UnionDto`/
+  `UnionMemberDto`/`UnionAnnouncementDto`/`UnionDocumentDto`/`UnionEventDto` plus numeric
+  `UnionMemberRole`/`UnionMembershipStatus`/`UnionEventStatus` enums and an `OFFICER_ROLES` set
+  mirroring the backend's `UnionAuthorization.OfficerRoles`), `unions.service.ts` (every core-scope
+  endpoint — browse/create/join/members/pending-members/review-membership/remove-member/
+  announcements/documents/events/event-status).
+  - `union-list/` — public directory (`GET /unions`, admin-approved only per the backend query),
+    search by name, a "Start a Union"/"My Unions" pair shown only to Sellers.
+  - `union-create/` — Seller-only creation form (name/description/logo/city/state/annual fee) —
+    the founder becomes President and the union starts unapproved.
+  - `union-detail/` — public (`/unions/:id`), `MatTabsModule` tabs: Overview (description, founder,
+    established date, fee), Members (roster + a Pending Requests section with Approve/Reject,
+    visible only to officers), Announcements/Documents/Events (list + an officer-only inline
+    create form per tab, plus delete on announcements and cancel on upcoming events). Officer
+    status (`isOfficer`) and membership status (`isActiveMember`/`isPendingMember`/`canJoin`) are
+    all derived client-side from `GetMyMembershipsQuery`, filtered to the current union.
+  - `my-unions/` — a seller's own memberships; since `UnionMemberDto` doesn't carry the union's
+    name/city, each row's union is fetched via a `forkJoin` over `getById` calls (acceptable at
+    the scale of "unions one seller belongs to," not paginated).
+  - Navbar gains a public "Unions" top-level link and a "My Unions" account-menu entry for Sellers.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
 
@@ -217,25 +242,48 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   review list) looked identical whether "filled" or not, because Lucide's `Star` icon renders
   `fill="none"` by default — a `color` change alone only affects the stroke. Fixed by adding
   `::ng-deep svg { fill: currentColor }` to the `--filled` state in both components.
-- **Demo data was created directly against the live database**, across five verification passes:
-  three seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`,
-  `seller-test-verify@example.com`), four categories (Rings, Necklaces, Earrings, Bracelets), eight
-  products, a test customer (`checkout.smoke@example.com`) with one saved address and one placed
-  order, a second test customer (`customer-order-verify@example.com`) whose order was carried all
-  the way through Delivered and now has one review on it, and two throwaway `temp-hash-donor*`
-  accounts (see below) with no orders/products of their own. Kept intentionally as ongoing sample
-  data (user's decision, 2026-08-06) rather than cleaned up.
-- **Two accounts needed a manual password reset directly in the local dev database** during
-  verification, since there's no self-service password-reset endpoint: the dev admin
-  (`admin@jewelryhub.local`) had `IsLockedOut = true` with a stale `AccessFailedCount`/
-  `LockoutEndUtc` mismatch left over from earlier session activity, and `customer-order-verify@example.com`'s
-  password simply stopped matching its stored hash for an undetermined reason. Both were fixed by
-  registering a brand-new throwaway account with the desired password through the live
-  `/auth/register` endpoint (so the app's own `BCryptPasswordHasher` produces the hash — no
-  password-hashing library was reimplemented by hand) and copying that hash onto the target
-  account's row directly in SQL. The two throwaway accounts (`temp-hash-donor@example.com`,
-  `temp-hash-donor2@example.com`) couldn't be hard-deleted afterward (one has a dependent `Customer`
-  FK row) and were left in place as harmless clutter rather than risk a cascading delete.
+  2026-08-07 (Union module): created a union as a KYC-approved seller → admin-approved it as the
+  dev admin → a second seller requested to join → approved as the founding President → published
+  an announcement, uploaded a document, and scheduled an event as an officer — all render correctly
+  for a signed-in officer. **This run caught a real frontend bug**: viewing the union detail page
+  while signed out threw three console 401s (Members/Announcements/Documents are backend
+  `[Authorize]` endpoints — any logged-in user, but not anonymous — while Events is
+  `[AllowAnonymous]`; the page fetched all four unconditionally) which then cascaded into a
+  spurious `AuthService.refresh()` call throwing "No refresh token available" for a session that
+  never existed. Initially misdiagnosed as a concurrent-refresh race (the union detail page is the
+  first in the app to fire ~5 simultaneous authenticated requests on load) — ruled that out by
+  firing 5 concurrent authenticated requests directly at the backend via curl (all succeeded), then
+  found the real cause by logging the actual request/response pairs, which showed the failures
+  correlated with signed-out state, not concurrency. Fixed by gating the three endpoints on
+  `auth.isAuthenticated()`.
+- **Demo data was created directly against the live database**, across six verification passes:
+  five seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`,
+  `seller-test-verify@example.com`, `union-member-seller@example.com`,
+  `union-member-seller2@example.com`), four categories (Rings, Necklaces, Earrings, Bracelets),
+  eight products, a test customer (`checkout.smoke@example.com`) with one saved address and one
+  placed order, a second test customer (`customer-order-verify@example.com`) whose order was
+  carried all the way through Delivered and now has one review on it, one approved union
+  ("Rajasthan Jewelers Guild" — 1 announcement, 1 document, 1 event, 2 active members), and four
+  throwaway `temp-hash-donor*` accounts (see below) with no orders/products of their own. Kept
+  intentionally as ongoing sample data (user's decision, 2026-08-06) rather than cleaned up.
+- **Several accounts needed a manual password reset directly in the local dev database** across
+  verification passes, since there's no self-service password-reset endpoint — this happened
+  repeatedly enough (the dev admin twice, plus two different test sellers/customers) that it's
+  worth flagging as a recurring, not-fully-explained environment quirk: a previously-working
+  account's login would intermittently start failing with "Invalid email or password" despite no
+  intentional change to its password, sometimes (`admin@jewelryhub.local`) with `IsLockedOut = true`
+  and a stale `AccessFailedCount`/`LockoutEndUtc`, sometimes with no lockout at all — just a
+  non-matching hash. The exact trigger was never conclusively identified (ruled out: the seed-only
+  `SeedDevAdminAsync` path, which never touches an existing row). The reliable fix each time:
+  register a brand-new throwaway account with the desired password through the live
+  `/auth/register` endpoint (so the app's own `BCryptPasswordHasher` produces a correctly-formed
+  hash — no password-hashing library was reimplemented by hand) and copy that hash onto the target
+  account's row directly via `sqlcmd`. The four throwaway accounts
+  (`temp-hash-donor@example.com` through `temp-hash-donor4@example.com`) couldn't be hard-deleted
+  afterward (one has a dependent `Customer` FK row) and were left in place as harmless clutter
+  rather than risk a cascading delete. **Worth investigating** if this recurs — possibly worth
+  checking whether something outside the app (a backup/restore script, another process with DB
+  access) is touching the `Users` table.
 - **Checkout simplifications for v1**: billing address always equals shipping address (no separate
   billing UI); there's no way to edit or delete a saved address from the frontend yet (the backend
   supports both — see `AddressesService`); "confirm payment" is a client-side stand-in for a real
@@ -252,6 +300,15 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   page will show "Write a Review" again for an already-reviewed item; submitting just surfaces the
   backend's existing duplicate-review error rather than silently failing, so this is a UX rough
   edge, not a data-integrity issue.
+- **Union module scope for v1 (explicit, user-approved cut)**: Meetings (agenda items, RSVP,
+  minutes, action items) and Governance Polls (create/open/close/vote) have no frontend at all yet
+  — see [ROADMAP.md](ROADMAP.md) Phase 16a. Within core scope: member role changes and member
+  removal have backend endpoints (`UpdateMemberRoleCommand`, `RemoveMemberCommand`) but no UI;
+  "My Unions" fetches each membership's union via a `forkJoin` of individual `GET /unions/{id}`
+  calls rather than a batch endpoint (fine at the scale of one seller's own memberships); the event
+  creation form's `datetime-local` input is timezone-naive (no explicit timezone picker or
+  server-side timezone normalization beyond treating it as the browser's local time before
+  converting to UTC).
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -278,8 +335,9 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Customer UI — Checkout + order confirmation | ✅ Complete, verified live |
 | Customer UI — Order history (list), reviews | ✅ Complete, verified live |
 | Seller UI — Dashboard, KYC, Products, Order Fulfillment | ✅ Complete, verified live |
+| Union UI — Directory, Create/Join, Membership, Announcements/Documents/Events | ✅ Complete, verified live |
+| Union UI — Meetings, Governance Polls | ❌ Missing (deliberately deferred, see Phase 16a) |
 | Admin UI | ❌ Missing |
-| Union UI | ❌ Missing |
 
 ## How to Run
 

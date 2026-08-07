@@ -37,6 +37,7 @@ export class NavbarComponent {
     { label: 'Necklaces', route: ['/products'], queryParams: { search: 'necklace' } },
     { label: 'Earrings', route: ['/products'], queryParams: { search: 'earring' } },
     { label: 'Bracelets', route: ['/products'], queryParams: { search: 'bracelet' } },
+    { label: 'Unions', route: ['/unions'] },
     { label: 'The Atelier', route: ['/'], fragment: 'brand-story' },
   ];
 

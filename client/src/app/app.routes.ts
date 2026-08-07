@@ -60,6 +60,26 @@ export const routes: Routes = [
         loadComponent: () => import('./features/orders/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
       },
       {
+        path: 'unions',
+        loadComponent: () => import('./features/unions/union-list/union-list.component').then((m) => m.UnionListComponent),
+      },
+      {
+        path: 'unions/new',
+        canActivate: [roleGuard(['Seller'])],
+        loadComponent: () => import('./features/unions/union-create/union-create.component').then((m) => m.UnionCreateComponent),
+      },
+      {
+        path: 'unions/mine',
+        canActivate: [roleGuard(['Seller'])],
+        loadComponent: () => import('./features/unions/my-unions/my-unions.component').then((m) => m.MyUnionsComponent),
+      },
+      {
+        // Publicly viewable (GetUnionByIdQuery is [AllowAnonymous]) — join/officer
+        // actions are gated inside the component based on the caller's role/membership.
+        path: 'unions/:id',
+        loadComponent: () => import('./features/unions/union-detail/union-detail.component').then((m) => m.UnionDetailComponent),
+      },
+      {
         path: 'seller',
         canActivate: [roleGuard(['Seller'])],
         children: [

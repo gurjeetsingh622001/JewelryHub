@@ -1,0 +1,63 @@
+<div class="union-list mx-auto max-w-6xl px-4 py-12 md:px-8">
+  <header class="union-list__header">
+    <div>
+      <p class="eyebrow">Jewelry Trade Unions</p>
+      <h1>Find a Union</h1>
+      <p class="union-list__intro">Trade associations run by KYC-verified jewelry sellers — governance, events, and shared resources for the trade.</p>
+    </div>
+    @if (auth.hasRole('Seller')) {
+      <div class="union-list__seller-actions">
+        <a mat-stroked-button routerLink="/unions/mine">My Unions</a>
+        <a mat-flat-button color="primary" routerLink="/unions/new">Start a Union</a>
+      </div>
+    }
+  </header>
+
+  <div class="union-list__search">
+    <mat-form-field appearance="outline">
+      <mat-label>Search by name</mat-label>
+      <input matInput [ngModel]="searchInput()" (ngModelChange)="searchInput.set($event)" (keyup.enter)="submitSearch()" />
+      <button matSuffix mat-icon-button type="button" (click)="submitSearch()" aria-label="Search">
+        <lucide-icon name="Search" [size]="18" [strokeWidth]="1.5" />
+      </button>
+    </mat-form-field>
+  </div>
+
+  @if (unionsResource.isLoading()) {
+    <div class="union-list__loading">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else if ((unionsResource.value()?.items?.length ?? 0) === 0) {
+    <p class="union-list__empty">No unions match your search.</p>
+  } @else {
+    <div class="union-list__grid">
+      @for (union of unionsResource.value()!.items; track union.id) {
+        <a [routerLink]="['/unions', union.id]" class="union-card">
+          <div class="union-card__logo" [style.background-image]="union.logoUrl ? 'url(' + union.logoUrl + ')' : null">
+            @if (!union.logoUrl) {
+              <lucide-icon name="Landmark" [size]="28" [strokeWidth]="1" />
+            }
+          </div>
+          <h3>{{ union.name }}</h3>
+          <p class="union-card__location">{{ union.city }}, {{ union.state }}</p>
+          <p class="union-card__members">
+            <lucide-icon name="Users" [size]="14" [strokeWidth]="1.5" />
+            {{ union.activeMemberCount }} member{{ union.activeMemberCount === 1 ? '' : 's' }}
+          </p>
+        </a>
+      }
+    </div>
+
+    @if ((unionsResource.value()?.totalPages ?? 0) > 1) {
+      <div class="union-list__pagination">
+        <button mat-stroked-button type="button" [disabled]="!unionsResource.value()?.hasPreviousPage" (click)="goToPage(pageNumber() - 1)">
+          Previous
+        </button>
+        <span>Page {{ pageNumber() }} of {{ unionsResource.value()?.totalPages }}</span>
+        <button mat-stroked-button type="button" [disabled]="!unionsResource.value()?.hasNextPage" (click)="goToPage(pageNumber() + 1)">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>
