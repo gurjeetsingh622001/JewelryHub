@@ -268,6 +268,54 @@
           }
         </div>
       </mat-tab>
+
+      <mat-tab label="Meetings">
+        <div class="union-detail__panel">
+          @if (isOfficer()) {
+            <a mat-stroked-button [routerLink]="['/unions', unionId(), 'meetings', 'new']">New Meeting</a>
+          }
+
+          @if (!isActiveMember() && !auth.hasRole('Admin')) {
+            <p class="union-detail__no-items">Only active members can view this union's meetings.</p>
+          } @else if ((meetingsResource.value()?.items?.length ?? 0) === 0) {
+            <p class="union-detail__no-items">No meetings scheduled.</p>
+          } @else {
+            @for (meeting of meetingsResource.value()!.items; track meeting.id) {
+              <a [routerLink]="['/unions', unionId(), 'meetings', meeting.id]" class="union-detail__row union-detail__row--link">
+                <lucide-icon name="CalendarDays" [size]="16" [strokeWidth]="1.5" />
+                <span class="union-detail__doc-title">{{ meeting.title }}</span>
+                <span class="union-detail__role-badge">{{ meetingStatusLabels[meeting.status] }}</span>
+                <span class="union-detail__card-meta">{{ meeting.scheduledAtUtc | date: 'medium' }}</span>
+              </a>
+            }
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Polls">
+        <div class="union-detail__panel">
+          @if (isOfficer()) {
+            <a mat-stroked-button [routerLink]="['/unions', unionId(), 'polls', 'new']">New Poll</a>
+          }
+
+          @if (!isActiveMember() && !auth.hasRole('Admin')) {
+            <p class="union-detail__no-items">Only active members can view this union's polls.</p>
+          } @else if ((pollsResource.value()?.items?.length ?? 0) === 0) {
+            <p class="union-detail__no-items">No polls yet.</p>
+          } @else {
+            @for (poll of pollsResource.value()!.items; track poll.id) {
+              <a [routerLink]="['/unions', unionId(), 'polls', poll.id]" class="union-detail__row union-detail__row--link">
+                <lucide-icon name="Vote" [size]="16" [strokeWidth]="1.5" />
+                <span class="union-detail__doc-title">{{ poll.question }}</span>
+                <span class="union-detail__role-badge">{{ pollStatusLabels[poll.status] }}</span>
+                @if (poll.closesAtUtc) {
+                  <span class="union-detail__card-meta">Closes {{ poll.closesAtUtc | date: 'mediumDate' }}</span>
+                }
+              </a>
+            }
+          }
+        </div>
+      </mat-tab>
     </mat-tab-group>
   </div>
 }

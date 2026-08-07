@@ -1,0 +1,53 @@
+<div class="poll-form mx-auto max-w-2xl px-4 py-12 md:px-8">
+  <a [routerLink]="['/unions', unionId()]" class="poll-form__back">
+    <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+    Back to Union
+  </a>
+
+  <header class="poll-form__header">
+    <p class="eyebrow">Union Governance</p>
+    <h1>Create a Poll</h1>
+    <p class="poll-form__intro">The poll is created as a Draft — you'll need to open it separately before members can vote.</p>
+  </header>
+
+  <form class="poll-form__form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>Question</mat-label>
+      <textarea matInput rows="2" [ngModel]="question()" (ngModelChange)="question.set($event)" name="question" required></textarea>
+    </mat-form-field>
+
+    <div class="poll-form__options">
+      <p class="poll-form__options-label">Options (at least 2)</p>
+      @for (option of options(); track $index) {
+        <div class="poll-form__option-row">
+          <mat-form-field appearance="outline">
+            <input matInput [ngModel]="option" (ngModelChange)="updateOption($index, $event)" [name]="'option' + $index" />
+          </mat-form-field>
+          @if (options().length > 2) {
+            <button mat-icon-button type="button" (click)="removeOption($index)" aria-label="Remove option">
+              <lucide-icon name="Trash2" [size]="16" [strokeWidth]="1.5" />
+            </button>
+          }
+        </div>
+      }
+      <button mat-button type="button" (click)="addOption()">Add Option</button>
+    </div>
+
+    <mat-checkbox [ngModel]="allowMultipleSelections()" (ngModelChange)="allowMultipleSelections.set($event)" name="allowMultiple">
+      Allow members to select multiple options
+    </mat-checkbox>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Closes At (optional)</mat-label>
+      <input matInput type="datetime-local" [ngModel]="closesAt()" (ngModelChange)="closesAt.set($event)" name="closesAt" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+      @if (submitting()) {
+        <mat-spinner diameter="20" class="inline-block" />
+      } @else {
+        Create Poll
+      }
+    </button>
+  </form>
+</div>

@@ -1,0 +1,173 @@
+@if (meetingResource.isLoading()) {
+  <div class="meeting-detail__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (meetingResource.error()) {
+  <div class="meeting-detail__empty">
+    <p>We couldn't load this meeting — you may not be a member of its union.</p>
+  </div>
+} @else {
+  @let meeting = meetingResource.value()!;
+  <div class="meeting-detail mx-auto max-w-3xl px-4 py-12 md:px-8">
+    <a [routerLink]="['/unions', meeting.unionId]" class="meeting-detail__back">
+      <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+      Back to Union
+    </a>
+
+    <header class="meeting-detail__header">
+      <div>
+        <p class="eyebrow">Union Meeting</p>
+        <h1>{{ meeting.title }}</h1>
+        <p class="meeting-detail__meta">
+          {{ meeting.scheduledAtUtc | date: 'medium' }} &middot; {{ meeting.durationMinutes }} min
+          @if (meeting.location) {
+            &middot; {{ meeting.location }}
+          }
+        </p>
+        @if (meeting.virtualMeetingLink) {
+          <a [href]="meeting.virtualMeetingLink" target="_blank" rel="noopener" class="meeting-detail__link">Join Virtual Meeting</a>
+        }
+      </div>
+      <span class="meeting-detail__status-badge">{{ meetingStatusLabels[meeting.status] }}</span>
+    </header>
+
+    @if (myAttendee() && meeting.status === MeetingStatus.Scheduled) {
+      <section class="meeting-detail__rsvp">
+        <p>Will you attend?</p>
+        <div class="meeting-detail__rsvp-actions">
+          <button mat-flat-button color="primary" type="button" [disabled]="rsvping()" (click)="rsvp(MeetingAttendanceStatus.Confirmed)">
+            Confirm Attendance
+          </button>
+          <button mat-stroked-button type="button" [disabled]="rsvping()" (click)="rsvp(MeetingAttendanceStatus.Excused)">Can't Attend</button>
+        </div>
+        <p class="meeting-detail__rsvp-current">Current response: {{ attendanceStatusLabels[myAttendee()!.status] }}</p>
+      </section>
+    }
+
+    @if (isOfficer()) {
+      <section class="meeting-detail__officer-actions">
+        @if (meeting.status === MeetingStatus.Scheduled) {
+          <button mat-stroked-button type="button" (click)="updateStatus(MeetingStatus.Ongoing)">Start Meeting</button>
+          <button mat-stroked-button type="button" (click)="updateStatus(MeetingStatus.Cancelled)">Cancel Meeting</button>
+        }
+        @if (meeting.status === MeetingStatus.Ongoing) {
+          <button mat-stroked-button type="button" (click)="updateStatus(MeetingStatus.Completed)">Mark Completed</button>
+        }
+      </section>
+    }
+
+    <section class="meeting-detail__section">
+      <h2>Agenda</h2>
+      @if (meeting.agendaItems.length === 0) {
+        <p class="meeting-detail__no-items">No agenda items.</p>
+      } @else {
+        @for (item of meeting.agendaItems; track item.id) {
+          <div class="meeting-detail__row">
+            <span>{{ item.topic }}</span>
+            <span class="meeting-detail__badge">{{ agendaItemStatusLabels[item.status] }}</span>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="meeting-detail__section">
+      <h2>Attendees</h2>
+      @for (attendee of meeting.attendees; track attendee.id) {
+        <div class="meeting-detail__row">
+          <span>{{ attendee.sellerBusinessName }}</span>
+          <span class="meeting-detail__badge">{{ attendanceStatusLabels[attendee.status] }}</span>
+        </div>
+      }
+    </section>
+
+    <section class="meeting-detail__section">
+      <h2>Minutes</h2>
+      @if (isOfficer()) {
+        @if (!showMinuteForm()) {
+          <button mat-stroked-button type="button" (click)="showMinuteForm.set(true)">Record Minutes</button>
+        } @else {
+          <div class="meeting-detail__minute-form">
+            <mat-form-field appearance="outline">
+              <mat-label>Agenda Item (optional)</mat-label>
+              <mat-select [ngModel]="minuteAgendaItemId()" (ngModelChange)="minuteAgendaItemId.set($event)">
+                <mat-option [value]="null">None</mat-option>
+                @for (item of meeting.agendaItems; track item.id) {
+                  <mat-option [value]="item.id">{{ item.topic }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Decision Summary</mat-label>
+              <textarea matInput rows="3" [ngModel]="minuteDecisionSummary()" (ngModelChange)="minuteDecisionSummary.set($event)"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Discussion Notes (optional)</mat-label>
+              <textarea matInput rows="2" [ngModel]="minuteDiscussionNotes()" (ngModelChange)="minuteDiscussionNotes.set($event)"></textarea>
+            </mat-form-field>
+
+            <div class="meeting-detail__action-items">
+              <p class="meeting-detail__action-items-label">Action Items (optional)</p>
+              @for (draft of minuteActionItems(); track $index) {
+                <div class="meeting-detail__action-item-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Description</mat-label>
+                    <input matInput [ngModel]="draft.description" (ngModelChange)="updateActionItem($index, { description: $event })" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Responsible</mat-label>
+                    <mat-select [ngModel]="draft.responsibleMemberId" (ngModelChange)="updateActionItem($index, { responsibleMemberId: $event })">
+                      @for (attendee of meeting.attendees; track attendee.id) {
+                        <mat-option [value]="attendee.unionMemberId">{{ attendee.sellerBusinessName }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Due Date</mat-label>
+                    <input matInput type="date" [ngModel]="draft.dueDate" (ngModelChange)="updateActionItem($index, { dueDate: $event })" />
+                  </mat-form-field>
+                  <button mat-icon-button type="button" (click)="removeActionItem($index)" aria-label="Remove action item">
+                    <lucide-icon name="Trash2" [size]="16" [strokeWidth]="1.5" />
+                  </button>
+                </div>
+              }
+              <button mat-button type="button" (click)="addActionItem()">Add Action Item</button>
+            </div>
+
+            <div class="meeting-detail__inline-form-actions">
+              <button mat-flat-button color="primary" type="button" [disabled]="savingMinute()" (click)="submitMinute()">Save Minutes</button>
+              <button mat-button type="button" (click)="showMinuteForm.set(false)">Cancel</button>
+            </div>
+          </div>
+        }
+      }
+
+      @if (meeting.minutes.length === 0) {
+        <p class="meeting-detail__no-items">No minutes recorded yet.</p>
+      } @else {
+        @for (minute of meeting.minutes; track minute.id) {
+          <div class="meeting-detail__minute-card">
+            <p class="meeting-detail__minute-summary">{{ minute.decisionSummary }}</p>
+            @if (minute.discussionNotes) {
+              <p class="meeting-detail__minute-notes">{{ minute.discussionNotes }}</p>
+            }
+            <p class="meeting-detail__card-meta">{{ minute.recordedByBusinessName }} &middot; {{ minute.createdAtUtc | date: 'mediumDate' }}</p>
+
+            @if (minute.actionItems.length > 0) {
+              <div class="meeting-detail__minute-actions">
+                @for (action of minute.actionItems; track action.id) {
+                  <div class="meeting-detail__row">
+                    <span>
+                      {{ action.description }}
+                      <span class="meeting-detail__card-meta">— {{ action.responsibleBusinessName }}</span>
+                    </span>
+                    <span class="meeting-detail__badge">{{ actionItemStatusLabels[action.status] }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
+  </div>
+}

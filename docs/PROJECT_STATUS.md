@@ -1,7 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-07** (Angular Union module — core scope: browse/create/join, membership
-management, officer-gated announcements/documents/events — verified live). This file, along with
+Last updated: **2026-08-07** (Angular Union Meetings + Governance Polls — the last piece of the
+Union module — verified live). This file, along with
 the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
@@ -148,6 +148,21 @@ any chat history. See the Maintenance Rule at the bottom.
   end-to-end (create → admin-approve → second seller joins → founder approves the request →
   publishes an announcement, uploads a document, schedules an event), zero console errors for both
   a signed-in officer and an anonymous visitor.
+- ✔ Union Meetings + Governance Polls (2026-08-07) — the deferred Phase 16a piece, closing out the
+  full Union module. Two new tabs on `/unions/:id` (Meetings, Polls, gated on active membership),
+  plus `/unions/:unionId/meetings/new`+`/:meetingId` (schedule with a dynamic agenda list, RSVP,
+  officer status controls, and an officer "Record Minutes" form with dynamic action items assigned
+  to attendees) and `/unions/:unionId/polls/new`+`/:pollId` (create as Draft, a radio/checkbox
+  ballot shown only while Active, live results, officer Open/Close). "My Action Items" added to
+  `/unions/mine`. **Found and fixed a real layout bug**: the Record Minutes action-item row crammed
+  three form fields into one flex row, squeezing the dropdown/date fields down to an unusable
+  width — fixed with a responsive grid. Verification also caught two Playwright/Angular-Material
+  interaction quirks (clicking a `mat-select`/`mat-radio-button`'s host element rather than its
+  native `<input>` can silently no-op in headless Chromium) — confirmed via `aria-checked`/
+  `outerHTML` inspection that these were test-tooling artifacts, not app bugs. Verified live
+  end-to-end: scheduled a meeting → recorded minutes with an action item → a second member RSVP'd;
+  created and opened a poll → a second member voted → results and re-vote rejection both correct →
+  the assigned action item appeared under "My Action Items." Zero console errors.
 
 ## In Progress
 
@@ -169,13 +184,12 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Admin UI
-- ❌ Union Meetings + Governance Polls UI (core Union UI is done — see Completed above and
-  [ROADMAP.md](ROADMAP.md) Phase 16a)
+- ❌ Admin UI (the only remaining frontend module)
 
 (The full Customer UI — Home, auth, product browsing, cart, checkout, order history, reviews —
-the full Seller UI, and the core Union UI are now done, see Completed above. The Angular
-foundation these are built on is described in [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
+the full Seller UI, and the full Union UI — including Meetings and Governance Polls — are now
+done, see Completed above. The Angular foundation these are built on is described in
+[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
 
 ## Explicit Non-Priorities (by decision, not oversight)
 

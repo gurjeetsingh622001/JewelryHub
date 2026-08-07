@@ -1,0 +1,93 @@
+@if (pollResource.isLoading()) {
+  <div class="poll-detail__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (pollResource.error()) {
+  <div class="poll-detail__empty">
+    <p>We couldn't load this poll — you may not be a member of its union.</p>
+  </div>
+} @else {
+  @let poll = pollResource.value()!;
+  <div class="poll-detail mx-auto max-w-2xl px-4 py-12 md:px-8">
+    <a [routerLink]="['/unions', poll.unionId]" class="poll-detail__back">
+      <lucide-icon name="ChevronRight" class="rotate-180" [size]="16" [strokeWidth]="1.5" />
+      Back to Union
+    </a>
+
+    <header class="poll-detail__header">
+      <div>
+        <p class="eyebrow">Union Poll</p>
+        <h1>{{ poll.question }}</h1>
+        <p class="poll-detail__meta">
+          By {{ poll.createdByBusinessName }} &middot; {{ poll.totalVotes }} vote{{ poll.totalVotes === 1 ? '' : 's' }}
+          @if (poll.closesAtUtc) {
+            &middot; Closes {{ poll.closesAtUtc | date: 'medium' }}
+          }
+        </p>
+      </div>
+      <span class="poll-detail__status-badge">{{ pollStatusLabels[poll.status] }}</span>
+    </header>
+
+    @if (isOfficer()) {
+      <section class="poll-detail__officer-actions">
+        @if (poll.status === PollStatus.Draft) {
+          <button mat-flat-button color="primary" type="button" (click)="openPoll()">Open for Voting</button>
+        }
+        @if (poll.status === PollStatus.Active) {
+          <button mat-stroked-button type="button" (click)="closePoll()">Close Poll</button>
+        }
+      </section>
+    }
+
+    @if (poll.status === PollStatus.Active && isActiveMember() && !hasVotedThisSession()) {
+      <section class="poll-detail__ballot">
+        @if (poll.allowMultipleSelections) {
+          @for (option of poll.options; track option.id) {
+            <mat-checkbox
+              [ngModel]="selectedOptionIds().includes(option.id)"
+              (ngModelChange)="toggleOption(option.id, true)"
+            >
+              {{ option.text }}
+            </mat-checkbox>
+          }
+        } @else {
+          <mat-radio-group [ngModel]="selectedOptionIds()[0]" (ngModelChange)="toggleOption($event, false)">
+            @for (option of poll.options; track option.id) {
+              <mat-radio-button [value]="option.id">{{ option.text }}</mat-radio-button>
+            }
+          </mat-radio-group>
+        }
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="poll-detail__vote-button"
+          [disabled]="selectedOptionIds().length === 0 || voting()"
+          (click)="submitVote()"
+        >
+          @if (voting()) {
+            <mat-spinner diameter="20" class="inline-block" />
+          } @else {
+            Submit Vote
+          }
+        </button>
+      </section>
+    }
+
+    <section class="poll-detail__results">
+      <h2>Results</h2>
+      @for (option of poll.options; track option.id) {
+        <div class="poll-detail__result-row">
+          <span class="poll-detail__result-text">{{ option.text }}</span>
+          <span class="poll-detail__result-count">{{ option.voteCount }}</span>
+          <div class="poll-detail__result-bar">
+            <div
+              class="poll-detail__result-bar-fill"
+              [style.width.%]="poll.totalVotes > 0 ? (option.voteCount / poll.totalVotes) * 100 : 0"
+            ></div>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+}

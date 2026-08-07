@@ -1,0 +1,119 @@
+.poll-detail__loading,
+.poll-detail__empty {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.poll-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+
+  &:hover {
+    color: var(--color-gold-deep);
+  }
+}
+
+.poll-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    margin-top: 0.35rem;
+    max-width: 40ch;
+  }
+}
+
+.poll-detail__meta {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  margin-top: 0.5rem;
+}
+
+.poll-detail__status-badge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+
+.poll-detail__officer-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.poll-detail__ballot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+
+  mat-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.poll-detail__vote-button {
+  align-self: flex-start;
+  margin-top: 0.75rem;
+}
+
+.poll-detail__results {
+  h2 {
+    font-size: var(--text-base);
+    margin-bottom: 1rem;
+  }
+}
+
+.poll-detail__result-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.poll-detail__result-text {
+  font-size: var(--text-sm);
+}
+
+.poll-detail__result-count {
+  font-family: var(--font-display);
+  color: var(--color-gold-deep);
+}
+
+.poll-detail__result-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.poll-detail__result-bar-fill {
+  height: 100%;
+  background: var(--color-gold);
+  border-radius: var(--radius-full, 999px);
+}

@@ -5,6 +5,57 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-07 — Union UI: Meetings + Governance Polls (Fixed a Real Layout Bug, Verified Live)
+
+**Module**: Frontend (`client/`, new `features/unions/meeting-form/`, `meeting-detail/`,
+`poll-form/`, `poll-detail/`, `meetings.service.ts`, `polls.service.ts`) + demo data in the live DB
+
+**Scope**: closes out Phase 16a, deliberately deferred from the core Union module pass. Pure
+frontend — `UnionMeetingsController` and `UnionPollsController` were already complete.
+
+**Files modified**:
+- `client/src/app/features/unions/models.ts` — added `MeetingStatus`/`AgendaItemStatus`/
+  `MeetingAttendanceStatus`/`ActionItemStatus`/`PollStatus` enums + labels, and every Meeting/Poll
+  DTO and request interface
+- `client/src/app/features/unions/meetings.service.ts`, `polls.service.ts` (new)
+- `client/src/app/features/unions/meeting-form/`, `meeting-detail/`, `poll-form/`, `poll-detail/`
+  (new)
+- `client/src/app/features/unions/union-detail/` — added Meetings and Polls tabs
+- `client/src/app/features/unions/my-unions/` — added a "My Action Items" section
+- `client/src/app/app.routes.ts` — added `/unions/:unionId/meetings/new`+`/:meetingId` and
+  `/unions/:unionId/polls/new`+`/:pollId`
+- `client/src/app/app.config.ts` — registered `CalendarDays`, `Vote` icons
+- `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Frontend bug found and fixed**: the Record Minutes form's action-item row packed a description
+input, a responsible-member `mat-select`, a due-date input, and a delete button into a single flex
+row with `flex: 1` on each field and no minimum width — at normal viewport widths this squeezed
+the dropdown and date field down to roughly 90px, making them illegible and (incidentally) hard
+for Playwright to click reliably. Fixed with a responsive grid (`2fr 1.5fr 1fr auto`, collapsing
+to one column below 640px).
+
+**Test-tooling quirks investigated and ruled out as real bugs**: verification twice hit what
+looked like broken data binding — a `mat-select` that wouldn't open and a `mat-radio-button` that
+wouldn't select, both via Playwright's default `.click()` on the component's host element in
+headless Chromium. Rather than assume the app was broken, inspected the DOM directly
+(`aria-checked`, `outerHTML`) and confirmed clicking the actual native `<input>` inside each
+component toggled it correctly and the Angular bindings (`ngModel`, `[disabled]`) responded
+exactly as coded — these were Playwright/Material interaction quirks, not app bugs, and the fix
+was in the test script, not the product.
+
+**Verified live end-to-end**: as the founding officer, scheduled a meeting with a two-item agenda
+(every active member auto-invited), recorded minutes with a decision summary and an action item
+assigned to another member, and confirmed that member could RSVP; created a poll as `Draft`,
+opened it, had a second member vote, confirmed the tally updated correctly and a second vote
+attempt was rejected with the backend's real "already voted" error; confirmed the assigned action
+item appeared under that member's "My Action Items" on `/unions/mine`. Zero console errors on the
+final run.
+
+This closes the full Union module (Phase 11 backend through Phase 16a frontend). Only the Admin
+module remains on the roadmap.
+
+---
+
 ## 2026-08-07 — Union UI: Directory, Create/Join, Membership, Announcements/Documents/Events (Fixed a Real Auth-Gating Bug, Verified Live)
 
 **Module**: Frontend (`client/`, new `features/unions/`) + demo data in the live DB

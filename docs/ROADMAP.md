@@ -188,9 +188,47 @@ uploaded a document, and scheduled an event as an officer → confirmed all of i
 for both a signed-in officer and an anonymous visitor, zero console errors.
 
 ## Phase 16a — Union Meetings + Governance Polls (Angular)
-**Pending.** Deliberately deferred from Phase 16 to keep that pass a reasonable size. Backend is
-complete (`UnionMeetingsController`: create/list/get/status/RSVP/minutes/my-action-items;
-`UnionPollsController`: create/list/get/open/close/vote) — this phase is purely frontend.
+**Completed (2026-08-07).** Deferred from Phase 16 to keep that pass a reasonable size; this phase
+was pure frontend since the backend (`UnionMeetingsController`, `UnionPollsController`) was already
+complete.
+
+Built, added to `/unions/:id` as two new tabs (Meetings, Polls — both gated on the caller being an
+active member or Admin, matching `GetMeetingsQuery`/`GetPollsQuery`'s own server-side check):
+- **Meetings**: `/unions/:unionId/meetings/new` (officer-only — title, location, virtual link,
+  schedule, duration, a dynamic agenda-topic list) and `/unions/:unionId/meetings/:meetingId`
+  (agenda, the full attendee list with RSVP status, an RSVP widget for the caller's own invite,
+  officer status controls — Start/Cancel/Complete — and an officer-only "Record Minutes" form:
+  optional agenda-item link, decision summary, discussion notes, and a dynamic action-item list
+  each assigned to an attendee with an optional due date). Agenda-item status and action-item
+  status are read-only in this UI — the backend has no endpoint to change either, so there was
+  nothing to build there.
+- **Polls**: `/unions/:unionId/polls/new` (officer-only — question, single/multi-select toggle,
+  optional close date, a dynamic 2+ option list; created as `Draft` per the backend's design) and
+  `/unions/:unionId/polls/:pollId` (a radio/checkbox ballot shown only while `Active`, live vote
+  counts with a simple bar-chart-style result view, and officer Open/Close controls). Like Reviews,
+  there's no per-member "already voted" flag on `PollDto`, so the ballot just hides itself locally
+  after a successful submit and a revote correctly surfaces the backend's real "already voted"
+  error rather than failing silently.
+- **My Action Items**: added to `/unions/mine` — the caller's open action items across every union
+  they belong to (`GetMyActionItemsQuery`), each showing its due date and status.
+
+**Found and fixed a real layout bug during verification**: the Record Minutes form's action-item
+row (description + responsible-member dropdown + due date + delete button, all in one flex row)
+squeezed the dropdown and date input down to an unusable, near-illegible width. Fixed with a
+responsive grid (stacks to one column below 640px). Verification also surfaced two Playwright/
+Angular-Material interaction quirks (clicking a `mat-select`/`mat-radio-button` host element
+instead of its native `<input>` can silently no-op in headless Chromium) — confirmed these were
+test-tooling artifacts, not app bugs, by inspecting `aria-checked`/`outerHTML` directly and showing
+the underlying model updates correctly once the native control is toggled.
+
+Verified live end-to-end: scheduled a meeting (auto-inviting every active member) → recorded
+minutes with an action item → a second member confirmed their RSVP; created a poll as Draft →
+opened it → a second member voted → tallies updated correctly and re-voting was rejected; the
+assigned action item appeared under "My Action Items" for the responsible member. Zero console
+errors on the final run.
+
+This closes out the full Union module — Phase 11 (backend) through Phase 16a (frontend) are all
+complete.
 
 ## Phase 17 — Reports / Analytics
 **Pending.** No reporting endpoints exist anywhere yet (sales, seller performance, union

@@ -1,0 +1,72 @@
+.meeting-form__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+
+  &:hover {
+    color: var(--color-gold-deep);
+  }
+}
+
+.meeting-form__header {
+  margin-bottom: 2.5rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin: 0.35rem 0 1rem;
+  }
+}
+
+.meeting-form__intro {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.meeting-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  > button {
+    align-self: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+.meeting-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.meeting-form__agenda {
+  margin: 1rem 0;
+}
+
+.meeting-form__agenda-label {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  margin-bottom: 0.5rem;
+}
+
+.meeting-form__agenda-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  mat-form-field {
+    flex: 1;
+  }
+}

@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowRight,
   Award,
+  CalendarDays,
   ChevronDown,
   ChevronRight,
   ClipboardList,
@@ -42,6 +43,7 @@ import {
   User,
   UserPlus,
   Users,
+  Vote,
   X,
 } from 'lucide-angular';
 
@@ -67,6 +69,7 @@ export const appConfig: ApplicationConfig = {
         AlertCircle,
         ArrowRight,
         Award,
+        CalendarDays,
         ChevronDown,
         ChevronRight,
         ClipboardList,
@@ -102,6 +105,7 @@ export const appConfig: ApplicationConfig = {
         User,
         UserPlus,
         Users,
+        Vote,
         X,
       }),
     ),

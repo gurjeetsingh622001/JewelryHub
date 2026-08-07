@@ -12,14 +12,18 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { LucideAngularModule } from 'lucide-angular';
 import { map } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { MeetingsService } from '../meetings.service';
 import {
+  MEETING_STATUS_LABELS,
   OFFICER_ROLES,
+  POLL_STATUS_LABELS,
   UNION_EVENT_STATUS_LABELS,
   UNION_MEMBER_ROLE_LABELS,
   UNION_MEMBERSHIP_STATUS_LABELS,
   UnionEventStatus,
   UnionMembershipStatus,
 } from '../models';
+import { PollsService } from '../polls.service';
 import { UnionsService } from '../unions.service';
 
 @Component({
@@ -41,12 +45,16 @@ import { UnionsService } from '../unions.service';
 export class UnionDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly unionsService = inject(UnionsService);
+  private readonly meetingsService = inject(MeetingsService);
+  private readonly pollsService = inject(PollsService);
   protected readonly auth = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly roleLabels = UNION_MEMBER_ROLE_LABELS;
   protected readonly membershipStatusLabels = UNION_MEMBERSHIP_STATUS_LABELS;
   protected readonly eventStatusLabels = UNION_EVENT_STATUS_LABELS;
+  protected readonly meetingStatusLabels = MEETING_STATUS_LABELS;
+  protected readonly pollStatusLabels = POLL_STATUS_LABELS;
   protected readonly UnionEventStatus = UnionEventStatus;
 
   protected readonly unionId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), { requireSync: true });
@@ -124,6 +132,23 @@ export class UnionDetailComponent {
   protected readonly eventsResource = rxResource({
     params: this.unionId,
     stream: ({ params }) => this.unionsService.getEvents(params, 1, 20),
+  });
+
+  // GetMeetings/GetPolls require an active membership (or Admin) server-side
+  // — gating on that here avoids a guaranteed BusinessRuleException for a
+  // logged-in visitor who isn't a member of this particular union.
+  private readonly activeMemberUnionId = computed(() =>
+    this.isActiveMember() || this.auth.hasRole('Admin') ? this.unionId() : undefined,
+  );
+
+  protected readonly meetingsResource = rxResource({
+    params: this.activeMemberUnionId,
+    stream: ({ params }) => this.meetingsService.getMeetings(params, 1, 20),
+  });
+
+  protected readonly pollsResource = rxResource({
+    params: this.activeMemberUnionId,
+    stream: ({ params }) => this.pollsService.getPolls(params, 1, 20),
   });
 
   join(): void {

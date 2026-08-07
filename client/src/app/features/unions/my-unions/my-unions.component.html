@@ -32,4 +32,21 @@
       }
     </div>
   }
+
+  @if ((actionItemsResource.value()?.length ?? 0) > 0) {
+    <section class="my-unions__action-items">
+      <h2>My Action Items</h2>
+      @for (item of actionItemsResource.value()!; track item.id) {
+        <div class="my-unions__action-item-row">
+          <span>{{ item.description }}</span>
+          <div class="my-unions__action-item-meta">
+            @if (item.dueDateUtc) {
+              <span class="my-unions__meta">Due {{ item.dueDateUtc | date: 'mediumDate' }}</span>
+            }
+            <span class="my-unions__status">{{ actionItemStatusLabels[item.status] }}</span>
+          </div>
+        </div>
+      }
+    </section>
+  }
 </div>

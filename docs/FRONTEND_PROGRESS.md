@@ -1,24 +1,24 @@
 # Frontend Progress
 
-## Status: Full Customer + Seller UI Complete, Core Union UI Complete
+## Status: Full Customer + Seller + Union UI Complete
 
 Last updated 2026-08-07. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The entire Customer-facing storefront (auth, Home,
 product browsing, cart, checkout, order history, reviews), the entire Seller module (dashboard,
-KYC, product/inventory management, order fulfillment), and the core Union module (directory,
-create/join, membership management, officer-gated announcements/documents/events) are built — all
-wired to the live backend APIs and verified end to end against an actual running backend +
-database, not just a build. **Building Checkout surfaced a hard backend blocker** (no way to ever
-create a `CustomerAddress`), **verifying Cart live surfaced a real backend bug**, **verifying the
-Seller Order Fulfillment queue live surfaced another real backend bug** (marking an item Shipped
-always 500'd), **verifying Reviews live surfaced a real frontend CSS bug** (Lucide's stroke-only
-`Star` icon needs an explicit `fill` override to actually look "filled"), and **verifying the Union
-module live surfaced a real frontend auth-gating bug** (three of its four detail tabs call
-`[Authorize]`-only endpoints, fetched unconditionally regardless of login state) — see Known Gaps.
-Worth remembering: "the spec says it's done" and "builds and looks right" are both different from
-"someone actually tried to use it end to end." Union Meetings + Governance Polls were deliberately
-scoped out of this pass (user decision — see [ROADMAP.md](ROADMAP.md) Phase 16a); only Admin and
-that remain.
+KYC, product/inventory management, order fulfillment), and the entire Union module (directory,
+create/join, membership management, announcements/documents/events, meetings, governance polls)
+are built — all wired to the live backend APIs and verified end to end against an actual running
+backend + database, not just a build. **Building Checkout surfaced a hard backend blocker** (no
+way to ever create a `CustomerAddress`), **verifying Cart live surfaced a real backend bug**,
+**verifying the Seller Order Fulfillment queue live surfaced another real backend bug** (marking an
+item Shipped always 500'd), **verifying Reviews live surfaced a real frontend CSS bug** (Lucide's
+stroke-only `Star` icon needs an explicit `fill` override to actually look "filled"), **verifying
+the Union module live surfaced a real frontend auth-gating bug** (three of its four detail tabs
+call `[Authorize]`-only endpoints, fetched unconditionally regardless of login state), and
+**verifying Union Meetings live surfaced a real layout bug** (an action-item form row squeezed
+three fields into an unusable width) — see Known Gaps. Worth remembering: "the spec says it's
+done" and "builds and looks right" are both different from "someone actually tried to use it end
+to end." Only Admin remains — see [ROADMAP.md](ROADMAP.md) Phase 12/15.
 
 ## Design System
 
@@ -171,12 +171,14 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
     immediately, since the backend's `UpdateOrderItemStatusCommand` validator requires both fields
     only for that transition.
   - Navbar's account menu gains a "Seller Dashboard" link when `auth.hasRole('Seller')`.
-- `features/unions/` (added 2026-08-07, core scope) — `models.ts` (mirrors `UnionDto`/
-  `UnionMemberDto`/`UnionAnnouncementDto`/`UnionDocumentDto`/`UnionEventDto` plus numeric
-  `UnionMemberRole`/`UnionMembershipStatus`/`UnionEventStatus` enums and an `OFFICER_ROLES` set
-  mirroring the backend's `UnionAuthorization.OfficerRoles`), `unions.service.ts` (every core-scope
-  endpoint — browse/create/join/members/pending-members/review-membership/remove-member/
-  announcements/documents/events/event-status).
+- `features/unions/` (core scope added 2026-08-07, Meetings + Polls added 2026-08-07) — `models.ts`
+  (mirrors every Union/Meeting/Poll DTO plus numeric `UnionMemberRole`/`UnionMembershipStatus`/
+  `UnionEventStatus`/`MeetingStatus`/`AgendaItemStatus`/`MeetingAttendanceStatus`/
+  `ActionItemStatus`/`PollStatus` enums and an `OFFICER_ROLES` set mirroring the backend's
+  `UnionAuthorization.OfficerRoles`), `unions.service.ts` (core-scope endpoints —
+  browse/create/join/members/pending-members/review-membership/remove-member/announcements/
+  documents/events/event-status), `meetings.service.ts` and `polls.service.ts` (one each per
+  backend controller).
   - `union-list/` — public directory (`GET /unions`, admin-approved only per the backend query),
     search by name, a "Start a Union"/"My Unions" pair shown only to Sellers.
   - `union-create/` — Seller-only creation form (name/description/logo/city/state/annual fee) —
@@ -184,12 +186,37 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   - `union-detail/` — public (`/unions/:id`), `MatTabsModule` tabs: Overview (description, founder,
     established date, fee), Members (roster + a Pending Requests section with Approve/Reject,
     visible only to officers), Announcements/Documents/Events (list + an officer-only inline
-    create form per tab, plus delete on announcements and cancel on upcoming events). Officer
-    status (`isOfficer`) and membership status (`isActiveMember`/`isPendingMember`/`canJoin`) are
-    all derived client-side from `GetMyMembershipsQuery`, filtered to the current union.
+    create form per tab, plus delete on announcements and cancel on upcoming events), and — added
+    2026-08-07 — Meetings and Polls (summary lists linking to their own detail pages, an officer-
+    only "New Meeting"/"New Poll" entry point; both resources gated on active membership, matching
+    `GetMeetingsQuery`/`GetPollsQuery`'s own server-side check, to avoid a guaranteed
+    `BusinessRuleException` for a logged-in non-member). Officer status (`isOfficer`) and
+    membership status (`isActiveMember`/`isPendingMember`/`canJoin`) are all derived client-side
+    from `GetMyMembershipsQuery`, filtered to the current union.
   - `my-unions/` — a seller's own memberships; since `UnionMemberDto` doesn't carry the union's
     name/city, each row's union is fetched via a `forkJoin` over `getById` calls (acceptable at
-    the scale of "unions one seller belongs to," not paginated).
+    the scale of "unions one seller belongs to," not paginated). Added 2026-08-07: a "My Action
+    Items" section (`GetMyActionItemsQuery`) listing the seller's open action items across every
+    union they belong to.
+  - `meeting-form/` (added 2026-08-07) — officer-only, `/unions/:unionId/meetings/new`: title,
+    location, virtual link, schedule, duration, and a dynamic agenda-topic list (add/remove rows).
+  - `meeting-detail/` (added 2026-08-07) — `/unions/:unionId/meetings/:meetingId`: agenda items,
+    the full attendee list with RSVP status, an RSVP widget (Confirm/Can't Attend) for the caller's
+    own invite, officer-only meeting-status controls (Start/Cancel/Complete — the only transitions
+    that make sense from `Scheduled`/`Ongoing`), and an officer-only "Record Minutes" form
+    (optional agenda-item link, decision summary, discussion notes, a dynamic list of action items
+    each assigned to an attendee with an optional due date). Agenda-item status and action-item
+    status are both read-only here — the backend has no endpoint to change either.
+  - `poll-form/` (added 2026-08-07) — officer-only, `/unions/:unionId/polls/new`: question, a
+    single/multi-select toggle, an optional close date, and a dynamic 2+ option list; created as
+    `Draft` per the backend's design (an officer must separately open it).
+  - `poll-detail/` (added 2026-08-07) — `/unions/:unionId/polls/:pollId`: a radio (single-select)
+    or checkbox (multi-select) ballot shown only while the poll is `Active` and the caller is an
+    active member, live vote-count results with a simple proportional bar per option, and
+    officer-only Open/Close controls. Like Reviews, there's no per-member "already voted" flag on
+    `PollDto`, so the ballot hides itself locally after a successful submit (a session-only signal)
+    and a revote correctly surfaces the backend's real "You have already voted in this poll." error
+    rather than failing silently.
   - Navbar gains a public "Unions" top-level link and a "My Unions" account-menu entry for Sellers.
 - `environments/` — `apiUrl` pointing at `https://localhost:65334/api/v1` in development, a
   relative `/api/v1` default for production.
@@ -256,15 +283,31 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   found the real cause by logging the actual request/response pairs, which showed the failures
   correlated with signed-out state, not concurrency. Fixed by gating the three endpoints on
   `auth.isAuthenticated()`.
-- **Demo data was created directly against the live database**, across six verification passes:
+  2026-08-07 (Union Meetings + Polls): as the founding officer, scheduled a meeting with a
+  two-item agenda (auto-inviting every active member), recorded minutes with an action item
+  assigned to another member, and confirmed a second member could RSVP; created a poll as Draft,
+  opened it, had the second member vote, confirmed the tally updated and a revote was correctly
+  rejected; confirmed the assigned action item appeared under that member's "My Action Items."
+  **This run caught a real layout bug**: the Record Minutes form's action-item row (description +
+  responsible-member dropdown + due date + delete button, all one flex row) squeezed the dropdown
+  and date field down to an unusable, largely illegible width at normal viewport sizes — fixed with
+  a responsive grid that stacks to one column below 640px. Verification also hit two Playwright/
+  Angular-Material interaction quirks along the way: clicking a `mat-select`'s or
+  `mat-radio-button`'s host element (rather than its native `<input>`) silently no-ops in headless
+  Chromium some of the time, leaving the bound model unchanged with no console error. Confirmed via
+  direct DOM inspection (`aria-checked`, `outerHTML`) that the app's own data binding was correct
+  and the underlying `<input>` toggling correctly — these were test-tooling artifacts, not app
+  bugs, and needed no product code change (the click target in the test script was fixed instead).
+- **Demo data was created directly against the live database**, across seven verification passes:
   five seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`,
   `seller-test-verify@example.com`, `union-member-seller@example.com`,
   `union-member-seller2@example.com`), four categories (Rings, Necklaces, Earrings, Bracelets),
   eight products, a test customer (`checkout.smoke@example.com`) with one saved address and one
   placed order, a second test customer (`customer-order-verify@example.com`) whose order was
   carried all the way through Delivered and now has one review on it, one approved union
-  ("Rajasthan Jewelers Guild" — 1 announcement, 1 document, 1 event, 2 active members), and four
-  throwaway `temp-hash-donor*` accounts (see below) with no orders/products of their own. Kept
+  ("Rajasthan Jewelers Guild" — 1 announcement, 1 document, 1 event, 3 active members, several
+  test meetings each with recorded minutes and an action item, and a poll with one vote cast), and
+  four throwaway `temp-hash-donor*` accounts (see below) with no orders/products of their own. Kept
   intentionally as ongoing sample data (user's decision, 2026-08-06) rather than cleaned up.
 - **Several accounts needed a manual password reset directly in the local dev database** across
   verification passes, since there's no self-service password-reset endpoint — this happened
@@ -300,15 +343,16 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   page will show "Write a Review" again for an already-reviewed item; submitting just surfaces the
   backend's existing duplicate-review error rather than silently failing, so this is a UX rough
   edge, not a data-integrity issue.
-- **Union module scope for v1 (explicit, user-approved cut)**: Meetings (agenda items, RSVP,
-  minutes, action items) and Governance Polls (create/open/close/vote) have no frontend at all yet
-  — see [ROADMAP.md](ROADMAP.md) Phase 16a. Within core scope: member role changes and member
-  removal have backend endpoints (`UpdateMemberRoleCommand`, `RemoveMemberCommand`) but no UI;
-  "My Unions" fetches each membership's union via a `forkJoin` of individual `GET /unions/{id}`
-  calls rather than a batch endpoint (fine at the scale of one seller's own memberships); the event
-  creation form's `datetime-local` input is timezone-naive (no explicit timezone picker or
-  server-side timezone normalization beyond treating it as the browser's local time before
-  converting to UTC).
+- **Union module simplifications for v1**: member role changes and member removal have backend
+  endpoints (`UpdateMemberRoleCommand`, `RemoveMemberCommand`) but no UI; "My Unions" fetches each
+  membership's union via a `forkJoin` of individual `GET /unions/{id}` calls rather than a batch
+  endpoint (fine at the scale of one seller's own memberships); every `datetime-local` input in the
+  module (event/meeting scheduling, poll close date) is timezone-naive — no explicit timezone
+  picker, just the browser's local time converted to UTC on submit. Meeting/Poll-specific: agenda-
+  item status and action-item status are read-only in the UI because the backend has no endpoint
+  to change either (`AgendaItemStatus` and `ActionItemStatus` are set at creation and never
+  updated by any command); the poll ballot's "already voted" state is tracked client-side only for
+  the current page session, same pattern and same reasoning as Reviews.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -336,7 +380,7 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Customer UI — Order history (list), reviews | ✅ Complete, verified live |
 | Seller UI — Dashboard, KYC, Products, Order Fulfillment | ✅ Complete, verified live |
 | Union UI — Directory, Create/Join, Membership, Announcements/Documents/Events | ✅ Complete, verified live |
-| Union UI — Meetings, Governance Polls | ❌ Missing (deliberately deferred, see Phase 16a) |
+| Union UI — Meetings, Governance Polls | ✅ Complete, verified live |
 | Admin UI | ❌ Missing |
 
 ## How to Run

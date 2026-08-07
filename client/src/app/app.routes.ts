@@ -80,6 +80,28 @@ export const routes: Routes = [
         loadComponent: () => import('./features/unions/union-detail/union-detail.component').then((m) => m.UnionDetailComponent),
       },
       {
+        path: 'unions/:unionId/meetings/new',
+        canActivate: [roleGuard(['Seller'])],
+        loadComponent: () => import('./features/unions/meeting-form/meeting-form.component').then((m) => m.MeetingFormComponent),
+      },
+      {
+        // GetMeetingByIdQuery requires an active membership (or Admin) —
+        // enforced server-side, authGuard here just rules out anonymous.
+        path: 'unions/:unionId/meetings/:meetingId',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/unions/meeting-detail/meeting-detail.component').then((m) => m.MeetingDetailComponent),
+      },
+      {
+        path: 'unions/:unionId/polls/new',
+        canActivate: [roleGuard(['Seller'])],
+        loadComponent: () => import('./features/unions/poll-form/poll-form.component').then((m) => m.PollFormComponent),
+      },
+      {
+        path: 'unions/:unionId/polls/:pollId',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/unions/poll-detail/poll-detail.component').then((m) => m.PollDetailComponent),
+      },
+      {
         path: 'seller',
         canActivate: [roleGuard(['Seller'])],
         children: [
