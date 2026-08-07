@@ -31,15 +31,82 @@
     <section class="order-detail__section">
       <h2>Items</h2>
       @for (item of order.items; track item.id) {
-        <div class="order-detail__item">
-          <div>
-            <p class="order-detail__item-name">{{ item.productNameSnapshot }}</p>
-            <p class="order-detail__item-meta">
-              Sold by {{ item.sellerBusinessName }} &middot; Qty {{ item.quantity }} &middot;
-              {{ orderStatusLabels[item.itemStatus] }}
-            </p>
+        <div class="order-detail__item-group">
+          <div class="order-detail__item">
+            <div>
+              <p class="order-detail__item-name">{{ item.productNameSnapshot }}</p>
+              <p class="order-detail__item-meta">
+                Sold by {{ item.sellerBusinessName }} &middot; Qty {{ item.quantity }} &middot;
+                {{ orderStatusLabels[item.itemStatus] }}
+              </p>
+            </div>
+            <div class="order-detail__item-actions">
+              <p class="order-detail__item-total">{{ item.lineTotal | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+              @if (item.itemStatus === OrderStatus.Delivered && !reviewedItemIds().has(item.id) && reviewingItemId() !== item.id) {
+                <button mat-button type="button" (click)="startReview(item.id)">Write a Review</button>
+              } @else if (reviewedItemIds().has(item.id)) {
+                <span class="order-detail__reviewed">
+                  <lucide-icon name="ShieldCheck" [size]="14" [strokeWidth]="1.5" />
+                  Reviewed
+                </span>
+              }
+            </div>
           </div>
-          <p class="order-detail__item-total">{{ item.lineTotal | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+
+          @if (reviewingItemId() === item.id) {
+            <div class="order-detail__review-form">
+              <div class="order-detail__rating-row">
+                <span>Product Rating</span>
+                <div class="order-detail__stars">
+                  @for (star of stars; track star) {
+                    <button
+                      type="button"
+                      class="order-detail__star"
+                      [class.order-detail__star--filled]="star <= productRating()"
+                      (click)="productRating.set(star)"
+                      [attr.aria-label]="star + ' stars'"
+                    >
+                      <lucide-icon name="Star" [size]="20" [strokeWidth]="1.5" />
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="order-detail__rating-row">
+                <span>Seller Rating</span>
+                <div class="order-detail__stars">
+                  @for (star of stars; track star) {
+                    <button
+                      type="button"
+                      class="order-detail__star"
+                      [class.order-detail__star--filled]="star <= sellerRating()"
+                      (click)="sellerRating.set(star)"
+                      [attr.aria-label]="star + ' stars'"
+                    >
+                      <lucide-icon name="Star" [size]="20" [strokeWidth]="1.5" />
+                    </button>
+                  }
+                </div>
+              </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Title (optional)</mat-label>
+                <input matInput [ngModel]="reviewTitle()" (ngModelChange)="reviewTitle.set($event)" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Comment (optional)</mat-label>
+                <textarea matInput rows="3" [ngModel]="reviewComment()" (ngModelChange)="reviewComment.set($event)"></textarea>
+              </mat-form-field>
+              <div class="order-detail__review-actions">
+                <button mat-flat-button color="primary" type="button" [disabled]="submittingReview()" (click)="submitReview(item.id)">
+                  @if (submittingReview()) {
+                    <mat-spinner diameter="18" class="inline-block" />
+                  } @else {
+                    Submit Review
+                  }
+                </button>
+                <button mat-button type="button" (click)="cancelReview()">Cancel</button>
+              </div>
+            </div>
+          }
         </div>
       }
     </section>

@@ -125,10 +125,19 @@ impossible. Closed by adding `CustomerAddressesController` (full CRUD) and compl
 → confirmed order with correct items/address/payment/totals → cart empties), zero console errors.
 
 ## Phase 13e — Customer UI: Order History (List) + Reviews (Angular)
-**Pending.** Builds directly on Phase 13d — `GetMyOrdersQuery`/`OrdersService.getMyOrders` already
-exist on both sides, this is "just" a list page linking into the `order-detail` page Phase 13d
-already built. Reviews (`ReviewsController`) is fully built on the backend and has no frontend
-yet either.
+**Completed (2026-08-07).** `order-history/` (paginated list via `GetMyOrdersQuery`, linking into
+the existing `order-detail` page) plus a full Reviews slice: a "Write a Review" inline form on
+Order Detail for any `Delivered` item (product + seller star ratings, optional title/comment;
+correctly surfaces the backend's "already reviewed" business-rule error since there's no
+server-side flag to hide the button after the fact — a documented v1 simplification), and a
+Customer Reviews section on Product Detail (`GetProductReviewsQuery`) showing star ratings, title,
+comment, and any seller response. Verified live end-to-end: reviewed a delivered order → review
+appeared on the product page with the correct rating → resubmitting the same item's review
+correctly showed "You have already reviewed this purchase." via the global error interceptor.
+**Found and fixed a real CSS bug in the process**: Lucide's `Star` icon is stroke-only
+(`fill="none"`) by default, so a `color` change alone only recolors the outline — interactive
+rating stars looked unfilled regardless of state until `::ng-deep svg { fill: currentColor }` was
+added.
 
 ## Phase 14 — Seller Dashboard (Angular)
 **Completed (2026-08-06).** `/seller` area (`roleGuard(['Seller'])`) with a Dashboard (KYC status,

@@ -1,8 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-06** (Angular Seller module — Dashboard, KYC, Product management, Order
-Fulfillment — verified live, which surfaced and fixed a real `UpdateOrderItemStatusCommand` bug).
-This file, along with the rest of
+Last updated: **2026-08-07** (Angular Order History + Reviews — the last piece of the Customer UI
+on the roadmap — verified live). This file, along with the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
 any chat history. See the Maintenance Rule at the bottom.
@@ -122,6 +121,17 @@ any chat history. See the Maintenance Rule at the bottom.
   on the "new product" route (an `rxResource` `null`-vs-`undefined` params pitfall) and the KYC
   form showing every required field as invalid immediately after a successful submit (`form.reset()`
   doesn't clear `FormGroupDirective`'s submitted flag — fixed via `resetForm()`).
+- ✔ Order History + Reviews (2026-08-07): a paginated `/orders` list (`order-history/`) linking
+  into the existing order-detail page, plus a full Reviews slice — a "Write a Review" inline form
+  on any `Delivered` order item (star ratings for product and seller, optional title/comment) and
+  a Customer Reviews section on Product Detail. Verified live: reviewed a delivered item →
+  appeared on the product page with the correct rating → re-reviewing the same item correctly
+  surfaced the backend's real "already reviewed" error via the global error interceptor (there's
+  no server-side "already reviewed" flag on `OrderItemDto`, so the Write-a-Review button hides
+  itself locally after a successful submit but reappears on a fresh page load — a documented v1
+  simplification, not a bug). **Found and fixed a real CSS bug**: Lucide's `Star` icon is
+  stroke-only by default, so recoloring it gold via CSS `color` alone left every "filled" star
+  looking identical to an "unfilled" one — fixed with `::ng-deep svg { fill: currentColor }`.
 
 ## In Progress
 
@@ -143,16 +153,12 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
 
 **Frontend**
 
-- ❌ Customer UI — order history (a list of past orders; single-order detail already exists) and
-  reviews (Home, auth, product browsing, cart, and checkout are done — see Completed above)
 - ❌ Admin UI
 - ❌ Union UI
 
-(Seller UI — dashboard, product/inventory management, fulfillment queue, KYC submission — is now
-done, see Completed above.)
-
-(The Angular foundation exists — see above and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) —
-but no feature screens are built on top of it yet.)
+(The full Customer UI — Home, auth, product browsing, cart, checkout, order history, reviews —
+and the full Seller UI are now done, see Completed above. The Angular foundation these are built
+on is described in [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
 
 ## Explicit Non-Priorities (by decision, not oversight)
 

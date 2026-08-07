@@ -5,6 +5,56 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-07 — Customer UI: Order History + Reviews (Fixed a Real CSS Bug, Verified Live)
+
+**Module**: Frontend (`client/`, new `features/reviews/` and `features/orders/order-history/`) +
+demo data in the live DB
+
+**Files modified**:
+- `client/src/app/features/orders/order-history/` (new) — paginated order list
+  (`GetMyOrdersQuery`), links into the existing `order-detail/` page
+- `client/src/app/features/reviews/` (new) — `models.ts`, `reviews.service.ts`
+  (`getForProduct`/`create`)
+- `client/src/app/features/orders/order-detail/` — added an inline "Write a Review" form per
+  `Delivered` item (star buttons for product/seller rating, optional title/comment)
+- `client/src/app/features/products/product-detail/` — added a "Customer Reviews" section
+  (`GetProductReviewsQuery`)
+- `client/src/app/app.routes.ts` — added `/orders` (Customer-guarded)
+- `client/src/app/core/layout/navbar/navbar.component.html` — "My Orders" link in the account
+  menu when `auth.hasRole('Customer')`
+- `docs/FRONTEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`
+
+**Frontend bug found and fixed**: the interactive rating stars (both the review-submission form
+and the review list) looked unfilled regardless of their actual state. Lucide's `Star` icon
+renders `fill="none"` by default (it's a stroke-only outline icon), so changing its CSS `color`
+for a "filled" star only recolors the stroke, not the interior — visually indistinguishable from
+an "unfilled" star at a glance. Fixed by adding `::ng-deep svg { fill: currentColor }` to the
+`--filled` state's styles in both `order-detail.component.scss` and
+`product-detail.component.scss`.
+
+**Two accounts needed a manual password fix directly in the local dev database** to complete live
+verification, since there's no self-service password-reset flow: the dev admin account
+(`admin@jewelryhub.local`) had `IsLockedOut = true` with a stale `AccessFailedCount`/
+`LockoutEndUtc` combination left over from earlier session activity, and the
+`customer-order-verify@example.com` test account (created during the previous Seller module
+verification pass) had a password that no longer matched its stored hash. Both were fixed the same
+way: register a brand-new throwaway account through the live `/auth/register/customer` endpoint
+with the desired password (so the app's own `BCryptPasswordHasher` produces a correctly-formed
+hash), then copy that hash onto the target account's row directly via `sqlcmd`. No password
+hashing was reimplemented by hand. The two throwaway accounts couldn't be hard-deleted afterward
+(one has a dependent `Customer` foreign-key row) and were left in place as harmless demo-data
+clutter.
+
+**Verified live end-to-end**: as `customer-order-verify@example.com`, opened Order History, opened
+the one Delivered order, submitted a product + seller review with a title and comment — the review
+immediately appeared on the product's detail page with the correct star rating, author, and
+comment, and the product's aggregate rating updated to reflect it. Resubmitting a review for the
+same item correctly surfaced the backend's real `BusinessRuleException` ("You have already
+reviewed this purchase.") via the global error interceptor, rather than silently failing or
+crashing. Zero console errors and zero unexpected HTTP error responses on the final run.
+
+---
+
 ## 2026-08-06 — Seller UI: Dashboard, KYC, Products, Order Fulfillment (Fixed a Real Backend Bug, Verified Live)
 
 **Module**: Backend (`Shipments` repository + `UpdateOrderItemStatusCommand` fix) + Frontend

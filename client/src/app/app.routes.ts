@@ -46,6 +46,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/orders/checkout/checkout.component').then((m) => m.CheckoutComponent),
       },
       {
+        // The backend's GetMyOrdersQuery is [Authorize(Roles = "Customer")].
+        path: 'orders',
+        canActivate: [roleGuard(['Customer'])],
+        loadComponent: () => import('./features/orders/order-history/order-history.component').then((m) => m.OrderHistoryComponent),
+      },
+      {
         // Just needs to be logged in, not a specific role — ownership is
         // enforced server-side (GetOrderByIdQuery checks the caller is the
         // order's Customer, an involved Seller, or Admin).

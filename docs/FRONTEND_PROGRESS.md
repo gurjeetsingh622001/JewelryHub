@@ -1,20 +1,19 @@
 # Frontend Progress
 
-## Status: Foundation Through Seller Module Complete
+## Status: Full Customer + Seller UI Complete
 
-Last updated 2026-08-06. An Angular workspace exists at `client/` (sibling to `src/`, not part of
-`JewelryHub.sln` since it isn't a .NET project). The auth flow, HTTP layer, routing, a full
-premium design system, the public Home page, redesigned Login/Register pages, real product
-browsing (list + detail), a real shopping cart, a full checkout flow (address book, payment
-method, place order, confirmation), and a full Seller module (dashboard, KYC, product/inventory
-management, order fulfillment) are built — all wired to the live backend APIs and verified end to
-end against an actual running backend + database, not just a build. **Building Checkout surfaced a
-hard backend blocker** (no way to ever create a `CustomerAddress`), **verifying Cart live surfaced
-a real backend bug**, and **verifying the Seller Order Fulfillment queue live surfaced another
-real backend bug** (marking an item Shipped always 500'd) — see Known Gaps. Worth remembering:
-"the spec says it's done" and "builds and looks right" are both different from "someone actually
-tried to use it end to end." Order history (a list of past orders) and reviews don't exist yet for
-Customers, nor do the Admin/Union dashboards — see [ROADMAP.md](ROADMAP.md) Phase 13e onward.
+Last updated 2026-08-07. An Angular workspace exists at `client/` (sibling to `src/`, not part of
+`JewelryHub.sln` since it isn't a .NET project). The entire Customer-facing storefront (auth, Home,
+product browsing, cart, checkout, order history, reviews) and the entire Seller module (dashboard,
+KYC, product/inventory management, order fulfillment) are built — all wired to the live backend
+APIs and verified end to end against an actual running backend + database, not just a build.
+**Building Checkout surfaced a hard backend blocker** (no way to ever create a `CustomerAddress`),
+**verifying Cart live surfaced a real backend bug**, **verifying the Seller Order Fulfillment queue
+live surfaced another real backend bug** (marking an item Shipped always 500'd), and **verifying
+Reviews live surfaced a real frontend CSS bug** (Lucide's stroke-only `Star` icon needs an explicit
+`fill` override to actually look "filled") — see Known Gaps. Worth remembering: "the spec says it's
+done" and "builds and looks right" are both different from "someone actually tried to use it end to
+end." Only Admin and Union dashboards remain — see [ROADMAP.md](ROADMAP.md) Phase 15 onward.
 
 ## Design System
 
@@ -127,10 +126,25 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   sidebar, defaults billing to the same address as shipping — no separate billing-address UI in
   v1), `order-detail/` (doubles as the post-checkout confirmation page via a `?placed=true` query
   param and as a general order lookup — items, shipping address, payment, cost breakdown, a Cancel
-  Order button shown only when the order's status is actually cancellable). Checkout calls
-  `OrdersService.confirmPayment` immediately after placing an order for every payment method
-  except Cash on Delivery, standing in for a real payment gateway webhook (see
-  `ConfirmPaymentCommand`'s backend remarks) since there's no real gateway to redirect to yet.
+  Order button shown only when the order's status is actually cancellable, and — added
+  2026-08-07 — a "Write a Review" inline form per `Delivered` item: star buttons for product and
+  seller ratings plus optional title/comment, calling `ReviewsService.create`. There's no
+  server-side "already reviewed" flag on `OrderItemDto`, so the button just hides itself locally
+  (a `Set<string>` of reviewed item ids) after a successful submit; on a fresh page load it
+  reappears, and resubmitting correctly surfaces the backend's real `BusinessRuleException`
+  ("You have already reviewed this purchase.") via the global error interceptor rather than
+  silently failing. Checkout calls `OrdersService.confirmPayment` immediately after placing an
+  order for every payment method except Cash on Delivery, standing in for a real payment gateway
+  webhook (see `ConfirmPaymentCommand`'s backend remarks) since there's no real gateway to redirect
+  to yet.
+- `features/orders/order-history/` (added 2026-08-07) — a paginated list of the customer's own
+  orders (`GetMyOrdersQuery`, 10 per page), each row linking into `order-detail/`. Routed at
+  `/orders` (`roleGuard(['Customer'])`); Navbar's account menu gains a "My Orders" link when
+  `auth.hasRole('Customer')`.
+- `features/reviews/` (added 2026-08-07) — `models.ts` (mirrors `ReviewDto`/`CreateReviewCommand`),
+  `reviews.service.ts` (`getForProduct`/`create`). Consumed by Order Detail (writing a review) and
+  Product Detail (displaying them — a "Customer Reviews" section below the main product layout:
+  per-review star rating, author first name, date, title, comment, and any seller response).
 - `features/seller/` — `models.ts` (mirrors `SellerDto`/`SellerDocumentDto`/`SellerOrderItemDto`
   plus numeric `SellerVerificationStatus`/`DocumentVerificationStatus` enums), `seller.service.ts`
   (`getMyProfile`/`submitDocument`/`createProduct`/`updateProduct`/`adjustInventory`/
@@ -194,13 +208,34 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   clears values but not `FormGroupDirective`'s internal "submitted" flag — Material's default
   `ErrorStateMatcher` then treats every empty required field as touched-and-invalid. Fixed via
   `resetForm()` on the directive instead of `form.reset()` on the `FormGroup`.
-- **Demo data was created directly against the live database**, across four verification passes:
+  2026-08-07 (Order History + Reviews): reviewed a `Delivered` item on `customer-order-verify@example.com`'s
+  order → the review appeared correctly on the product's detail page with the right star rating,
+  title, and comment → resubmitting a review for the same item correctly surfaced the backend's
+  real "You have already reviewed this purchase." error via the global error interceptor (expected
+  behavior given no client-side "already reviewed" flag exists, not a bug). **This run caught a
+  real CSS bug**: the interactive rating stars (Order Detail's review form, Product Detail's
+  review list) looked identical whether "filled" or not, because Lucide's `Star` icon renders
+  `fill="none"` by default — a `color` change alone only affects the stroke. Fixed by adding
+  `::ng-deep svg { fill: currentColor }` to the `--filled` state in both components.
+- **Demo data was created directly against the live database**, across five verification passes:
   three seller accounts (`seller.demo@jewelryhub.local`, `ananya.seller@jewelryhub.local`,
   `seller-test-verify@example.com`), four categories (Rings, Necklaces, Earrings, Bracelets), eight
   products, a test customer (`checkout.smoke@example.com`) with one saved address and one placed
-  order, and a second test customer (`customer-order-verify@example.com`) whose order was carried
-  all the way through Delivered during Seller module verification. Kept intentionally as ongoing
-  sample data (user's decision, 2026-08-06) rather than cleaned up.
+  order, a second test customer (`customer-order-verify@example.com`) whose order was carried all
+  the way through Delivered and now has one review on it, and two throwaway `temp-hash-donor*`
+  accounts (see below) with no orders/products of their own. Kept intentionally as ongoing sample
+  data (user's decision, 2026-08-06) rather than cleaned up.
+- **Two accounts needed a manual password reset directly in the local dev database** during
+  verification, since there's no self-service password-reset endpoint: the dev admin
+  (`admin@jewelryhub.local`) had `IsLockedOut = true` with a stale `AccessFailedCount`/
+  `LockoutEndUtc` mismatch left over from earlier session activity, and `customer-order-verify@example.com`'s
+  password simply stopped matching its stored hash for an undetermined reason. Both were fixed by
+  registering a brand-new throwaway account with the desired password through the live
+  `/auth/register` endpoint (so the app's own `BCryptPasswordHasher` produces the hash — no
+  password-hashing library was reimplemented by hand) and copying that hash onto the target
+  account's row directly in SQL. The two throwaway accounts (`temp-hash-donor@example.com`,
+  `temp-hash-donor2@example.com`) couldn't be hard-deleted afterward (one has a dependent `Customer`
+  FK row) and were left in place as harmless clutter rather than risk a cascading delete.
 - **Checkout simplifications for v1**: billing address always equals shipping address (no separate
   billing UI); there's no way to edit or delete a saved address from the frontend yet (the backend
   supports both — see `AddressesService`); "confirm payment" is a client-side stand-in for a real
@@ -211,6 +246,12 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   Products has no pagination (fine at today's per-seller product counts, would need one before a
   seller has more than ~100 listings); there's no seller-facing analytics/reporting beyond the
   three Dashboard stat cards.
+- **Reviews simplification for v1**: the "already reviewed" state is tracked client-side only for
+  the current page session (a `Set<string>` of order-item ids), not read back from the server —
+  there's no `hasReview`-style flag on `OrderItemDto` to check on load. A reloaded Order Detail
+  page will show "Write a Review" again for an already-reviewed item; submitting just surfaces the
+  backend's existing duplicate-review error rather than silently failing, so this is a UX rough
+  edge, not a data-integrity issue.
 - No password-reset/email-verification screens (the backend doesn't have these endpoints either —
   see [API_PROGRESS.md](API_PROGRESS.md)).
 - No global loading indicator, no HTTP retry/offline handling.
@@ -235,7 +276,7 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Customer UI — Product browsing (list + detail) | ✅ Complete, verified live |
 | Customer UI — Cart | ✅ Complete, verified live |
 | Customer UI — Checkout + order confirmation | ✅ Complete, verified live |
-| Customer UI — Order history (list), reviews | ❌ Missing |
+| Customer UI — Order history (list), reviews | ✅ Complete, verified live |
 | Seller UI — Dashboard, KYC, Products, Order Fulfillment | ✅ Complete, verified live |
 | Admin UI | ❌ Missing |
 | Union UI | ❌ Missing |

@@ -36,6 +36,12 @@
         </button>
         <mat-menu #accountMenu="matMenu" class="navbar__account-menu">
           <div class="navbar__account-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</div>
+          @if (auth.hasRole('Customer')) {
+            <a mat-menu-item routerLink="/orders">
+              <lucide-icon name="Package" [size]="16" [strokeWidth]="1.5" />
+              <span>My Orders</span>
+            </a>
+          }
           @if (auth.hasRole('Seller')) {
             <a mat-menu-item routerLink="/seller">
               <lucide-icon name="LayoutDashboard" [size]="16" [strokeWidth]="1.5" />

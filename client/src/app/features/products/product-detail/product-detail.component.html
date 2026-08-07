@@ -151,5 +151,42 @@
         <p class="product-detail__seller">Sold by <strong>{{ product.sellerBusinessName }}</strong></p>
       </div>
     </div>
+
+    <section class="product-detail__reviews">
+      <h2>Customer Reviews</h2>
+      @if ((reviewsResource.value()?.items?.length ?? 0) === 0) {
+        <p class="product-detail__no-reviews">No reviews yet — be the first to share your experience after your order is delivered.</p>
+      } @else {
+        @for (review of reviewsResource.value()!.items; track review.id) {
+          <div class="product-detail__review">
+            <div class="product-detail__review-header">
+              <div class="product-detail__review-stars">
+                @for (star of stars; track star) {
+                  <lucide-icon
+                    name="Star"
+                    [size]="14"
+                    [strokeWidth]="1.5"
+                    [class.product-detail__review-star--filled]="star <= review.productRating"
+                  />
+                }
+              </div>
+              <span class="product-detail__review-author">{{ review.customerFirstName }}</span>
+              <span class="product-detail__review-date">{{ review.createdAtUtc | date: 'mediumDate' }}</span>
+            </div>
+            @if (review.title) {
+              <p class="product-detail__review-title">{{ review.title }}</p>
+            }
+            @if (review.comment) {
+              <p class="product-detail__review-comment">{{ review.comment }}</p>
+            }
+            @if (review.sellerResponse) {
+              <div class="product-detail__review-response">
+                <span>Seller response:</span> {{ review.sellerResponse }}
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
   </div>
 }

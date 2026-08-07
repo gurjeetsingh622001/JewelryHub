@@ -54,12 +54,90 @@
   }
 }
 
+.order-detail__item-group {
+  border-bottom: 1px solid var(--color-border);
+}
+
 .order-detail__item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 1rem 0;
-  border-bottom: 1px solid var(--color-border);
+}
+
+.order-detail__item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.order-detail__reviewed {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xs);
+  color: var(--color-emerald);
+  white-space: nowrap;
+}
+
+.order-detail__review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 28rem;
+  padding: 0 0 1.5rem;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.order-detail__rating-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.order-detail__stars {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.order-detail__star {
+  display: inline-flex;
+  border: none;
+  background: transparent;
+  padding: 0.15rem;
+  cursor: pointer;
+  color: var(--color-border);
+
+  lucide-icon {
+    pointer-events: none;
+  }
+
+  &--filled {
+    color: var(--color-gold);
+
+    ::ng-deep svg {
+      fill: currentColor;
+    }
+  }
+}
+
+.order-detail__review-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+
+  button:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 
 .order-detail__item-name {

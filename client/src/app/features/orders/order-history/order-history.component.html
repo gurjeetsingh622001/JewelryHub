@@ -1,0 +1,48 @@
+<div class="order-history mx-auto max-w-4xl px-4 py-12 md:px-8">
+  <header class="order-history__header">
+    <p class="eyebrow">My Account</p>
+    <h1>Order History</h1>
+  </header>
+
+  @if (ordersResource.isLoading()) {
+    <div class="order-history__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if (ordersResource.error()) {
+    <p class="order-history__empty">Something went wrong loading your orders. Please try again.</p>
+  } @else if ((ordersResource.value()?.items?.length ?? 0) === 0) {
+    <div class="order-history__empty">
+      <lucide-icon name="Package" [size]="40" [strokeWidth]="1" />
+      <p>You haven't placed any orders yet.</p>
+      <a mat-flat-button color="primary" routerLink="/products">Start Shopping</a>
+    </div>
+  } @else {
+    <div class="order-history__list">
+      @for (order of ordersResource.value()!.items; track order.id) {
+        <a [routerLink]="['/orders', order.id]" class="order-history__row">
+          <div class="order-history__info">
+            <p class="order-history__number">{{ order.orderNumber }}</p>
+            <p class="order-history__meta">
+              Placed {{ order.createdAtUtc | date: 'mediumDate' }} &middot; {{ order.itemCount }} item{{ order.itemCount === 1 ? '' : 's' }}
+            </p>
+          </div>
+          <span class="order-history__status">{{ orderStatusLabels[order.status] }}</span>
+          <p class="order-history__total">{{ order.grandTotal | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+          <lucide-icon name="ChevronRight" [size]="18" [strokeWidth]="1.5" />
+        </a>
+      }
+    </div>
+
+    @if ((ordersResource.value()?.totalPages ?? 0) > 1) {
+      <div class="order-history__pagination">
+        <button mat-stroked-button type="button" [disabled]="!ordersResource.value()?.hasPreviousPage" (click)="goToPage(pageNumber() - 1)">
+          Previous
+        </button>
+        <span>Page {{ pageNumber() }} of {{ ordersResource.value()?.totalPages }}</span>
+        <button mat-stroked-button type="button" [disabled]="!ordersResource.value()?.hasNextPage" (click)="goToPage(pageNumber() + 1)">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>
