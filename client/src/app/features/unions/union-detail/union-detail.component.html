@@ -124,7 +124,7 @@
                     }
                     <span>{{ member.sellerBusinessName }}</span>
                   </div>
-                  <span class="union-detail__role-badge">{{ roleLabels[member.role] }}</span>
+                  <span class="union-detail__role-badge {{ roleBadgeClass[member.role] }}">{{ roleLabels[member.role] }}</span>
                 </div>
               }
             }

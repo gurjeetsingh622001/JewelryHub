@@ -183,15 +183,114 @@
   }
 }
 
+.navbar__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+
+  &--lg {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  &--empty {
+    background: var(--color-gold-tint);
+    color: var(--color-gold-deep);
+  }
+}
+
+.navbar__account-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.navbar__account-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .navbar__account-name {
-  padding: 0.75rem 1rem 0.25rem;
-  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+
+.navbar__account-email {
+  font-size: var(--text-xs);
   color: var(--color-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar__account-divider {
+  height: 1px;
+  margin: 0.4rem 0;
+  background: var(--color-border);
 }
 
 // mat-menu content renders into a CDK overlay outside this component's DOM,
 // so it needs ::ng-deep to reach — the one place in this component that
 // can't be scoped normally.
-::ng-deep .navbar__account-menu .mat-mdc-menu-content {
-  font-family: var(--font-body);
+::ng-deep .navbar__account-menu {
+  .mat-mdc-menu-content {
+    font-family: var(--font-body);
+    padding: 0.5rem 0 !important;
+    min-width: 15rem;
+  }
+
+  .mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-height: 2.75rem;
+    padding: 0 1.25rem;
+    font-size: var(--text-sm);
+    color: var(--color-ink);
+
+    .mat-mdc-menu-item-text {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    lucide-icon {
+      color: var(--color-ink-muted);
+      flex-shrink: 0;
+      transition: color var(--duration-fast) var(--ease-standard);
+    }
+
+    &:hover,
+    &:focus {
+      background: var(--color-gold-tint);
+
+      lucide-icon {
+        color: var(--color-gold-deep);
+      }
+    }
+  }
+
+  .navbar__account-logout {
+    color: var(--color-error);
+
+    lucide-icon {
+      color: var(--color-error);
+    }
+
+    &:hover,
+    &:focus {
+      background: color-mix(in srgb, var(--color-error) 10%, var(--color-bg));
+    }
+  }
 }

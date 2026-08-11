@@ -351,6 +351,28 @@ pools of real Unsplash/Unsplash+ editorial jewelry photography (9-11 per categor
 `ROW_NUMBER() % pool size` update so repetition dropped to ~3-4x per photo instead of clustering.
 See [CHANGELOG.md](CHANGELOG.md) for the full before/after detail on both rejected attempts.
 
+## Phase 23 — Account Dropdown Redesign, Avatar in Navbar, Themed Union Role Badges, Demo User Photos
+**Completed (2026-08-11).** A third same-day UI-polish pass, prompted by feedback on the account
+dropdown's uneven spacing and the union member roster's flat, undifferentiated role badges.
+
+- `ProfileService` gained a cached signal (same pattern as `CartService`/`WishlistService`) so the
+  Navbar can show the signed-in user's actual photo in the account trigger button and a redesigned
+  dropdown header, instead of always the generic person icon.
+- The dropdown's `mat-menu-item`s were restyled (consistent icon/text gap, min-height, gold hover)
+  and Log out set apart with a divider and red styling.
+- Union role badges (`UnionMemberRole`) each got a distinct color derived from existing design
+  tokens via `color-mix()` — gold President, bronze Vice President, charcoal Secretary, emerald
+  Treasurer — instead of one flat neutral badge for every role.
+- All 32 existing Customers and 23 existing Sellers were backfilled with hand-curated,
+  individually-verified photos (portraits for Customers, jewelry-atelier shots for Sellers'
+  `LogoUrl`) via direct SQL, same sourcing rigor as Phase 22's product images. The demo-data script
+  was updated so future runs set a photo automatically.
+
+Verified live: dropdown renders correctly with zero console errors, role badges show distinct
+colors, and union member photos load (a first-pass screenshot that appeared to show missing photos
+was a test-script wait-time artifact on a same-page tab switch, not a real bug — confirmed by
+re-checking with a longer wait). See [CHANGELOG.md](CHANGELOG.md) for full detail.
+
 ## Maintenance
 
 Update this file whenever a phase's status changes, and whenever a new phase is identified.

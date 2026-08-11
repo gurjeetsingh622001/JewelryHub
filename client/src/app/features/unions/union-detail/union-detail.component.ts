@@ -22,6 +22,7 @@ import {
   UNION_MEMBER_ROLE_LABELS,
   UNION_MEMBERSHIP_STATUS_LABELS,
   UnionEventStatus,
+  UnionMemberRole,
   UnionMembershipStatus,
 } from '../models';
 import { PollsService } from '../polls.service';
@@ -58,6 +59,17 @@ export class UnionDetailComponent {
   protected readonly pollStatusLabels = POLL_STATUS_LABELS;
   protected readonly UnionEventStatus = UnionEventStatus;
   protected readonly resolveMediaUrl = resolveMediaUrl;
+
+  // Distinct color per governance role so the member roster reads at a
+  // glance, instead of every role sharing one neutral badge — see
+  // union-detail.component.scss for the actual colors.
+  protected readonly roleBadgeClass: Record<UnionMemberRole, string> = {
+    [UnionMemberRole.President]: 'union-detail__role-badge--president',
+    [UnionMemberRole.VicePresident]: 'union-detail__role-badge--vice-president',
+    [UnionMemberRole.Secretary]: 'union-detail__role-badge--secretary',
+    [UnionMemberRole.Treasurer]: 'union-detail__role-badge--treasurer',
+    [UnionMemberRole.Member]: '',
+  };
 
   protected readonly unionId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), { requireSync: true });
 

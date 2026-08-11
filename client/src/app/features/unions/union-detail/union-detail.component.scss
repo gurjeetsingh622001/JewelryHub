@@ -217,6 +217,32 @@
   padding: 0.25rem 0.6rem;
   border-radius: var(--radius-full, 999px);
   white-space: nowrap;
+
+  // One color per governance role, each derived from existing design
+  // tokens via color-mix rather than new hardcoded hexes — most-senior
+  // (President) gets the app's primary gold accent, down through a bronze
+  // Vice President, a charcoal (authoritative) Secretary, and an emerald
+  // Treasurer (the app's existing "value/finance" accent color elsewhere).
+  // Member stays the neutral default above.
+  &--president {
+    color: var(--color-gold-deep);
+    background: var(--color-gold-tint);
+  }
+
+  &--vice-president {
+    color: color-mix(in srgb, var(--color-gold-deep) 65%, var(--color-ink) 35%);
+    background: color-mix(in srgb, var(--color-gold-tint) 60%, var(--color-bg-alt) 40%);
+  }
+
+  &--secretary {
+    color: var(--color-charcoal-ink);
+    background: var(--color-charcoal);
+  }
+
+  &--treasurer {
+    color: var(--color-emerald);
+    background: var(--color-emerald-tint);
+  }
 }
 
 .union-detail__no-items {

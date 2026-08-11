@@ -34,11 +34,28 @@
       </a>
 
       @if (auth.isAuthenticated()) {
-        <button type="button" class="navbar__icon-btn" [matMenuTriggerFor]="accountMenu" aria-label="Account menu">
-          <lucide-icon name="User" [size]="20" [strokeWidth]="1.5" />
+        <button type="button" class="navbar__icon-btn navbar__account-trigger" [matMenuTriggerFor]="accountMenu" aria-label="Account menu">
+          @if (profile.photoUrl()) {
+            <span class="navbar__avatar" [style.background-image]="'url(' + resolveMediaUrl(profile.photoUrl()) + ')'"></span>
+          } @else {
+            <lucide-icon name="User" [size]="20" [strokeWidth]="1.5" />
+          }
         </button>
         <mat-menu #accountMenu="matMenu" class="navbar__account-menu">
-          <div class="navbar__account-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</div>
+          <div class="navbar__account-header">
+            @if (profile.photoUrl()) {
+              <span class="navbar__avatar navbar__avatar--lg" [style.background-image]="'url(' + resolveMediaUrl(profile.photoUrl()) + ')'"></span>
+            } @else {
+              <span class="navbar__avatar navbar__avatar--lg navbar__avatar--empty">
+                <lucide-icon name="User" [size]="18" [strokeWidth]="1.5" />
+              </span>
+            }
+            <div class="navbar__account-identity">
+              <span class="navbar__account-name">{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</span>
+              <span class="navbar__account-email">{{ auth.currentUser()?.email }}</span>
+            </div>
+          </div>
+
           <a mat-menu-item routerLink="/profile">
             <lucide-icon name="User" [size]="16" [strokeWidth]="1.5" />
             <span>My Profile</span>
@@ -65,7 +82,8 @@
               <span>Admin Dashboard</span>
             </a>
           }
-          <button mat-menu-item (click)="logout()">
+          <div class="navbar__account-divider"></div>
+          <button mat-menu-item class="navbar__account-logout" (click)="logout()">
             <lucide-icon name="LogOut" [size]="16" [strokeWidth]="1.5" />
             <span>Log out</span>
           </button>

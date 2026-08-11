@@ -1,11 +1,10 @@
 # Project Status
 
-Last updated: **2026-08-11** (second same-day pass: a User Profile page + avatar upload (new
-`UsersController`), seller logos now shown on union member lists, every seeded product given a
-genuinely unique image, and a real membership-gating bug found and fixed on the Union Documents
-tab). This file, along with the rest of `docs/`, is the project's permanent memory — it should
-always reflect the actual state of the repository, independent of any chat history. See the
-Maintenance Rule at the bottom.
+Last updated: **2026-08-11** (third same-day pass: account dropdown redesign, avatar-in-navbar,
+themed union role badges, and hand-curated demo photos for every existing Customer/Seller). This
+file, along with the rest of `docs/`, is the project's permanent memory — it should always reflect
+the actual state of the repository, independent of any chat history. See the Maintenance Rule at
+the bottom.
 
 ## Completed
 
@@ -277,6 +276,24 @@ Maintenance Rule at the bottom.
   a photo, edited name/phone, saved, confirmed the Navbar updated immediately and the change
   persisted across a full page reload; confirmed the Seller's uploaded logo shows up correctly via
   `GET /sellers/me`. This is the pass that surfaced the Union Documents bug above.
+- ✔ Account UI polish + demo user photos (2026-08-11) — a third same-day follow-up. The account
+  dropdown's `mat-menu-item`s had inconsistent spacing/alignment (Angular Material's defaults
+  weren't restyled for this app's custom icon/typography), the nav trigger was a generic icon even
+  for a signed-in user with a photo, and union governance-role badges (President/Vice President/
+  Secretary/Treasurer/Member) all shared one neutral color. Fixed: `ProfileService` gained a
+  cached signal (same lifecycle pattern as `CartService`/`WishlistService`) so the Navbar shows the
+  signed-in user's actual avatar in the trigger button and in a redesigned dropdown header
+  (avatar + name + email), with normalized menu-item spacing/hover states and Log out set apart in
+  red; union role badges now get one color per role derived from existing design tokens via
+  `color-mix` (gold President, bronze Vice President, charcoal Secretary, emerald Treasurer, neutral
+  Member) instead of inventing new hex values. Also backfilled all 32 demo customers and 23 demo
+  sellers with hand-curated, hand-verified photos (diverse professional portraits for Customers,
+  jewelry-atelier/craftsmanship shots for Sellers) via direct SQL, same rigor as the product-image
+  curation — and updated the demo-data script so future runs set a photo automatically instead of
+  leaving every new demo account photo-less. Verified live: dropdown renders cleanly with zero
+  console errors, role badges show distinct colors, union member photos load correctly (an initial
+  screenshot appeared to show missing avatars — turned out to be a test-script wait-time artifact on
+  a same-page tab switch, not a real bug, confirmed by re-checking with a longer wait).
 
 ## In Progress
 

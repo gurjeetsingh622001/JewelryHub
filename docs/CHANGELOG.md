@@ -5,6 +5,60 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-11 — Account Dropdown Redesign, Avatar in Navbar, Themed Union Role Badges, Demo User Photos (Verified Live)
+
+**Module**: Frontend (`navbar.component.*`, `profile.service.ts`, `union-detail.component.*`) + a
+direct data fix on `Customers`/`Sellers` + the (scratchpad, uncommitted) demo-data script
+
+**Trigger**: user feedback on screenshots of the account dropdown (uneven `mat-menu-item` spacing)
+and the union member roster (every governance role — President, Member, etc. — sharing one flat
+badge color), plus two feature requests: show the signed-in user's own photo somewhere in the
+navbar, and populate the existing demo accounts with sample photos instead of leaving them blank.
+
+**Account menu**: `ProfileService` gained a cached `signal` (same lifecycle as `CartService`/
+`WishlistService` — an `effect()` that loads on auth, clears on logout), so any component can read
+the signed-in user's `photoUrl` without its own fetch. The Navbar's account trigger button now
+shows that photo (falling back to the existing generic icon when unset), and the dropdown gained a
+proper header (avatar + name + email) above the menu items. Angular Material's default
+`mat-menu-item` styling was restyled via `::ng-deep` for consistent icon/text gap, min-height, and
+a gold hover state matching the rest of the app; Log out was set apart with a divider and red text/
+icon color since it's a different kind of action than the links above it.
+
+**Union role badges**: `union-detail__role-badge` gained one modifier class per `UnionMemberRole`
+(President/Vice President/Secretary/Treasurer), each color derived from existing design tokens via
+`color-mix()` rather than new hardcoded hex values — gold for President (the app's primary accent,
+matching the existing "officer" badge elsewhere), a bronze blend for Vice President, charcoal for
+Secretary, and the app's existing `--color-emerald` (already used elsewhere for "value"/finance
+context) for Treasurer. Member keeps the original neutral badge.
+
+**Demo user photos**: backfilled all 32 existing `Customers` and 23 existing `Sellers` with
+hand-curated, individually-verified photos — diverse professional portrait photography for Customer
+avatars, jewelry-atelier/craftsmanship close-ups for Seller `LogoUrl` (their shop identity photo,
+same field shown on union member lists and their own profile) — via `WebFetch` against Unsplash
+search results, same sourcing method as the product-image curation. Applied via a `ROW_NUMBER() %
+pool size` SQL update against two 10-photo pools (pure data correction, no business logic
+touched). The demo-data script (scratchpad-only) was also updated to call `PUT /users/me` with a
+cycled photo right after registering each new seller/customer, so future runs don't need a
+follow-up backfill.
+
+**Files modified**:
+- `client/src/app/features/profile/profile.service.ts` — cached `myProfile`/`photoUrl` signal
+- `client/src/app/core/layout/navbar/navbar.component.ts`/`.html`/`.scss` — avatar trigger,
+  redesigned dropdown header, restyled menu items
+- `client/src/app/features/unions/union-detail/union-detail.component.ts`/`.html`/`.scss` —
+  per-role badge colors
+- Direct SQL data fix on `Customers.ProfileImageUrl`/`Sellers.LogoUrl` (32 + 23 rows) — not a
+  migration, a one-time data correction; also updated the scratchpad demo-data script
+
+**Verified live**: dropdown renders with correct spacing/hover states and zero console errors;
+signed-in user's avatar shows in both the trigger button and dropdown header; a union's Members tab
+shows the President badge in gold versus Member's neutral badge, and all four seller photos load
+correctly (an initial screenshot with only an 800ms wait after a same-page tab switch appeared to
+show missing avatars — re-checking with a longer wait confirmed this was a test-script timing
+artifact on cross-origin image loads, not a real rendering bug).
+
+---
+
 ## 2026-08-11 — Product Images Corrected: Curated Premium Jewelry Photography (Verified Live)
 
 **Module**: a direct data fix on `ProductImages` + the (scratchpad, uncommitted) demo-data script

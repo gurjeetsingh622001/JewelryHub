@@ -4,7 +4,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
 import { CartService } from '../../../features/cart/cart.service';
+import { ProfileService } from '../../../features/profile/profile.service';
 import { WishlistService } from '../../../features/wishlist/wishlist.service';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { AuthService } from '../../auth/auth.service';
 
 interface NavLink {
@@ -24,6 +26,8 @@ export class NavbarComponent {
   protected readonly auth = inject(AuthService);
   protected readonly cart = inject(CartService);
   protected readonly wishlist = inject(WishlistService);
+  protected readonly profile = inject(ProfileService);
+  protected readonly resolveMediaUrl = resolveMediaUrl;
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
