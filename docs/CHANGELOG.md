@@ -5,6 +5,50 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-11 — Product Images Corrected: Curated Premium Jewelry Photography (Verified Live)
+
+**Module**: a direct data fix on `ProductImages` + the (scratchpad, uncommitted) demo-data script
+
+**Trigger**: a follow-up correction on the "Unique Product Images" work below. The user rejected
+the `picsum.photos` approach documented there — "it does not mean that you can add any image...
+only add jewellry and product category related images" — and a second attempt was also rejected
+for a different reason after the first fix.
+
+**Attempt 1 (rejected — wrong content)**: swapped `picsum.photos/seed/{id}` for
+`loremflickr.com/800/600/{category},jewelry?lock={n}` — a keyword-matched real-photo service,
+deterministic per lock value, so still genuinely unique per product. Spot-checking each category
+before committing to it live surfaced an unacceptable noise rate on generic single-word keywords:
+`ring,jewelry` returned two people at a laptop (a ring visible incidentally in the corner) and
+`bracelet,jewelry` returned a market vendor selling dried fish (a bracelet visible on her wrist).
+Roughly 1 in 4-5 images across a live spot-check were completely unrelated to jewelry — not
+acceptable for a jewelry marketplace's product photography.
+
+**Attempt 2 (rejected — not premium enough)**: refined the LoremFlickr keywords to compound phrases
+(`diamond,ring,jewelry`, `gold,bracelet,jewelry`) which fixed most of the relevance problem (real
+jewelry in every sampled image, occasional wrong sub-category), applied it to all 142 rows, and
+verified via full-category screenshots. User rejected on sight — "not even single image looks
+premium. please use only best premium jewellry images" — a fair call; the results were genuine
+product-listing-style photos, not the editorial/dramatic-lighting register the rest of the site
+(see [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) § Imagery) is built to.
+
+**Final approach**: used `WebFetch` against Unsplash's own search pages with category + "luxury"/
+"editorial" qualifiers (e.g. `unsplash.com/s/photos/luxury-diamond-ring`) to surface real,
+professionally-shot jewelry photography, then downloaded and personally viewed a sample from each
+result set before trusting it. Landed on four hand-verified pools of 9-11 URLs each (Rings,
+Necklaces, Earrings, Bracelets — a mix of `images.unsplash.com` and Unsplash+ `plus.unsplash.com`
+photos, all confirmed to hotlink without restriction). Applied via one SQL update using
+`ROW_NUMBER() OVER (PARTITION BY CategoryId ...) % pool size` so each category's pool cycles evenly
+(roughly 3-4x repetition per photo at 142 products, down from the original ~35x) instead of
+clustering. The demo-data script (scratchpad-only, not part of the repo) was updated to draw from
+the same four pools for any future run, replacing its `picsum.photos` seed generator.
+
+**Verified live**: full-page screenshots of the Rings/Necklaces/Earrings/Bracelets product list
+pages (`PAGE_SIZE` temporarily raised to see every product per category in one screenshot, reverted
+afterward) — every visible image across all four categories is genuine, correctly-categorized,
+premium editorial jewelry photography, no unrelated or low-quality results anywhere in the sample.
+
+---
+
 ## 2026-08-11 — User Profile Page, Avatar/Logo Upload, Union Member Photos, Unique Product Images (Verified Live)
 
 **Module**: Backend (new `Features/Users`, `UsersController`; `Features/Uploads` extended;

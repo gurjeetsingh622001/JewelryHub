@@ -316,10 +316,9 @@ reused only 4 images across 142 products, then asked how a user uploads a photo 
 profile — a page that turned out not to exist yet — and asked for seller photos on union member
 lists.
 
-- **Unique product images**: per user decision (fully-unique-but-generic over
-  more-varied-but-still-repeated), every `ProductImage.Url` now points at a distinct
-  `picsum.photos/seed/{id}/800/600` — a one-time direct SQL fix for the 142 existing rows, plus the
-  demo-data script updated for future runs.
+- **Unique product images**: every `ProductImage.Url` made distinct via a one-time direct SQL fix
+  for the 142 existing rows, plus the demo-data script updated for future runs. The specific image
+  source went through two more rounds of correction after this phase closed — see Phase 22.
 - **User Profile**: new `Features/Users` + `UsersController` (`GET/PUT api/v1/users/me`, any
   authenticated role) — discovered `Customer.ProfileImageUrl` and `Seller.LogoUrl` already existed
   in the schema (no migration needed) but nothing had ever set or read them. New `/profile` page
@@ -339,6 +338,18 @@ account, confirmed the Navbar greeting updates immediately and the change surviv
 confirmed the Seller's logo appears via `GET /sellers/me`; confirmed the product list now shows 12
 visibly distinct photos per page instead of 4 repeating ones; confirmed the Documents tab now shows
 the correct "members only" message for a non-member instead of erroring. Zero console errors.
+
+## Phase 22 — Product Images: Curated Premium Jewelry Photography
+**Completed (2026-08-11).** Phase 21's `picsum.photos` fix made every image unique but generic —
+rejected on the spot: "only add jewellry and product category related images." A second attempt
+(`loremflickr.com` keyword search) fixed relevance but was noisy enough on generic single-word
+categories (real spot-checks turned up a laptop-meeting photo for "ring" and a fish-market photo for
+"bracelet") and, once refined to compound keywords, still wasn't premium-looking enough — rejected
+again: "not even single image looks premium." Landed on four hand-curated, individually-verified
+pools of real Unsplash/Unsplash+ editorial jewelry photography (9-11 per category, found via
+`unsplash.com/s/photos/luxury-{category}-editorial`-style searches), cycled per-category via a SQL
+`ROW_NUMBER() % pool size` update so repetition dropped to ~3-4x per photo instead of clustering.
+See [CHANGELOG.md](CHANGELOG.md) for the full before/after detail on both rejected attempts.
 
 ## Maintenance
 

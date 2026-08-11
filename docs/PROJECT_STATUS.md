@@ -250,15 +250,23 @@ Maintenance Rule at the bottom.
   spot-checked live in the browser (product list pagination, category filter, union directory,
   Admin dashboard counts) with zero console errors. Kept as ongoing sample data, same as every
   other demo account in this project.
-- ✔ Every product image made genuinely unique (2026-08-11) — all 142 seeded products previously
-  shared one of just 4 photos per category (up to ~39 products sharing the same image). Per user
-  decision, chose guaranteed-unique-but-generic over more-varied-but-still-repeated: every
-  `ProductImage.Url` now points at a distinct `picsum.photos/seed/{id}/800/600` (deterministic per
-  the row's own `Guid`, so trivially unique with zero external curation needed) — a one-time direct
-  SQL update for the existing 142 rows (pure data correction, no business logic involved, same
-  reasoning as the earlier password-hash fix), plus the demo-data script updated so future runs
-  generate unique images too. Confirmed live: 142 distinct URLs, one sampled to confirm it actually
-  resolves to a real photo.
+- ✔ Product images corrected to curated, premium, category-relevant photography (2026-08-11) — went
+  through two rejected approaches before landing on the right one, each time on direct user
+  correction: (1) an initial `picsum.photos/seed/{id}` pass made every image trivially unique but
+  generic/non-jewelry (rejected — "should be related to the product... only jewelry and category
+  related images", and in violation of [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)'s own "never a
+  lorem-picsum filler" rule); (2) a keyword-matched `loremflickr.com` pass (e.g. `ring,jewelry`)
+  fixed the category-relevance problem but had an unacceptable noise rate on generic single-word
+  categories (spot-checking "ring" and "bracelet" surfaced totally unrelated photos — a laptop demo
+  and a fish market) and, even where on-topic, wasn't "premium" (rejected — "not even single image
+  looks premium"). Landed on: four hand-picked, hand-verified pools of real Unsplash/Unsplash+
+  editorial jewelry photography (9-11 URLs each for Rings/Necklaces/Earrings/Bracelets, found via
+  category-specific "luxury"/"editorial" searches and individually downloaded and visually confirmed
+  before use), applied to all 142 existing `ProductImages` rows via a `ROW_NUMBER() % pool size` SQL
+  update (pure data correction, no business logic involved) and to the demo-data script for future
+  runs. Verified live via full-category screenshots — every image on every category page is now
+  genuine, on-theme, premium editorial jewelry photography with repetition down to roughly 3-4x per
+  photo instead of the original ~35x.
 - ✔ User Profile page + avatar/logo upload (2026-08-11) — a new `/profile` page (any authenticated
   role, reachable from the navbar's "My Profile" link): view/edit first name, last name, phone, and
   a photo (avatar for Customer, business logo for Seller — hidden for Admin, which has neither
