@@ -177,6 +177,36 @@
   gap: 0.5rem;
 }
 
+.union-detail__member-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.union-detail__avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-gold-tint);
+    color: var(--color-gold-deep);
+  }
+}
+
 .union-detail__role-badge {
   font-size: var(--text-xs);
   font-weight: 600;

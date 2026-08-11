@@ -1,0 +1,65 @@
+<div class="profile-page mx-auto max-w-3xl px-4 py-12 md:px-8">
+  <header class="profile-page__header">
+    <p class="eyebrow">Account</p>
+    <h1>My Profile</h1>
+  </header>
+
+  @if (profileResource.isLoading()) {
+    <div class="profile-page__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if (profileResource.value(); as profile) {
+    <form [formGroup]="form" (ngSubmit)="save()" class="profile-page__form">
+      @if (hasPhotoSlot()) {
+        <div class="profile-page__photo-row">
+          @if (photoUrl()) {
+            <div class="profile-page__avatar" [style.background-image]="'url(' + resolveMediaUrl(photoUrl()) + ')'"></div>
+          } @else {
+            <div class="profile-page__avatar profile-page__avatar--empty">
+              <lucide-icon name="User" [size]="32" [strokeWidth]="1.25" />
+            </div>
+          }
+          <label class="profile-page__upload-btn" [class.profile-page__upload-btn--busy]="uploadingPhoto()">
+            @if (uploadingPhoto()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              <lucide-icon name="PackagePlus" [size]="18" [strokeWidth]="1.5" />
+            }
+            {{ photoUrl() ? 'Change Photo' : 'Upload Photo' }}
+            <input type="file" accept="image/jpeg,image/png,image/webp" hidden [disabled]="uploadingPhoto()" (change)="onPhotoSelected($event)" />
+          </label>
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput [value]="profile.email" disabled />
+        <mat-hint>Email cannot be changed here.</mat-hint>
+      </mat-form-field>
+
+      <div class="profile-page__row">
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Phone Number</mat-label>
+        <input matInput formControlName="phoneNumber" />
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving() || uploadingPhoto()">
+        @if (saving()) {
+          <mat-spinner diameter="20" class="inline-block" />
+        } @else {
+          Save Changes
+        }
+      </button>
+    </form>
+  }
+</div>

@@ -1,8 +1,11 @@
 # Frontend Progress
 
-## Status: Full Customer + Seller + Union + Admin UI Complete, Plus Wishlist and Real File Upload
+## Status: Full Customer + Seller + Union + Admin UI Complete, Plus Wishlist, File Upload, and a Profile Page
 
-Last updated 2026-08-11. An Angular workspace exists at `client/` (sibling to `src/`, not part of
+Last updated 2026-08-11 (second same-day pass — a User Profile page + avatar/logo upload, seller
+photos on union member lists, and a real membership-gating bug found and fixed on the Union
+Documents tab; see the last two verification-log entries below). An Angular workspace exists at
+`client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The entire Customer-facing storefront (auth, Home,
 product browsing, cart, wishlist, checkout, order history, reviews), the entire Seller module
 (dashboard, KYC, product/inventory management, order fulfillment, real photo/document upload), the
@@ -301,6 +304,24 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   product photo uploaded during creation renders correctly; a real KYC document uploaded and
   submitted, with a working "view document" link; extension/size validation and the Customer-role
   403 all fire correctly. Zero console errors on the final run.
+  2026-08-11 (Profile page + avatar/logo upload + union member photos, same day as the above): the
+  user pointed out the demo-data pass had reused only 4 images across 142 products, then asked how
+  a user uploads a photo and views their profile — which turned out not to exist as a page yet —
+  and asked for seller photos on union member lists. Built `/profile` (name/phone/photo, reachable
+  from the Navbar), a third `UploadKind.Avatar` on the Uploads API opened to any role, and added the
+  seller's photo to the union Members tab and pending-requests row (falling back to a plain icon).
+  **This run caught a real bug, unrelated to the new work**: the Union Documents tab was gated on
+  `auth.isAuthenticated()` alongside Members/Announcements, but `GetDocumentsQuery` actually
+  requires the caller to be an active member of that specific union — the same, stricter rule
+  Meetings/Polls already correctly used. Any logged-in non-member hit a console 400 and a
+  misleadingly-generic "No documents yet." instead of "members only." Fixed by moving
+  `documentsResource` onto the same `activeMemberUnionId` gate Meetings/Polls used, and correcting
+  the fallback message. Verified live: uploaded a photo and edited name/phone as both a Customer
+  and a Seller, confirmed the Navbar greeting updates immediately (no re-login needed) and survives
+  a full page reload; confirmed the Seller's logo matches between the new profile endpoint and the
+  existing `GET /sellers/me`; confirmed the Members tab renders the fallback icon correctly when no
+  photo is set; confirmed the Documents tab now shows the correct message for a non-member. Zero
+  console errors on the final run.
   2026-08-07 (Union Meetings + Polls): as the founding officer, scheduled a meeting with a
   two-item agenda (auto-inviting every active member), recorded minutes with an action item
   assigned to another member, and confirmed a second member could RSVP; created a poll as Draft,
@@ -411,7 +432,8 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Union UI — Meetings, Governance Polls | ✅ Complete, verified live |
 | Admin UI | ✅ Complete, verified live (added 2026-08-11) |
 | Wishlist UI | ✅ Complete, verified live (added 2026-08-11) |
-| Real image/document upload (Seller product photo, KYC document) | ✅ Complete, verified live (added 2026-08-11) |
+| Real image/document upload (Seller product photo, KYC document, avatar) | ✅ Complete, verified live (added 2026-08-11) |
+| User Profile page (view/edit name, phone, photo) | ✅ Complete, verified live (added 2026-08-11) |
 
 ## How to Run
 

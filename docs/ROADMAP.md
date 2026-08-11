@@ -310,6 +310,36 @@ submitted; the demo-data script's output spot-checked in the browser (pagination
 union directory, Admin dashboard counts). Zero console errors on every run. See
 [CHANGELOG.md](CHANGELOG.md) for the full file list.
 
+## Phase 21 — User Profile Page, Avatar/Logo Upload, Union Member Photos, Unique Product Images
+**Completed (2026-08-11).** A same-day follow-up: the user pointed out the demo-data pass above had
+reused only 4 images across 142 products, then asked how a user uploads a photo and views their
+profile — a page that turned out not to exist yet — and asked for seller photos on union member
+lists.
+
+- **Unique product images**: per user decision (fully-unique-but-generic over
+  more-varied-but-still-repeated), every `ProductImage.Url` now points at a distinct
+  `picsum.photos/seed/{id}/800/600` — a one-time direct SQL fix for the 142 existing rows, plus the
+  demo-data script updated for future runs.
+- **User Profile**: new `Features/Users` + `UsersController` (`GET/PUT api/v1/users/me`, any
+  authenticated role) — discovered `Customer.ProfileImageUrl` and `Seller.LogoUrl` already existed
+  in the schema (no migration needed) but nothing had ever set or read them. New `/profile` page
+  (name, phone, photo), reachable from the Navbar. A third `UploadKind.Avatar` was added to the
+  Uploads feature (Phase 20), opened to any authenticated role unlike product-images/kyc-documents.
+- **Union member photos**: `UnionMemberDto` gained `SellerLogoUrl` (the query already
+  `.Include(m => m.Seller)`'d, so a one-line mapper change); the Members tab and pending-requests
+  row now show it, falling back to a plain icon.
+- **Found and fixed a real bug**: the Union Documents tab was gated on "is logged in," but
+  `GetDocumentsQuery` actually requires active membership (same rule as Meetings/Polls, which were
+  already gated correctly) — any authenticated non-member hit a console 400 and a misleading "No
+  documents yet." message. Fixed by using the same active-membership gate Meetings/Polls already
+  had, and correcting the fallback message.
+
+Verified live end-to-end: uploaded a photo and edited name/phone for both a Customer and a Seller
+account, confirmed the Navbar greeting updates immediately and the change survives a full reload;
+confirmed the Seller's logo appears via `GET /sellers/me`; confirmed the product list now shows 12
+visibly distinct photos per page instead of 4 repeating ones; confirmed the Documents tab now shows
+the correct "members only" message for a non-member instead of erroring. Zero console errors.
+
 ## Maintenance
 
 Update this file whenever a phase's status changes, and whenever a new phase is identified.

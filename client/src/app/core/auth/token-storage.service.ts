@@ -33,6 +33,15 @@ export class TokenStorageService {
     this.store?.setItem(USER_KEY, JSON.stringify(user));
   }
 
+  /** Merges a partial update (e.g. a name change from the Profile page) onto the cached user, without touching tokens. */
+  updateUser(partial: Partial<AuthenticatedUser>): AuthenticatedUser | null {
+    const current = this.loadUser();
+    if (!current) return null;
+    const updated = { ...current, ...partial };
+    this.store?.setItem(USER_KEY, JSON.stringify(updated));
+    return updated;
+  }
+
   clear(): void {
     this.store?.removeItem(ACCESS_TOKEN_KEY);
     this.store?.removeItem(REFRESH_TOKEN_KEY);

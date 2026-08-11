@@ -11,11 +11,11 @@ export interface UploadedFile {
 }
 
 /**
- * Thin wrapper around the backend's generic UploadsController — Seller/Admin
- * only (matches the controller's [Authorize(Roles = "Seller,Admin")]).
- * Callers store the returned url in whatever field the existing create/
- * submit command already expects (Product's imageUrl, KYC's fileUrl) —
- * uploading is a separate pre-step, not baked into those commands.
+ * Thin wrapper around the backend's generic UploadsController. Product
+ * photos and KYC documents are Seller/Admin-only; avatars are open to any
+ * authenticated role. Callers store the returned url in whatever field the
+ * existing create/submit/profile command already expects — uploading is a
+ * separate pre-step, not baked into those commands.
  */
 @Injectable({ providedIn: 'root' })
 export class UploadsService {
@@ -28,6 +28,10 @@ export class UploadsService {
 
   uploadKycDocument(file: File): Observable<UploadedFile> {
     return this.upload(`${this.baseUrl}/kyc-documents`, file);
+  }
+
+  uploadAvatar(file: File): Observable<UploadedFile> {
+    return this.upload(`${this.baseUrl}/avatars`, file);
   }
 
   private upload(url: string, file: File): Observable<UploadedFile> {

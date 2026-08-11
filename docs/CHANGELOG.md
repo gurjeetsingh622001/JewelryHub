@@ -5,6 +5,87 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-11 — User Profile Page, Avatar/Logo Upload, Union Member Photos, Unique Product Images (Verified Live)
+
+**Module**: Backend (new `Features/Users`, `UsersController`; `Features/Uploads` extended;
+`Features/Unions/Common` DTO change) + Frontend (new `features/profile/`, `Auth`/`Uploads`
+services extended, union-detail template) + a direct data fix on `ProductImages`
+
+**Trigger**: a same-day follow-up to the Wishlist/Upload/demo-data work above. The user pointed
+out the demo-data pass had reused only 4 images across 142 products, asked how a user uploads a
+photo and views their profile (a page that turned out not to exist at all), and asked for seller
+photos to show up on union member lists.
+
+**Unique product images**: presented the user with a real tradeoff — a bigger curated jewelry
+photo pool (still on-theme, less repetition but not perfectly unique) vs. guaranteed uniqueness via
+a generic stock-photo service. User chose guaranteed uniqueness. Every `ProductImages.Url` now
+points at a distinct `picsum.photos/seed/{id}/800/600`, deterministic per the row's own `Guid` —
+fixed via a single direct SQL `UPDATE` for the 142 existing rows (pure data correction, no business
+logic touched, same reasoning as the session's earlier password-hash fix), and the demo-data
+script updated so future runs generate unique images automatically.
+
+**User Profile feature**: researched first and found `Customer.ProfileImageUrl` and
+`Seller.LogoUrl` already existed in the schema (from the original `InitialCreate` migration, no
+new migration needed) but had zero Application-layer references — nothing had ever set or read
+either. Added a new `Features/Users` slice + `UsersController` (`GET/PUT api/v1/users/me`, any
+authenticated role) that reads/writes the shared `User` name/phone fields plus whichever
+role-specific entity owns a photo (Customer vs. Seller; Admin has neither, so its photo section is
+a no-op by design). Added a third `UploadKind.Avatar` to the Uploads feature, opened to any
+authenticated role (unlike product-images/kyc-documents, which stay Seller/Admin-only) — the
+controller's class-level `[Authorize(Roles = "Seller,Admin")]` was relaxed to a bare `[Authorize]`
+with the original restriction moved to the two existing actions individually. Built a `/profile`
+page (name, phone, photo — reachable from the Navbar's new "My Profile" link); editing the name
+updates the Navbar greeting immediately via a new `AuthService.updateCachedName()`, without
+requiring re-login.
+
+**Union member photos**: `UnionMemberDto` gained `SellerLogoUrl` — the query already
+`.Include(m => m.Seller)`'d, so this was a one-line mapper change. The Members tab and
+pending-requests row in `union-detail` now render it, falling back to a plain user icon when unset.
+
+**Bug found and fixed (unrelated to the new work, caught during its verification)**: the Union
+Documents tab was gated on `auth.isAuthenticated()` alongside Members/Announcements, but
+`GetDocumentsQuery` actually requires the caller to be an active member of that specific union —
+the same, stricter rule Meetings/Polls already used correctly. Any authenticated non-member viewing
+a union's detail page got a console 400 and a misleadingly-generic "No documents yet." instead of
+the correct "members only" explanation. Fixed by moving `documentsResource` onto the same
+`activeMemberUnionId` gate Meetings/Polls use, and correcting the fallback message.
+
+**Files modified (backend)**:
+- `src/JewelryHub.Application/Features/Users/` (new) — `MyProfileDto`, `GetMyProfileQuery`,
+  `UpdateMyProfileCommand`
+- `src/JewelryHub.API/Controllers/UsersController.cs` (new)
+- `src/JewelryHub.Application/Features/Uploads/Commands/UploadFile/UploadFileCommand.cs` — added
+  `UploadKind.Avatar`
+- `src/JewelryHub.API/Controllers/UploadsController.cs` — relaxed class-level auth, added
+  `POST avatars`
+- `src/JewelryHub.Application/Features/Unions/Common/UnionDto.cs`,
+  `UnionMapper.cs` — added `SellerLogoUrl` to `UnionMemberDto`
+- Direct SQL data fix on `ProductImages.Url` (142 rows) — not a migration, a one-time data
+  correction; also added to `.gitignore`-tracked scratchpad tooling, not the repo
+
+**Files modified (frontend)**:
+- `client/src/app/features/profile/` (new) — `models.ts`, `profile.service.ts`, `profile-page/`
+- `client/src/app/core/uploads/uploads.service.ts` — added `uploadAvatar`
+- `client/src/app/core/auth/auth.service.ts`, `token-storage.service.ts` — added
+  `updateCachedName()`/`updateUser()` so the Navbar reflects a profile edit without re-login
+- `client/src/app/app.routes.ts` — added `/profile`
+- `client/src/app/core/layout/navbar/navbar.component.html` — "My Profile" link
+- `client/src/app/features/unions/models.ts` — added `sellerLogoUrl` to `UnionMember`
+- `client/src/app/features/unions/union-detail/union-detail.component.ts`/`.html`/`.scss` — member
+  photos, and the Documents tab membership-gating fix
+- (scratchpad-only, not committed) the demo-data script's image generation switched from 4 shared
+  category images to a unique `picsum.photos` seed per product
+
+**Verified live end-to-end**: uploaded a photo and edited name/phone for both a Customer and a
+Seller account — Navbar greeting updates immediately and survives a full page reload; confirmed a
+Seller's uploaded logo matches between `GET /users/me` and the existing `GET /sellers/me`; product
+list now shows 12 visibly distinct photos per page instead of 4 repeating ones (142/142 distinct
+URLs confirmed, one sampled to confirm it resolves to a real image); Members tab renders the
+fallback icon correctly for members without a photo; Documents tab now shows the correct
+"members only" message for a non-member instead of erroring. Zero console errors on every run.
+
+---
+
 ## 2026-08-11 — Wishlist UI, Real File Upload, Two More `DbUpdateConcurrencyException` Bug Fixes, Large Demo-Data Pass (Verified Live)
 
 **Module**: Backend (`Features/Cart`, `Features/Wishlist`, new `Features/Uploads`,

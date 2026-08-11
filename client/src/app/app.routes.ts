@@ -25,6 +25,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
       },
       {
+        // Any authenticated role — ownership is implicit (always "me").
+        path: 'profile',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/profile/profile-page/profile-page.component').then((m) => m.ProfilePageComponent),
+      },
+      {
         path: 'products',
         loadComponent: () => import('./features/products/product-list/product-list.component').then((m) => m.ProductListComponent),
       },

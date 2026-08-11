@@ -1,10 +1,11 @@
 # Project Status
 
-Last updated: **2026-08-11** (post-v1 polish pass: Wishlist UI, a generic file-upload feature for
-product photos/KYC documents, two real `DbUpdateConcurrencyException` bugs found and fixed in Cart
-and Wishlist, and a large live demo-data generation pass). This file, along with the rest of
-`docs/`, is the project's permanent memory — it should always reflect the actual state of the
-repository, independent of any chat history. See the Maintenance Rule at the bottom.
+Last updated: **2026-08-11** (second same-day pass: a User Profile page + avatar upload (new
+`UsersController`), seller logos now shown on union member lists, every seeded product given a
+genuinely unique image, and a real membership-gating bug found and fixed on the Union Documents
+tab). This file, along with the rest of `docs/`, is the project's permanent memory — it should
+always reflect the actual state of the repository, independent of any chat history. See the
+Maintenance Rule at the bottom.
 
 ## Completed
 
@@ -89,8 +90,25 @@ repository, independent of any chat history. See the Maintenance Rule at the bot
   `SubmitSellerDocumentCommand`) were untouched — they already just take a URL string, so uploading
   is a separate client-side pre-step, not baked into those commands. See
   [API_PROGRESS.md](API_PROGRESS.md).
-
-**Frontend**
+- ✔ **User Profile API added (2026-08-11)** — a new `Features/Users` slice + `UsersController`
+  (`api/v1/users`, any authenticated role): `GET me` / `PUT me`. Distinct from `SellersController`'s
+  existing `GET /sellers/me` (seller-specific business fields) — this is the generic name/phone/
+  photo every role needs. `Customer.ProfileImageUrl` and `Seller.LogoUrl` already existed in the
+  schema (no migration needed) but had zero Application-layer references before this — nothing had
+  ever set or read them. `PhotoUrl` in the response is sourced from whichever role-specific entity
+  owns it; Admin has neither, so its photo section is a no-op by design, not a bug. Also added a
+  third `UploadKind.Avatar` to the Uploads feature (`POST /uploads/avatars`, opened to any
+  authenticated role, unlike product-images/kyc-documents which stay Seller/Admin-only) and added
+  `SellerLogoUrl` to `UnionMemberDto` so union member lists can show a seller's photo (the query
+  already `.Include(m => m.Seller)`'d, so this was a one-line mapper change).
+- ✔ **Found and fixed a real bug on the Union Documents tab (2026-08-11)** — `GetDocumentsQuery`
+  requires the caller to be an active member of that specific union (same rule as Meetings/Polls),
+  but the Angular page had bucketed Documents with Members/Announcements, which only require being
+  logged in. Any authenticated non-member viewing a union's detail page got a console 400 and a
+  misleading "No documents yet." message instead of the correct "members only" explanation. Found
+  live during today's Playwright verification, not by design. Fixed by gating `documentsResource`
+  on the same active-membership signal Meetings/Polls already used correctly, and correcting the
+  fallback message.
 
 - ✔ Angular 22 workspace at `client/` — standalone components, signals, Angular Material +
   Tailwind CSS (see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md); PrimeNG was tried and removed —
@@ -232,6 +250,25 @@ repository, independent of any chat history. See the Maintenance Rule at the bot
   spot-checked live in the browser (product list pagination, category filter, union directory,
   Admin dashboard counts) with zero console errors. Kept as ongoing sample data, same as every
   other demo account in this project.
+- ✔ Every product image made genuinely unique (2026-08-11) — all 142 seeded products previously
+  shared one of just 4 photos per category (up to ~39 products sharing the same image). Per user
+  decision, chose guaranteed-unique-but-generic over more-varied-but-still-repeated: every
+  `ProductImage.Url` now points at a distinct `picsum.photos/seed/{id}/800/600` (deterministic per
+  the row's own `Guid`, so trivially unique with zero external curation needed) — a one-time direct
+  SQL update for the existing 142 rows (pure data correction, no business logic involved, same
+  reasoning as the earlier password-hash fix), plus the demo-data script updated so future runs
+  generate unique images too. Confirmed live: 142 distinct URLs, one sampled to confirm it actually
+  resolves to a real photo.
+- ✔ User Profile page + avatar/logo upload (2026-08-11) — a new `/profile` page (any authenticated
+  role, reachable from the navbar's "My Profile" link): view/edit first name, last name, phone, and
+  a photo (avatar for Customer, business logo for Seller — hidden for Admin, which has neither
+  entity to persist one). Editing the name updates the Navbar greeting immediately via a new
+  `AuthService.updateCachedName()`, without requiring re-login. Union member lists (`/unions/:id`'s
+  Members and pending-requests rows) now show that same seller photo, falling back to a plain user
+  icon when none is set. Verified live end-to-end for both a Customer and a Seller account: uploaded
+  a photo, edited name/phone, saved, confirmed the Navbar updated immediately and the change
+  persisted across a full page reload; confirmed the Seller's uploaded logo shows up correctly via
+  `GET /sellers/me`. This is the pass that surfaced the Union Documents bug above.
 
 ## In Progress
 

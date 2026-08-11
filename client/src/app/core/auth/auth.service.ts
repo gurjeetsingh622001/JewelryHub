@@ -27,6 +27,14 @@ export class AuthService {
     return this.roles().includes(role);
   }
 
+  /** Keeps the cached name (Navbar greeting, etc.) in sync after a Profile page edit, without a full re-login. */
+  updateCachedName(firstName: string, lastName: string): void {
+    const updated = this.storage.updateUser({ firstName, lastName });
+    if (updated) {
+      this._currentUser.set(updated);
+    }
+  }
+
   getAccessToken(): string | null {
     return this.storage.getAccessToken();
   }

@@ -1,9 +1,10 @@
 # Backend Progress
 
 Per-module completion status across all four layers (Domain → Persistence → Application → API).
-Derived directly from source inspection, last updated 2026-08-11 (`UploadsController` added; a
-real `DbUpdateConcurrencyException` bug found and fixed in both Cart and Wishlist) — see
-[API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the Application/API
+Derived directly from source inspection, last updated 2026-08-11 (`UsersController` added — a
+generic Profile GET/PUT and an avatar upload kind, both discovered to have zero prior
+Application-layer support despite the underlying `Customer`/`Seller` columns already existing) —
+see [API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the Application/API
 columns here.
 
 | Module | Domain | Persistence | Application | API | Overall |
@@ -23,7 +24,8 @@ columns here.
 | Notifications | ✅ | ✅ | ✅ (3 use cases + real-time push) | ✅ (3 endpoints + SignalR hub) | **Complete** |
 | **Jewelry Union** | ✅ (13 tables, richly modeled) | ✅ | ✅ (19 commands, 14 queries) | ✅ (33 endpoints, 3 controllers) | **Complete** |
 | Admin (as a distinct module) | n/a (reuses `User`/`Review` etc.) | n/a | ✅ (4 use cases: dashboard, users, set-status, reviews) | ✅ (4 endpoints, `AdminController`) | **Complete for v1** (added 2026-08-11; resource-specific admin actions — seller/union approval, review moderate — remain on their own controllers, see below) |
-| File Uploads | n/a | n/a (local disk, not a DB table) | ✅ (1 use case, 2 kinds) | ✅ (2 endpoints, `UploadsController`) | **Complete for v1** (added 2026-08-11 — local disk via `IFileStorageService`, see below) |
+| File Uploads | n/a | n/a (local disk, not a DB table) | ✅ (1 use case, 3 kinds) | ✅ (3 endpoints, `UploadsController`) | **Complete for v1** (added 2026-08-11 — local disk via `IFileStorageService`, avatars added same day, see below) |
+| User Profile (generic, cross-role) | n/a (reuses `User`/`Customer`/`Seller`) | n/a | ✅ (2 use cases) | ✅ (2 endpoints, `UsersController`) | **Complete for v1** (added 2026-08-11 — see below) |
 
 ## Detail by Status
 
@@ -130,7 +132,19 @@ delegates the actual write to a new `IFileStorageService` — currently `LocalFi
 (Infrastructure), local disk under the API's `wwwroot/uploads/`, served back out via
 `app.UseStaticFiles()`. Chosen over cloud blob storage for this stage since it needs zero external
 account/credentials; the interface boundary means swapping storage backends later only touches the
-Infrastructure implementation.
+Infrastructure implementation. A third `UploadKind.Avatar` (added the same day, alongside the User
+Profile feature below) opened `POST /uploads/avatars` to any authenticated role, unlike the other
+two kinds which stay Seller/Admin-only.
+
+**User Profile** (added 2026-08-11): a generic `Features/Users` slice + `UsersController`
+(`GET/PUT api/v1/users/me`, any authenticated role). Investigating how to show a photo led to
+finding `Customer.ProfileImageUrl` and `Seller.LogoUrl` already existed in the schema (from the
+original `InitialCreate` migration) but had never been read or written by any Application-layer
+code — this feature is the first to use either. `MyProfileDto.PhotoUrl` is sourced from whichever
+entity the caller's role actually owns; Admin has neither, so it's always null for that role by
+design. Distinct from `SellersController`'s `GET /sellers/me`, which returns seller-specific
+business fields (GST, verification status) rather than the generic name/phone/photo every role
+needs.
 
 ### ⚠️ Partially Complete
 

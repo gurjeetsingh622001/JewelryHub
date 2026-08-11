@@ -144,6 +144,7 @@ export interface UnionMember {
   unionId: string;
   sellerId: string;
   sellerBusinessName: string;
+  sellerLogoUrl: string | null;
   role: UnionMemberRole;
   status: UnionMembershipStatus;
   joinedAtUtc: string;

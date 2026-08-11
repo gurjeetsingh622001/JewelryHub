@@ -10,6 +10,7 @@ public enum UploadKind
 {
     ProductImage,
     SellerDocument,
+    Avatar,
 }
 
 public record UploadFileCommand(byte[] Content, string FileName, UploadKind Kind) : IRequest<UploadedFileDto>;
@@ -30,8 +31,8 @@ public class UploadFileCommandValidator : AbstractValidator<UploadFileCommand>
 
         RuleFor(x => x)
             .Must(x => ImageExtensions.Contains(Path.GetExtension(x.FileName).ToLowerInvariant()))
-            .When(x => x.Kind == UploadKind.ProductImage)
-            .WithMessage("Product images must be JPG, PNG, or WEBP.");
+            .When(x => x.Kind is UploadKind.ProductImage or UploadKind.Avatar)
+            .WithMessage("Images must be JPG, PNG, or WEBP.");
 
         RuleFor(x => x)
             .Must(x => DocumentExtensions.Contains(Path.GetExtension(x.FileName).ToLowerInvariant()))
@@ -51,7 +52,13 @@ public class UploadFileCommandHandler : IRequestHandler<UploadFileCommand, Uploa
 
     public async Task<UploadedFileDto> Handle(UploadFileCommand request, CancellationToken cancellationToken)
     {
-        var folder = request.Kind == UploadKind.ProductImage ? "products" : "documents";
+        var folder = request.Kind switch
+        {
+            UploadKind.ProductImage => "products",
+            UploadKind.SellerDocument => "documents",
+            UploadKind.Avatar => "avatars",
+            _ => throw new ArgumentOutOfRangeException(nameof(request), request.Kind, null),
+        };
         var url = await _fileStorage.SaveAsync(request.Content, request.FileName, folder, cancellationToken);
         return new UploadedFileDto(url, request.FileName, request.Content.Length);
     }

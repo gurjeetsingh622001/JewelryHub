@@ -12,6 +12,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { LucideAngularModule } from 'lucide-angular';
 import { map } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { MeetingsService } from '../meetings.service';
 import {
   MEETING_STATUS_LABELS,
@@ -56,6 +57,7 @@ export class UnionDetailComponent {
   protected readonly meetingStatusLabels = MEETING_STATUS_LABELS;
   protected readonly pollStatusLabels = POLL_STATUS_LABELS;
   protected readonly UnionEventStatus = UnionEventStatus;
+  protected readonly resolveMediaUrl = resolveMediaUrl;
 
   protected readonly unionId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), { requireSync: true });
 
@@ -98,12 +100,23 @@ export class UnionDetailComponent {
   });
   protected readonly canJoin = computed(() => this.auth.hasRole('Seller') && !this.myMembership());
 
-  // Members/Announcements/Documents are [Authorize] on the backend — any
-  // logged-in user, not anonymous. Only Events is [AllowAnonymous]. Gating
-  // these on isAuthenticated() avoids firing requests that are guaranteed
-  // to 401 for a signed-out visitor (which otherwise also triggers a
-  // spurious refresh-token attempt for a session that never existed).
+  // Members/Announcements are [Authorize] on the backend — any logged-in
+  // user, not anonymous. Only Events is [AllowAnonymous]. Gating these on
+  // isAuthenticated() avoids firing requests that are guaranteed to 401 for
+  // a signed-out visitor (which otherwise also triggers a spurious
+  // refresh-token attempt for a session that never existed).
   private readonly authedUnionId = computed(() => (this.auth.isAuthenticated() ? this.unionId() : undefined));
+
+  // GetDocumentsQuery/GetMeetingsQuery/GetPollsQuery all require an active
+  // membership (or Admin) server-side, a stricter bar than plain login —
+  // gating on that here avoids a guaranteed BusinessRuleException for a
+  // logged-in visitor who isn't a member of this particular union. (Found
+  // live: Documents was originally lumped in with the isAuthenticated-only
+  // group above, which looked right but didn't match its actual backend
+  // rule — see docs/CHANGELOG.md.)
+  private readonly activeMemberUnionId = computed(() =>
+    this.isActiveMember() || this.auth.hasRole('Admin') ? this.unionId() : undefined,
+  );
 
   protected readonly membersResource = rxResource({
     params: this.authedUnionId,
@@ -125,7 +138,7 @@ export class UnionDetailComponent {
   });
 
   protected readonly documentsResource = rxResource({
-    params: this.authedUnionId,
+    params: this.activeMemberUnionId,
     stream: ({ params }) => this.unionsService.getDocuments(params, 1, 20),
   });
 
@@ -133,13 +146,6 @@ export class UnionDetailComponent {
     params: this.unionId,
     stream: ({ params }) => this.unionsService.getEvents(params, 1, 20),
   });
-
-  // GetMeetings/GetPolls require an active membership (or Admin) server-side
-  // — gating on that here avoids a guaranteed BusinessRuleException for a
-  // logged-in visitor who isn't a member of this particular union.
-  private readonly activeMemberUnionId = computed(() =>
-    this.isActiveMember() || this.auth.hasRole('Admin') ? this.unionId() : undefined,
-  );
 
   protected readonly meetingsResource = rxResource({
     params: this.activeMemberUnionId,

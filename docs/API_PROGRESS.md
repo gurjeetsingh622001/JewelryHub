@@ -1,6 +1,6 @@
 # API Progress
 
-Ground truth as of 2026-08-11 (`UploadsController` added): 15 controllers, 87 endpoints, all backed
+Ground truth as of 2026-08-11 (`UsersController` added): 16 controllers, 90 endpoints, all backed
 by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every Application
 handler has exactly one controller action calling it) and zero dangling references (every
 controller action points at a command/query that exists). Route prefix for all controllers:
@@ -38,24 +38,47 @@ revoke already-issued refresh tokens for a deactivated user (only blocks *future
 `LoginCommand` already checks via `User.IsActive`) — good enough for "stop a problem account from
 logging in again," not full session termination.
 
-## UploadsController — `api/v1/uploads` (class-level `[Authorize(Roles = "Seller,Admin")]`) — added 2026-08-11
+## UsersController — `api/v1/users` (class-level `[Authorize]`) — added 2026-08-11
 
 | Verb | Route | Handler | Status |
 |---|---|---|---|
-| POST | `product-images` | `UploadFileCommand` (`UploadKind.ProductImage`) | ✅ Complete |
-| POST | `kyc-documents` | `UploadFileCommand` (`UploadKind.SellerDocument`) | ✅ Complete |
+| GET | `me` | `GetMyProfileQuery` | ✅ Complete |
+| PUT | `me` | `UpdateMyProfileCommand` | ✅ Complete |
+
+The generic "my account" endpoint every role needs (name, phone, photo) — distinct from
+`SellersController`'s `GET /sellers/me`, which returns seller-specific business fields
+(GST number, verification status, KYC documents). `PhotoUrl` is sourced from whichever
+role-specific entity actually owns a photo field: `Customer.ProfileImageUrl` for a Customer,
+`Seller.LogoUrl` for a Seller. Both fields already existed in the schema (no migration needed for
+this feature) but had **zero** Application-layer references before this — nothing had ever set or
+read either one. Admin has no such entity, so `PhotoUrl` is always null and `UpdateMyProfileCommand`
+silently skips persisting it for that role — not a bug, just nowhere to put it. Verified live for
+both a Customer and a Seller: uploaded an avatar via `POST /uploads/avatars`, `PUT`'d it into the
+profile along with a name/phone change, confirmed `GET /users/me` reflects it, and — for the
+Seller — confirmed `GET /sellers/me`'s `LogoUrl` reflects the exact same value (same underlying
+`Seller.LogoUrl` column).
+
+## UploadsController — `api/v1/uploads` (class-level `[Authorize]`) — added 2026-08-11
+
+| Verb | Route | Auth | Handler | Status |
+|---|---|---|---|---|
+| POST | `product-images` | Seller, Admin | `UploadFileCommand` (`UploadKind.ProductImage`) | ✅ Complete |
+| POST | `kyc-documents` | Seller, Admin | `UploadFileCommand` (`UploadKind.SellerDocument`) | ✅ Complete |
+| POST | `avatars` | Any authenticated | `UploadFileCommand` (`UploadKind.Avatar`) | ✅ Complete (added 2026-08-11) |
 
 A generic upload endpoint rather than folding file handling into `ProductsController`/
 `SellersController` — both `CreateProductCommand` and `SubmitSellerDocumentCommand` already just
 take a URL string, so uploading is a separate client-side pre-step: upload here to get a URL back,
 then call the existing create/submit command with it. Validates file size (5 MB max) and extension
-(`.jpg/.jpeg/.png/.webp` for product images; those plus `.pdf` for documents) via
+(`.jpg/.jpeg/.png/.webp` for product images and avatars; those plus `.pdf` for documents) via
 `UploadFileCommandValidator`, then saves through a new `IFileStorageService` — currently
 `LocalFileStorageService` (Infrastructure), writing to the API's `wwwroot/uploads/{products,
-documents}/` and served back out by `app.UseStaticFiles()` in `Program.cs`. The abstraction exists
-so a later swap to cloud blob storage touches only the Infrastructure implementation, not this
-controller or its command. Only Sellers upload anything today (their own product photos, their own
-KYC documents); Admin included for parity with other Seller-gated actions, same as
+documents,avatars}/` and served back out by `app.UseStaticFiles()` in `Program.cs`. The abstraction
+exists so a later swap to cloud blob storage touches only the Infrastructure implementation, not
+this controller or its command. Class-level auth relaxed from `Roles = "Seller,Admin"` to a bare
+`[Authorize]` when `avatars` was added, since every role can have one — the two original actions
+carry their own `[Authorize(Roles = "Seller,Admin")]` at the action level to keep their original
+restriction. Only Sellers upload product photos/KYC documents; Admin included for parity, same as
 `ProductsController`'s `[Authorize(Roles = "Seller,Admin")]` pattern. Verified live: successful
 upload returns `{url, fileName, sizeBytes}` and the file is immediately fetchable at that URL; a
 `.txt` upload to `product-images` correctly returns 400 with the extension-whitelist message; a
@@ -244,7 +267,7 @@ calling `AddAsync` explicitly. Found live while building the Wishlist UI, not re
 | GET | `{id}` | Anonymous | `GetUnionByIdQuery` | ✅ Complete (404s an unapproved union to non-owners/non-Admin) |
 | POST | `{id}/approve` | Admin | `ApproveUnionCommand` | ✅ Complete |
 | POST | `{id}/join` | Seller | `RequestMembershipCommand` | ✅ Complete |
-| GET | `{id}/members` | Any authenticated | `GetUnionMembersQuery` | ✅ Complete |
+| GET | `{id}/members` | Any authenticated | `GetUnionMembersQuery` | ✅ Complete (`UnionMemberDto` gained `SellerLogoUrl` 2026-08-11) |
 | GET | `{id}/members/pending` | Officer/Admin (enforced in handler) | `GetPendingMembershipsQuery` | ✅ Complete |
 | POST | `memberships/{membershipId}/review` | Officer/Admin | `ReviewMembershipCommand` | ✅ Complete |
 | PATCH | `memberships/{membershipId}/role` | Officer/Admin | `UpdateMemberRoleCommand` | ✅ Complete |
@@ -252,7 +275,7 @@ calling `AddAsync` explicitly. Found live while building the Wishlist UI, not re
 | GET | `{id}/announcements` | Any authenticated | `GetAnnouncementsQuery` | ✅ Complete |
 | POST | `{id}/announcements` | Officer only (no Admin bypass — needs a member author) | `CreateAnnouncementCommand` | ✅ Complete |
 | DELETE | `announcements/{announcementId}` | Officer/Admin | `DeleteAnnouncementCommand` | ✅ Complete |
-| GET | `{id}/documents` | Any active member/Admin | `GetDocumentsQuery` | ✅ Complete |
+| GET | `{id}/documents` | Any active member/Admin | `GetDocumentsQuery` | ✅ Complete (the Angular page didn't match this auth level until 2026-08-11 — see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md)) |
 | POST | `{id}/documents` | Any active member | `UploadDocumentCommand` | ✅ Complete |
 | GET | `{id}/events` | Anonymous | `GetEventsQuery` | ✅ Complete |
 | POST | `{id}/events` | Officer/Admin | `CreateEventCommand` | ✅ Complete |

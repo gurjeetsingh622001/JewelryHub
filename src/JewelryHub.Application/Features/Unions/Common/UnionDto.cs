@@ -22,6 +22,7 @@ public record UnionMemberDto(
     Guid UnionId,
     Guid SellerId,
     string SellerBusinessName,
+    string? SellerLogoUrl,
     UnionMemberRole Role,
     UnionMembershipStatus Status,
     DateTime JoinedAtUtc,

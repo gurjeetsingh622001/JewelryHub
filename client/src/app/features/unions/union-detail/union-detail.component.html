@@ -86,7 +86,16 @@
               <h2>Pending Requests</h2>
               @for (pending of pendingMembersResource.value()!.items; track pending.id) {
                 <div class="union-detail__row">
-                  <span>{{ pending.sellerBusinessName }}</span>
+                  <div class="union-detail__member-identity">
+                    @if (pending.sellerLogoUrl) {
+                      <div class="union-detail__avatar" [style.background-image]="'url(' + resolveMediaUrl(pending.sellerLogoUrl) + ')'"></div>
+                    } @else {
+                      <div class="union-detail__avatar union-detail__avatar--empty">
+                        <lucide-icon name="User" [size]="16" [strokeWidth]="1.5" />
+                      </div>
+                    }
+                    <span>{{ pending.sellerBusinessName }}</span>
+                  </div>
                   <div class="union-detail__row-actions">
                     <button mat-button type="button" (click)="reviewMembership(pending.id, true)">Approve</button>
                     <button mat-button type="button" (click)="reviewMembership(pending.id, false)">Reject</button>
@@ -105,7 +114,16 @@
             } @else {
               @for (member of membersResource.value()?.items; track member.id) {
                 <div class="union-detail__row">
-                  <span>{{ member.sellerBusinessName }}</span>
+                  <div class="union-detail__member-identity">
+                    @if (member.sellerLogoUrl) {
+                      <div class="union-detail__avatar" [style.background-image]="'url(' + resolveMediaUrl(member.sellerLogoUrl) + ')'"></div>
+                    } @else {
+                      <div class="union-detail__avatar union-detail__avatar--empty">
+                        <lucide-icon name="User" [size]="16" [strokeWidth]="1.5" />
+                      </div>
+                    }
+                    <span>{{ member.sellerBusinessName }}</span>
+                  </div>
                   <span class="union-detail__role-badge">{{ roleLabels[member.role] }}</span>
                 </div>
               }
@@ -194,11 +212,13 @@
 
           @if (!auth.isAuthenticated()) {
             <p class="union-detail__no-items"><a routerLink="/login">Log in</a> to view documents.</p>
+          } @else if (!isActiveMember() && !auth.hasRole('Admin')) {
+            <p class="union-detail__no-items">Only active members can view this union's documents.</p>
           } @else if ((documentsResource.value()?.items?.length ?? 0) === 0) {
             <p class="union-detail__no-items">No documents yet.</p>
           } @else {
             @for (doc of documentsResource.value()!.items; track doc.id) {
-              <a [href]="doc.fileUrl" target="_blank" rel="noopener" class="union-detail__row union-detail__row--link">
+              <a [href]="resolveMediaUrl(doc.fileUrl)" target="_blank" rel="noopener" class="union-detail__row union-detail__row--link">
                 <lucide-icon name="FileText" [size]="16" [strokeWidth]="1.5" />
                 <span class="union-detail__doc-title">{{ doc.title }}</span>
                 @if (doc.category) {

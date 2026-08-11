@@ -18,7 +18,7 @@ public static class UnionMapper
 
     /// <summary>Caller must have loaded Seller (.Include(m => m.Seller)).</summary>
     public static UnionMemberDto ToDto(UnionMember m) => new(
-        m.Id, m.UnionId, m.SellerId, m.Seller.BusinessName,
+        m.Id, m.UnionId, m.SellerId, m.Seller.BusinessName, m.Seller.LogoUrl,
         m.Role, m.Status, m.JoinedAtUtc, m.MembershipFeePaidThroughUtc);
 
     /// <summary>Caller must have loaded PublishedByMember.Seller.</summary>
