@@ -1,10 +1,10 @@
 # API Progress
 
-Ground truth as of 2026-08-06 (a real `UpdateOrderItemStatusCommand` bug fixed while building the
-Angular Seller module): 13 controllers, 81 endpoints, all backed by a real MediatR handler with
-EF-Core-backed logic. Zero orphaned commands (every Application handler has exactly one controller
-action calling it) and zero dangling references (every controller action points at a command/query
-that exists). Route prefix for all controllers: `api/v1/`.
+Ground truth as of 2026-08-11 (`AdminController` added): 14 controllers, 85 endpoints, all backed
+by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every Application
+handler has exactly one controller action calling it) and zero dangling references (every
+controller action points at a command/query that exists). Route prefix for all controllers:
+`api/v1/`.
 
 ## AuthController — `api/v1/auth` (class-level `[AllowAnonymous]`)
 
@@ -17,6 +17,26 @@ that exists). Route prefix for all controllers: `api/v1/`.
 | POST | `logout` | `LogoutCommand` | ✅ Complete |
 
 **Missing**: password reset / forgot-password flow, email verification, change-password endpoint.
+
+## AdminController — `api/v1/admin` (class-level `[Authorize(Roles = "Admin")]`) — added 2026-08-11
+
+| Verb | Route | Handler | Status |
+|---|---|---|---|
+| GET | `dashboard` | `GetDashboardOverviewQuery` | ✅ Complete |
+| GET | `users` | `GetUsersQuery` | ✅ Complete (search, role filter, isActive filter, paginated) |
+| POST | `users/{id}/status` | `SetUserActiveStatusCommand` | ✅ Complete (self-deactivation blocked) |
+| GET | `reviews` | `GetAllReviewsQuery` | ✅ Complete (isApproved/isFlagged filters, for moderation browsing) |
+
+**Deliberately holds only what has no other home.** Approving a seller/union or moderating a
+specific review stay on `SellersController`/`UnionsController`/`ReviewsController` — this
+controller exists for genuinely new cross-cutting concerns (a platform dashboard, user account
+management, and a way to *find* a review to moderate, since none of the existing per-product/
+per-seller review queries expose one). `GetUsersQuery` is the first Application-layer code to ever
+list/paginate `User` rows — before this, `IUnitOfWork.Users` was only consumed inside `Auth`.
+`SetUserActiveStatusCommand` blocks an admin from deactivating their own account but does not
+revoke already-issued refresh tokens for a deactivated user (only blocks *future* logins, which
+`LoginCommand` already checks via `User.IsActive`) — good enough for "stop a problem account from
+logging in again," not full session termination.
 
 ## CartController — `api/v1/cart` (Customer)
 

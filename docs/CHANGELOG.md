@@ -5,6 +5,80 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-11 — Admin Module: Dashboard, Seller/Union Approval Consumption, Review Moderation, User Management (Verified Live)
+
+**Module**: Backend (new `Features/Admin/`, `AdminController`) + Frontend (new
+`features/admin/`, extended `seller.service.ts`/`unions.service.ts`/`reviews.service.ts`)
+
+**Scope decision**: closes Phase 12 (backend) and Phase 15 (frontend), the last module on the
+originally planned v1 roadmap. Before writing any code, researched the existing codebase's own
+convention for admin-gated actions via an Explore subagent: every admin queue query already lived
+on its own resource's controller (`GetPendingSellersQuery` → `SellersController`,
+`GetPendingUnionsQuery` → `UnionsController`), not centralized. Deliberately followed that
+precedent rather than inventing a new one — seller/union approval and review moderation stayed put
+— and scoped the new `AdminController` to only what genuinely had no existing home: a platform
+dashboard, user account management (the first-ever Application-layer code to list `User` rows —
+nothing did this before), and an unfiltered review-moderation browsing queue (the existing
+`GetProductReviewsQuery` defaults to approved-only, which is wrong for an admin needing to see
+hidden reviews too).
+
+**Files modified (backend)**:
+- `src/JewelryHub.Application/Features/Admin/Common/AdminDto.cs` (new) — `DashboardOverviewDto`,
+  `UserSummaryDto`, `AdminReviewDto`
+- `src/JewelryHub.Application/Features/Admin/Queries/GetDashboardOverview/` (new) — platform-wide
+  counts: customers/sellers/unions pending & approved, orders and revenue this month (`GrandTotal`
+  summed for non-cancelled/refunded orders since the start of the month), total/flagged reviews
+- `src/JewelryHub.Application/Features/Admin/Queries/GetUsers/` (new) — search (email/first/last
+  name) + role + active-status filters, paginated, includes `UserRoles.Role`
+- `src/JewelryHub.Application/Features/Admin/Commands/SetUserActiveStatus/` (new) — activate/
+  deactivate, throws `BusinessRuleException` if an admin tries to deactivate their own account
+- `src/JewelryHub.Application/Features/Admin/Queries/GetAllReviews/` (new) — `isApproved`/
+  `isFlagged` filters, no default filter (unlike the public review query)
+- `src/JewelryHub.API/Controllers/AdminController.cs` (new) — `api/v1/admin`, class-level
+  `[Authorize(Roles = "Admin")]`: `GET dashboard`, `GET users`, `POST users/{id}/status`,
+  `GET reviews`
+
+**Files modified (frontend)**:
+- `client/src/app/features/admin/models.ts`, `admin.service.ts` (new)
+- `client/src/app/features/admin/dashboard/`, `pending-sellers/`, `pending-unions/`, `reviews/`,
+  `users/` (new components)
+- `client/src/app/features/seller/seller.service.ts` — added `getPendingSellers`,
+  `reviewDocument`, `approveSeller`, `rejectSeller`
+- `client/src/app/features/unions/unions.service.ts` — added `getPendingUnions`, `approveUnion`
+- `client/src/app/features/reviews/reviews.service.ts` — added `moderate`
+- `client/src/app/app.routes.ts` — added `/admin` (`roleGuard(['Admin'])`) with `''`, `sellers`,
+  `unions`, `reviews`, `users` children
+- `client/src/app/core/layout/navbar/navbar.component.html` — Admin-only "Admin Dashboard" link
+- `client/src/app/app.config.ts` — registered `Flag`, `UserCog` icons
+- `docs/BACKEND_PROGRESS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`,
+  `docs/API_PROGRESS.md`
+
+**No new app bugs found** — both backend and frontend built clean on the first pass and live
+verification hit no real product defects. Two bugs were found and fixed in the Playwright
+verification script itself, and are recorded here for transparency rather than left implicit:
+1. An ambiguous `page.click('button:has-text("Approve")')` matched the first of two "Approve"
+   buttons on the Pending Sellers page (a second, pre-existing pending seller with zero KYC
+   documents was also on the page) — the resulting `400 Bad Request` looked at first like a
+   possible app bug. Confirmed via direct `curl` against `GET /api/v1/sellers/pending` that the
+   backend's rejection (`BusinessRuleException`: "Cannot approve a seller who has not submitted
+   any KYC documents") was correct behavior for the seller the script had actually clicked. Fixed
+   by scoping the click to `.admin-pending__card` filtered by the intended seller's name.
+2. After that fix, a second full run hit a `locator.click: Timeout` waiting for a "Verify" button
+   that no longer rendered, because the document was already `Verified` from the first run's
+   partial progress. Fixed by making the script tolerate either starting state
+   (`if (await verifyBtn.count() > 0) { ...click... }`).
+
+**Verified live end-to-end** as the seeded `admin@jewelryhub.local` account: dashboard rendered
+real platform counts → verified a KYC document and approved a test seller ("Admin Verify Jewels")
+→ hid then restored a customer review → searched for and deactivated then reactivated a user
+account → confirmed a signed-in Seller account is redirected away from `/admin`. Zero console
+errors on the final run.
+
+This closes out the entire originally planned v1 roadmap — Customer, Seller, Union, and Admin are
+all now built and verified live end-to-end.
+
+---
+
 ## 2026-08-07 — Union UI: Meetings + Governance Polls (Fixed a Real Layout Bug, Verified Live)
 
 **Module**: Frontend (`client/`, new `features/unions/meeting-form/`, `meeting-detail/`,

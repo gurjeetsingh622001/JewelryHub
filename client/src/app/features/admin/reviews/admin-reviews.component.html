@@ -1,0 +1,61 @@
+<div class="admin-reviews mx-auto max-w-4xl px-4 py-12 md:px-8">
+  <header class="admin-reviews__header">
+    <p class="eyebrow">Admin</p>
+    <h1>Review Moderation</h1>
+  </header>
+
+  <mat-button-toggle-group [value]="activeFilter()" (change)="activeFilter.set($event.value)" class="admin-reviews__filter">
+    <mat-button-toggle value="all">All</mat-button-toggle>
+    <mat-button-toggle value="flagged">Flagged</mat-button-toggle>
+    <mat-button-toggle value="hidden">Hidden</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  @if (reviewsResource.isLoading()) {
+    <div class="admin-reviews__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((reviewsResource.value()?.items?.length ?? 0) === 0) {
+    <p class="admin-reviews__empty">No reviews match this filter.</p>
+  } @else {
+    @for (review of reviewsResource.value()!.items; track review.id) {
+      <div class="admin-reviews__card">
+        <div class="admin-reviews__card-header">
+          <div>
+            <p class="admin-reviews__product">{{ review.productName }}</p>
+            <p class="admin-reviews__meta">
+              Sold by {{ review.sellerBusinessName }} &middot; {{ review.customerFirstName }} &middot;
+              {{ review.createdAtUtc | date: 'mediumDate' }}
+            </p>
+          </div>
+          <div class="admin-reviews__badges">
+            @if (review.isFlagged) {
+              <span class="admin-reviews__badge admin-reviews__badge--flagged">
+                <lucide-icon name="Flag" [size]="12" [strokeWidth]="1.5" />
+                Flagged
+              </span>
+            }
+            <span class="admin-reviews__badge" [class.admin-reviews__badge--hidden]="!review.isApproved">
+              {{ review.isApproved ? 'Visible' : 'Hidden' }}
+            </span>
+          </div>
+        </div>
+
+        <p class="admin-reviews__ratings">Product {{ review.productRating }}/5 &middot; Seller {{ review.sellerRating }}/5</p>
+        @if (review.title) {
+          <p class="admin-reviews__title">{{ review.title }}</p>
+        }
+        @if (review.comment) {
+          <p class="admin-reviews__comment">{{ review.comment }}</p>
+        }
+
+        <div class="admin-reviews__actions">
+          @if (!review.isApproved) {
+            <button mat-stroked-button type="button" (click)="moderate(review.id, true)">Restore</button>
+          } @else {
+            <button mat-stroked-button type="button" (click)="moderate(review.id, false)">Hide</button>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

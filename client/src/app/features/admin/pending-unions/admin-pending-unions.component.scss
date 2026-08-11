@@ -1,0 +1,46 @@
+.admin-pending__header {
+  margin-bottom: 2.5rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin-top: 0.35rem;
+  }
+}
+
+.admin-pending__loading {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.admin-pending__empty {
+  color: var(--color-ink-muted);
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.admin-pending__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-pending__name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-gold-deep);
+  }
+}
+
+.admin-pending__meta {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-top: 0.2rem;
+}

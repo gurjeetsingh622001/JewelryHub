@@ -1,0 +1,88 @@
+@if (dashboardResource.isLoading()) {
+  <div class="admin-dashboard__loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (dashboardResource.value(); as stats) {
+  <div class="admin-dashboard mx-auto max-w-6xl px-4 py-12 md:px-8">
+    <header class="admin-dashboard__header">
+      <p class="eyebrow">Admin</p>
+      <h1>Platform Overview</h1>
+    </header>
+
+    <div class="admin-dashboard__stats">
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="Users" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.totalCustomers }}</p>
+          <p class="admin-dashboard__stat-label">Customers</p>
+        </div>
+      </div>
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="Package" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.approvedSellers }} / {{ stats.totalSellers }}</p>
+          <p class="admin-dashboard__stat-label">Sellers Approved</p>
+        </div>
+      </div>
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="Landmark" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.approvedUnions }} / {{ stats.totalUnions }}</p>
+          <p class="admin-dashboard__stat-label">Unions Approved</p>
+        </div>
+      </div>
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="ShoppingBag" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.ordersThisMonth }}</p>
+          <p class="admin-dashboard__stat-label">Orders This Month</p>
+        </div>
+      </div>
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="TrendingUp" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.revenueThisMonth | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+          <p class="admin-dashboard__stat-label">Revenue This Month</p>
+        </div>
+      </div>
+      <div class="admin-dashboard__stat">
+        <lucide-icon name="Star" [size]="20" [strokeWidth]="1.5" />
+        <div>
+          <p class="admin-dashboard__stat-value">{{ stats.totalReviews }}</p>
+          <p class="admin-dashboard__stat-label">{{ stats.flaggedReviews }} flagged</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-dashboard__actions">
+      <a routerLink="/admin/sellers" class="admin-dashboard__action-card">
+        <lucide-icon name="ShieldCheck" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>Pending Sellers</h3>
+          <p>{{ stats.pendingSellers }} awaiting KYC approval.</p>
+        </div>
+      </a>
+      <a routerLink="/admin/unions" class="admin-dashboard__action-card">
+        <lucide-icon name="Landmark" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>Pending Unions</h3>
+          <p>{{ stats.pendingUnions }} awaiting approval.</p>
+        </div>
+      </a>
+      <a routerLink="/admin/reviews" class="admin-dashboard__action-card">
+        <lucide-icon name="Flag" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>Review Moderation</h3>
+          <p>Browse and moderate customer reviews.</p>
+        </div>
+      </a>
+      <a routerLink="/admin/users" class="admin-dashboard__action-card">
+        <lucide-icon name="UserCog" [size]="24" [strokeWidth]="1.5" />
+        <div>
+          <h3>Users</h3>
+          <p>Search accounts, activate or deactivate.</p>
+        </div>
+      </a>
+    </div>
+  </div>
+}

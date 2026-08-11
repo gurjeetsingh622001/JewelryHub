@@ -7,6 +7,7 @@ import { OrderStatus } from '../orders/models';
 import { Product } from '../products/models';
 import {
   CreateProductRequest,
+  DocumentVerificationStatus,
   SellerDocument,
   SellerOrderItem,
   SellerProfile,
@@ -52,5 +53,24 @@ export class SellerService {
 
   updateItemStatus(orderItemId: string, request: UpdateItemStatusRequest): Observable<void> {
     return this.http.patch<void>(`${this.ordersUrl}/items/${orderItemId}/status`, request);
+  }
+
+  // --- Admin-only actions (same /sellers resource, different role) ---
+
+  getPendingSellers(pageNumber = 1, pageSize = 20): Observable<PagedResult<SellerProfile>> {
+    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    return this.http.get<PagedResult<SellerProfile>>(`${this.sellersUrl}/pending`, { params });
+  }
+
+  reviewDocument(documentId: string, decision: DocumentVerificationStatus, reviewerNote?: string | null): Observable<void> {
+    return this.http.post<void>(`${this.sellersUrl}/documents/${documentId}/review`, { decision, reviewerNote });
+  }
+
+  approveSeller(sellerId: string): Observable<void> {
+    return this.http.post<void>(`${this.sellersUrl}/${sellerId}/approve`, {});
+  }
+
+  rejectSeller(sellerId: string, reason: string): Observable<void> {
+    return this.http.post<void>(`${this.sellersUrl}/${sellerId}/reject`, { reason });
   }
 }

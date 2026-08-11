@@ -63,12 +63,17 @@ Admin accounts don't have a membership row to attribute the record to. See
 No schema changes were needed — Domain/Persistence already had every table this phase needed.
 
 ## Phase 12 — Admin Module (dedicated)
-**Pending.** Currently admin capability is role-gated actions bolted onto other controllers with
-no dedicated dashboard. Needs: decide whether this stays distributed (current pattern, works fine
-for approve/reject/moderate-style actions) or gets a real `AdminController` for
-platform-wide concerns (user management, role assignment, reporting/analytics). Recommend
-deciding this only after Phase 11, since Union approval/moderation will likely need admin
-actions too and should follow whichever pattern is chosen here.
+**Completed (2026-08-11).** Decided, per explicit user choice, on a dedicated `AdminController`
+(`api/v1/admin`) rather than staying fully distributed — but scoped to only what genuinely had no
+existing home, keeping the codebase's established convention (a resource's admin queue query lives
+on that resource's own controller) for everything that already fit it. Added: `GET dashboard`
+(platform-wide counts — customers/sellers/unions pending & approved, orders/revenue this month,
+total/flagged reviews), `GET users` + `POST users/{id}/status` (the first-ever Application-layer
+User listing and activate/deactivate, with a guard against self-deactivation), and `GET reviews`
+(an unfiltered-by-default moderation browsing queue). Seller/union approval and review moderation
+deliberately stayed on `SellersController`/`UnionsController`/`ReviewsController`. Role/permission
+management and deeper reporting/analytics remain out of scope — see Phase 17. See
+[BACKEND_PROGRESS.md](BACKEND_PROGRESS.md) and [API_PROGRESS.md](API_PROGRESS.md) for full detail.
 
 ## Phase 13 — Frontend Foundation (Angular)
 **Completed (2026-08-04).** Angular 22 workspace at `client/` — Material + Tailwind (PrimeNG was
@@ -153,7 +158,27 @@ route; the KYC form showing false validation errors right after a successful sub
 [API_PROGRESS.md](API_PROGRESS.md) and [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).
 
 ## Phase 15 — Admin Dashboard (Angular)
-**Pending.** Depends on Phase 12's decision about whether a dedicated Admin API exists to back it.
+**Completed (2026-08-11).** A role-guarded `/admin` area (`roleGuard(['Admin'])`) consuming the new
+`AdminController` (Phase 12): a Dashboard (stat cards for customers/sellers/unions/orders/revenue/
+reviews, plus quick-link action cards), a Pending Sellers page (per-document Verify/Reject, seller
+Approve/Reject with an inline reason field — reusing `SellersController`'s existing endpoints),
+a Pending Unions page (Approve, reusing `UnionsController`), a Reviews moderation page
+(`MatButtonToggleGroup` All/Flagged/Hidden filter, Hide/Restore reusing `ReviewsController`'s
+moderate endpoint), and a Users page (search + role filter, Deactivate/Reactivate). An Admin-only
+navbar link was added, gated on `auth.hasRole('Admin')`.
+
+Verified live end-to-end as the seeded admin account: dashboard rendered real counts → verified a
+KYC document and approved the pending seller → hid then restored a review → deactivated then
+reactivated a user via search → confirmed a non-admin (Seller) account is redirected away from
+`/admin`. Zero console errors on the final run. No new backend or frontend app bugs were found
+during this pass — the only issues encountered were two bugs in the Playwright verification script
+itself (an ambiguous `button:has-text("Approve")` selector matching the wrong one of two pending-
+seller cards, and a script that assumed a fixed starting document-verification state on re-runs),
+both diagnosed by cross-checking backend state directly via `curl` before ruling out an app bug.
+
+This closes out the full Admin module — Phase 12 (backend) and Phase 15 (frontend) are both
+complete, which in turn closes out every module in the originally planned v1 roadmap (Customer,
+Seller, Union, Admin).
 
 ## Phase 16 — Union Dashboard (Angular)
 **Core union scope completed (2026-08-07)** — scoped down by explicit user decision to keep this
@@ -231,8 +256,10 @@ This closes out the full Union module — Phase 11 (backend) through Phase 16a (
 complete.
 
 ## Phase 17 — Reports / Analytics
-**Pending.** No reporting endpoints exist anywhere yet (sales, seller performance, union
-activity). Likely follows naturally once Admin (Phase 12) exists to consume from.
+**Pending.** No reporting endpoints exist yet beyond the Admin dashboard's basic counts (Phase 12/
+15 — customers/sellers/unions/orders/revenue/reviews totals only, no trends/breakdowns/exports).
+Deeper reporting (sales over time, seller performance, union activity) and role/permission
+management are the natural next additions to `AdminController` now that it exists to hold them.
 
 ## Phase 18 — Testing
 **Pending — deliberately deferred.** Unit tests, integration tests, and architecture tests

@@ -52,6 +52,12 @@
               <span>My Unions</span>
             </a>
           }
+          @if (auth.hasRole('Admin')) {
+            <a mat-menu-item routerLink="/admin">
+              <lucide-icon name="UserCog" [size]="16" [strokeWidth]="1.5" />
+              <span>Admin Dashboard</span>
+            </a>
+          }
           <button mat-menu-item (click)="logout()">
             <lucide-icon name="LogOut" [size]="16" [strokeWidth]="1.5" />
             <span>Log out</span>

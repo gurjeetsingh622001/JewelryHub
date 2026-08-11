@@ -18,4 +18,9 @@ export class ReviewsService {
   create(request: CreateReviewRequest): Observable<Review> {
     return this.http.post<Review>(this.baseUrl, request);
   }
+
+  /** Admin-only. */
+  moderate(reviewId: string, isApproved: boolean): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${reviewId}/moderate`, { isApproved });
+  }
 }

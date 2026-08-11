@@ -102,6 +102,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/unions/poll-detail/poll-detail.component').then((m) => m.PollDetailComponent),
       },
       {
+        path: 'admin',
+        canActivate: [roleGuard(['Admin'])],
+        children: [
+          { path: '', loadComponent: () => import('./features/admin/dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent) },
+          { path: 'sellers', loadComponent: () => import('./features/admin/pending-sellers/admin-pending-sellers.component').then((m) => m.AdminPendingSellersComponent) },
+          { path: 'unions', loadComponent: () => import('./features/admin/pending-unions/admin-pending-unions.component').then((m) => m.AdminPendingUnionsComponent) },
+          { path: 'reviews', loadComponent: () => import('./features/admin/reviews/admin-reviews.component').then((m) => m.AdminReviewsComponent) },
+          { path: 'users', loadComponent: () => import('./features/admin/users/admin-users.component').then((m) => m.AdminUsersComponent) },
+        ],
+      },
+      {
         path: 'seller',
         canActivate: [roleGuard(['Seller'])],
         children: [

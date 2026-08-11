@@ -1,0 +1,26 @@
+<div class="admin-pending mx-auto max-w-3xl px-4 py-12 md:px-8">
+  <header class="admin-pending__header">
+    <p class="eyebrow">Admin</p>
+    <h1>Pending Unions</h1>
+  </header>
+
+  @if (unionsResource.isLoading()) {
+    <div class="admin-pending__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((unionsResource.value()?.items?.length ?? 0) === 0) {
+    <p class="admin-pending__empty">No unions awaiting approval.</p>
+  } @else {
+    @for (union of unionsResource.value()!.items; track union.id) {
+      <div class="admin-pending__row">
+        <div>
+          <a [routerLink]="['/unions', union.id]" class="admin-pending__name">{{ union.name }}</a>
+          <p class="admin-pending__meta">
+            {{ union.city }}, {{ union.state }} &middot; Founded by {{ union.createdBySellerBusinessName }}
+          </p>
+        </div>
+        <button mat-flat-button color="primary" type="button" (click)="approve(union.id)">Approve</button>
+      </div>
+    }
+  }
+</div>

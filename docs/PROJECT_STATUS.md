@@ -1,7 +1,7 @@
 # Project Status
 
-Last updated: **2026-08-07** (Angular Union Meetings + Governance Polls — the last piece of the
-Union module — verified live). This file, along with
+Last updated: **2026-08-11** (Admin module — dedicated `AdminController` + Angular `/admin` area —
+verified live, closing out the full planned v1 roadmap). This file, along with
 the rest of
 `docs/`, is the project's
 permanent memory — it should always reflect the actual state of the repository, independent of
@@ -58,6 +58,14 @@ any chat history. See the Maintenance Rule at the bottom.
   instead of an `INSERT`. Found live while building the Angular Seller Order Fulfillment queue —
   see [API_PROGRESS.md](API_PROGRESS.md). Fixed by adding a `Shipments` repository to
   `IUnitOfWork` and calling `AddAsync` explicitly.
+- ✔ **Admin API added (2026-08-11)** — a dedicated `Features/Admin` folder + `AdminController`
+  (`api/v1/admin`, class-level `[Authorize(Roles = "Admin")]`): `GET dashboard` (platform-wide
+  counts), `GET users` + `POST users/{id}/status` (the first-ever Application-layer User listing/
+  activate-deactivate, with a guard against self-deactivation), and `GET reviews` (an unfiltered
+  moderation browsing queue). Researched the codebase's existing convention first (a resource's
+  admin queue query lives on that resource's own controller, not a central one) and deliberately
+  kept seller/union approval and review moderation where they already lived, adding only what had
+  no existing home. See [API_PROGRESS.md](API_PROGRESS.md) and [BACKEND_PROGRESS.md](BACKEND_PROGRESS.md).
 
 **Frontend**
 
@@ -163,6 +171,18 @@ any chat history. See the Maintenance Rule at the bottom.
   end-to-end: scheduled a meeting → recorded minutes with an action item → a second member RSVP'd;
   created and opened a poll → a second member voted → results and re-vote rejection both correct →
   the assigned action item appeared under "My Action Items." Zero console errors.
+- ✔ Admin module (2026-08-11) — the last remaining planned module. A role-guarded `/admin` area:
+  a Dashboard (platform stat cards + quick links), Pending Sellers (per-document verify, seller
+  approve/reject with an inline reason), Pending Unions (approve), Reviews (All/Flagged/Hidden
+  filter, Hide/Restore), and Users (search + role filter, Deactivate/Reactivate). No new backend
+  or frontend app bugs were found during verification this time — the only issues hit were two
+  test-script bugs in the Playwright verification script itself (an ambiguous `button:has-text`
+  selector matching the wrong one of two "Approve" buttons on the page, and a script that assumed
+  a fixed starting state on re-runs), both diagnosed by cross-checking backend state directly via
+  `curl` before concluding the app was correct. Verified live end-to-end as an admin (dashboard →
+  verify a KYC document → approve the seller → hide then restore a review → deactivate then
+  reactivate a user) and confirmed a non-admin (Seller) account is redirected away from `/admin`.
+  Zero console errors on the final run.
 
 ## In Progress
 
@@ -178,18 +198,18 @@ something half-written (see [ROADMAP.md](ROADMAP.md) for what's next).
   nothing calls it from a real provider yet
 - ⏳ Tax rate management API (currently seed/DB-edit only; applied at checkout but not manageable)
 - ⏳ Password reset / email verification for Auth
-- ⏳ Admin dashboard / reporting endpoints (today: role-gated actions only, no dedicated module)
+- ⏳ Role/permission management API and deeper reporting/analytics beyond the Admin dashboard's
+  basic counts (the dashboard/user-management/review-queue itself is done, see Completed above)
 - ⏳ Unit Tests, Integration Tests, Architecture Tests (explicitly deferred — see below)
 - ⏳ CI/CD pipeline (`.github/workflows/` exists but is empty — explicitly deferred)
 
 **Frontend**
 
-- ❌ Admin UI (the only remaining frontend module)
-
-(The full Customer UI — Home, auth, product browsing, cart, checkout, order history, reviews —
-the full Seller UI, and the full Union UI — including Meetings and Governance Polls — are now
-done, see Completed above. The Angular foundation these are built on is described in
-[FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md).)
+Nothing planned is outstanding. The full Customer UI — Home, auth, product browsing, cart,
+checkout, order history, reviews — the full Seller UI, the full Union UI (including Meetings and
+Governance Polls), and now the full Admin UI are all done, see Completed above. The Angular
+foundation these are built on is described in [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md). Any
+further frontend work needs fresh direction, not a resumption of planned scope.
 
 ## Explicit Non-Priorities (by decision, not oversight)
 

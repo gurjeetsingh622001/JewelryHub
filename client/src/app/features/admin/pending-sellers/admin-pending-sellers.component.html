@@ -1,0 +1,65 @@
+<div class="admin-pending mx-auto max-w-4xl px-4 py-12 md:px-8">
+  <header class="admin-pending__header">
+    <p class="eyebrow">Admin</p>
+    <h1>Pending Sellers</h1>
+  </header>
+
+  @if (sellersResource.isLoading()) {
+    <div class="admin-pending__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((sellersResource.value()?.items?.length ?? 0) === 0) {
+    <p class="admin-pending__empty">No sellers awaiting review.</p>
+  } @else {
+    @for (seller of sellersResource.value()!.items; track seller.id) {
+      <div class="admin-pending__card">
+        <div class="admin-pending__card-header">
+          <div>
+            <p class="admin-pending__business-name">{{ seller.businessName }}</p>
+            <p class="admin-pending__meta">{{ seller.city }}, {{ seller.state }} &middot; GST {{ seller.gstNumber }}</p>
+          </div>
+          <div class="admin-pending__card-actions">
+            <button mat-flat-button color="primary" type="button" (click)="approveSeller(seller.id)">Approve</button>
+            <button mat-stroked-button type="button" (click)="startReject(seller.id)">Reject</button>
+          </div>
+        </div>
+
+        @if (rejectingSellerId() === seller.id) {
+          <div class="admin-pending__reject-form">
+            <mat-form-field appearance="outline">
+              <mat-label>Rejection Reason</mat-label>
+              <input matInput [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)" />
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="button" [disabled]="!rejectReason().trim()" (click)="confirmReject(seller.id)">
+              Confirm Rejection
+            </button>
+            <button mat-button type="button" (click)="rejectingSellerId.set(null)">Cancel</button>
+          </div>
+        }
+
+        <div class="admin-pending__documents">
+          @for (doc of seller.documents; track doc.id) {
+            <div class="admin-pending__doc-row">
+              <a [href]="doc.fileUrl" target="_blank" rel="noopener">
+                <lucide-icon name="FileText" [size]="16" [strokeWidth]="1.5" />
+                {{ doc.documentType }}
+              </a>
+              <span class="admin-pending__doc-status" [class]="'admin-pending__doc-status--' + doc.status">
+                {{ documentStatusLabels[doc.status] }}
+              </span>
+              @if (doc.status === DocumentVerificationStatus.Pending) {
+                <div class="admin-pending__doc-actions">
+                  <button mat-button type="button" (click)="reviewDocument(doc.id, DocumentVerificationStatus.Verified)">Verify</button>
+                  <button mat-button type="button" (click)="reviewDocument(doc.id, DocumentVerificationStatus.Rejected)">Reject</button>
+                </div>
+              }
+            </div>
+          }
+          @if (seller.documents.length === 0) {
+            <p class="admin-pending__no-docs">No documents submitted yet.</p>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

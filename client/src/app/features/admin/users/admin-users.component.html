@@ -1,0 +1,57 @@
+<div class="admin-users mx-auto max-w-5xl px-4 py-12 md:px-8">
+  <header class="admin-users__header">
+    <p class="eyebrow">Admin</p>
+    <h1>Users</h1>
+  </header>
+
+  <div class="admin-users__filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Search by name or email</mat-label>
+      <input matInput [ngModel]="searchInput()" (ngModelChange)="searchInput.set($event)" (keyup.enter)="submitSearch()" />
+      <button matSuffix mat-icon-button type="button" (click)="submitSearch()" aria-label="Search">
+        <lucide-icon name="Search" [size]="18" [strokeWidth]="1.5" />
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Role</mat-label>
+      <mat-select [value]="roleFilter()" (selectionChange)="roleFilter.set($event.value)">
+        @for (opt of roleOptions; track opt.label) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (usersResource.isLoading()) {
+    <div class="admin-users__loading">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else if ((usersResource.value()?.items?.length ?? 0) === 0) {
+    <p class="admin-users__empty">No users match this search.</p>
+  } @else {
+    <div class="admin-users__list">
+      @for (user of usersResource.value()!.items; track user.id) {
+        <div class="admin-users__row">
+          <div class="admin-users__info">
+            <p class="admin-users__name">{{ user.firstName }} {{ user.lastName }}</p>
+            <p class="admin-users__meta">
+              {{ user.email }} &middot; {{ user.roles.join(', ') }} &middot; Joined {{ user.createdAtUtc | date: 'mediumDate' }}
+            </p>
+          </div>
+          <span class="admin-users__status" [class.admin-users__status--inactive]="!user.isActive">
+            {{ user.isActive ? 'Active' : 'Deactivated' }}
+          </span>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="updatingUserId() === user.id"
+            (click)="toggleActive(user.id, user.isActive)"
+          >
+            {{ user.isActive ? 'Deactivate' : 'Reactivate' }}
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

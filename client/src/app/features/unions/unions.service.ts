@@ -100,4 +100,15 @@ export class UnionsService {
   updateEventStatus(eventId: string, status: UnionEventStatus): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/events/${eventId}/status`, { status });
   }
+
+  // --- Admin-only actions (same /unions resource, different role) ---
+
+  getPendingUnions(pageNumber = 1, pageSize = 20): Observable<PagedResult<Union>> {
+    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    return this.http.get<PagedResult<Union>>(`${this.baseUrl}/pending`, { params });
+  }
+
+  approveUnion(unionId: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${unionId}/approve`, {});
+  }
 }

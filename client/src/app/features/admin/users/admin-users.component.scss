@@ -1,0 +1,82 @@
+.admin-users__header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: var(--text-2xl);
+    margin-top: 0.35rem;
+  }
+}
+
+.admin-users__filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  mat-form-field:first-child {
+    flex: 1;
+    min-width: 16rem;
+  }
+
+  mat-form-field:last-child {
+    width: 12rem;
+  }
+}
+
+.admin-users__loading {
+  display: flex;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.admin-users__empty {
+  color: var(--color-ink-muted);
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.admin-users__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-users__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-users__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-users__name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+}
+
+.admin-users__meta {
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  margin-top: 0.2rem;
+}
+
+.admin-users__status {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-emerald-tint);
+  color: var(--color-emerald);
+  white-space: nowrap;
+
+  &--inactive {
+    background: color-mix(in srgb, var(--color-error) 15%, transparent);
+    color: var(--color-error);
+  }
+}

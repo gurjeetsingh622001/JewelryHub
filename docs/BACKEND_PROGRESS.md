@@ -1,10 +1,10 @@
 # Backend Progress
 
 Per-module completion status across all four layers (Domain → Persistence → Application → API).
-Derived directly from source inspection, last updated 2026-08-06 (a real `UpdateOrderItemStatusCommand`
-bug — marking an item Shipped always 500'd — found and fixed while building the Angular Seller
-module) — see [API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the
-Application/API columns here.
+Derived directly from source inspection, last updated 2026-08-11 (`AdminController` added — a
+dashboard overview, user account management, and a review-moderation browsing queue) — see
+[API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the Application/API
+columns here.
 
 | Module | Domain | Persistence | Application | API | Overall |
 |---|---|---|---|---|---|
@@ -22,7 +22,7 @@ Application/API columns here.
 | Reviews | ✅ | ✅ | ✅ (5 use cases) | ✅ (5 endpoints) | **Complete** |
 | Notifications | ✅ | ✅ | ✅ (3 use cases + real-time push) | ✅ (3 endpoints + SignalR hub) | **Complete** |
 | **Jewelry Union** | ✅ (13 tables, richly modeled) | ✅ | ✅ (19 commands, 14 queries) | ✅ (33 endpoints, 3 controllers) | **Complete** |
-| Admin (as a distinct module) | n/a | n/a | ⚠️ folded into other modules | ⚠️ folded into other modules | **No dedicated module — role-gated actions only** |
+| Admin (as a distinct module) | n/a (reuses `User`/`Review` etc.) | n/a | ✅ (4 use cases: dashboard, users, set-status, reviews) | ✅ (4 endpoints, `AdminController`) | **Complete for v1** (added 2026-08-11; resource-specific admin actions — seller/union approval, review moderate — remain on their own controllers, see below) |
 
 ## Detail by Status
 
@@ -81,8 +81,6 @@ resolved:
   `IUnitOfWork` and routing the insert through `AddAsync` explicitly. Found live while building the
   Angular Seller Order Fulfillment queue — see [FRONTEND_PROGRESS.md](FRONTEND_PROGRESS.md) and
   [API_PROGRESS.md](API_PROGRESS.md).
-  `TotalRevenue` rollups the moment *their* item is delivered (independent of other sellers on a
-  multi-seller order).
 
 **Jewelry Union** (added 2026-08-04): union creation (KYC-approved sellers only, founder becomes
 President) with admin approval before the union is publicly visible; membership lifecycle
@@ -99,6 +97,24 @@ Actions that don't need that attribution (approving a union, reviewing a members
 poll) do allow Admin as an alternate to the officer check. No Domain or Persistence changes were
 needed — the schema already had every table this module uses.
 
+**Admin** (added 2026-08-11): a dedicated `Features/Admin` folder + `AdminController`
+(`api/v1/admin`, class-level `[Authorize(Roles = "Admin")]`) holding only what had no existing
+home — `GET dashboard` (platform-wide counts: customers/sellers/unions pending & approved, orders
+and revenue this month, total/flagged reviews), `GET users` (search/role/active-status filtered,
+paginated — the first Application-layer code to ever list `User` rows), `POST users/{id}/status`
+(activate/deactivate, with a guard against an admin deactivating their own account), and `GET
+reviews` (an unfiltered-by-default moderation browsing queue, unlike the public
+`GetProductReviewsQuery`). Deliberately does **not** duplicate or relocate the admin actions that
+already existed on their own resource controllers — seller/union approval stayed on
+`SellersController`/`UnionsController`, review moderate stayed on `ReviewsController` — following
+the codebase's existing convention (an admin queue query lives on its resource's controller, not
+a central one) rather than inventing a new one. Still explicitly out of scope for v1: role/
+permission management (granting or revoking roles), and reporting/analytics beyond the dashboard's
+basic counts — both are natural Phase 17+ follow-ups, not oversights. Also worth noting:
+deactivating a user does not revoke their already-issued refresh tokens, so a deactivated user
+stays logged in until that token expires or is rotated — `IsActive` is checked at `LoginCommand`
+time, not per-request.
+
 ### ⚠️ Partially Complete
 
 **Payments**: `ConfirmPaymentCommand` has real, complete logic (idempotency check, order/payment
@@ -113,10 +129,10 @@ the API — they can currently only be seeded or edited directly against the dat
 
 ### ❌ Not Started
 
-**Admin as its own module**: there is no `AdminController` or `Features/Admin` folder. Every
-admin capability today is a role-gated action tucked into an otherwise-customer/seller-facing
-controller (approve sellers, moderate reviews, manage categories/products). There's no
-platform-wide dashboard, user/role management, or reporting endpoint set.
+Nothing at the module level — every module in the table above is at least "Complete for current
+needs." Remaining backend gaps are all narrower and already called out above: password
+reset/email verification (Auth), a real payment gateway integration (Payments), tax-rate CRUD
+(Tax), and role/permission management + deeper reporting (Admin).
 
 ## What's NOT Missing (verified, not assumed)
 
@@ -135,7 +151,7 @@ module hiding in what's listed as ✅ above.
 | Validation pipeline | ✅ complete (FluentValidation via MediatR behavior) |
 | Global error handling | ✅ complete (`ProblemDetails` middleware + typed exceptions) |
 | Logging | ✅ complete (Serilog + `LoggingBehavior`) |
-| Auth/authorization | ✅ complete for existing modules; no user/role management API |
+| Auth/authorization | ✅ complete for existing modules; user listing + activate/deactivate via `AdminController` (added 2026-08-11), but no role/permission management API yet |
 | EF Core migrations | ✅ `InitialCreate` generated 2026-08-04 (none existed before) |
 | Testing (unit/integration/architecture) | ❌ not started — explicitly deferred, see [PROJECT_STATUS.md](PROJECT_STATUS.md) |
 | CI/CD | ❌ not started — `.github/workflows/` is empty, explicitly deferred |
