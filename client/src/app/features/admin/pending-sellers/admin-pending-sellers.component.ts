@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { DOCUMENT_STATUS_LABELS, DocumentVerificationStatus } from '../../seller/models';
 import { SellerService } from '../../seller/seller.service';
 
@@ -22,6 +23,7 @@ export class AdminPendingSellersComponent {
 
   protected readonly documentStatusLabels = DOCUMENT_STATUS_LABELS;
   protected readonly DocumentVerificationStatus = DocumentVerificationStatus;
+  protected readonly resolveMediaUrl = resolveMediaUrl;
 
   protected readonly rejectingSellerId = signal<string | null>(null);
   protected readonly rejectReason = signal('');

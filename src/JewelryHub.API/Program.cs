@@ -132,6 +132,10 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<JewelryHub.API.Middleware.ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+// Serves uploaded product images / KYC documents back out from
+// wwwroot/uploads (see LocalFileStorageService) — publicly readable, same
+// as the Unsplash URLs used for seeded demo images, no auth needed to view.
+app.UseStaticFiles();
 app.UseCors("AngularApp");
 app.UseAuthentication();
 app.UseAuthorization();

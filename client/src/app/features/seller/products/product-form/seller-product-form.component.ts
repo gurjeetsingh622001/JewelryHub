@@ -11,6 +11,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
 import { map } from 'rxjs';
+import { UploadsService } from '../../../../core/uploads/uploads.service';
+import { resolveMediaUrl } from '../../../../shared/resolve-media-url';
 import { METAL_TYPE_LABELS, PRODUCT_TYPE_LABELS, PURITY_TYPE_LABELS } from '../../../products/models';
 import { ProductsService } from '../../../products/products.service';
 import { SellerService } from '../../seller.service';
@@ -38,7 +40,11 @@ export class SellerProductFormComponent {
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService);
   private readonly sellerService = inject(SellerService);
+  private readonly uploadsService = inject(UploadsService);
   private readonly snackBar = inject(MatSnackBar);
+
+  protected readonly resolveMediaUrl = resolveMediaUrl;
+  protected readonly uploadingImage = signal(false);
 
   protected readonly metalTypeOptions = Object.entries(METAL_TYPE_LABELS).map(([value, label]) => ({ value: Number(value), label }));
   protected readonly purityTypeOptions = Object.entries(PURITY_TYPE_LABELS).map(([value, label]) => ({ value: Number(value), label }));
@@ -122,6 +128,20 @@ export class SellerProductFormComponent {
           discountPercentage: product.discountPercentage,
         });
       }
+    });
+  }
+
+  onImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingImage.set(true);
+    this.uploadsService.uploadProductImage(file).subscribe({
+      next: (uploaded) => {
+        this.uploadingImage.set(false);
+        this.createForm.patchValue({ imageUrl: uploaded.url });
+      },
+      error: () => this.uploadingImage.set(false),
     });
   }
 

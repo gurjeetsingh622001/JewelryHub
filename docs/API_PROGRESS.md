@@ -1,6 +1,6 @@
 # API Progress
 
-Ground truth as of 2026-08-11 (`AdminController` added): 14 controllers, 85 endpoints, all backed
+Ground truth as of 2026-08-11 (`UploadsController` added): 15 controllers, 87 endpoints, all backed
 by a real MediatR handler with EF-Core-backed logic. Zero orphaned commands (every Application
 handler has exactly one controller action calling it) and zero dangling references (every
 controller action points at a command/query that exists). Route prefix for all controllers:
@@ -38,12 +38,35 @@ revoke already-issued refresh tokens for a deactivated user (only blocks *future
 `LoginCommand` already checks via `User.IsActive`) — good enough for "stop a problem account from
 logging in again," not full session termination.
 
+## UploadsController — `api/v1/uploads` (class-level `[Authorize(Roles = "Seller,Admin")]`) — added 2026-08-11
+
+| Verb | Route | Handler | Status |
+|---|---|---|---|
+| POST | `product-images` | `UploadFileCommand` (`UploadKind.ProductImage`) | ✅ Complete |
+| POST | `kyc-documents` | `UploadFileCommand` (`UploadKind.SellerDocument`) | ✅ Complete |
+
+A generic upload endpoint rather than folding file handling into `ProductsController`/
+`SellersController` — both `CreateProductCommand` and `SubmitSellerDocumentCommand` already just
+take a URL string, so uploading is a separate client-side pre-step: upload here to get a URL back,
+then call the existing create/submit command with it. Validates file size (5 MB max) and extension
+(`.jpg/.jpeg/.png/.webp` for product images; those plus `.pdf` for documents) via
+`UploadFileCommandValidator`, then saves through a new `IFileStorageService` — currently
+`LocalFileStorageService` (Infrastructure), writing to the API's `wwwroot/uploads/{products,
+documents}/` and served back out by `app.UseStaticFiles()` in `Program.cs`. The abstraction exists
+so a later swap to cloud blob storage touches only the Infrastructure implementation, not this
+controller or its command. Only Sellers upload anything today (their own product photos, their own
+KYC documents); Admin included for parity with other Seller-gated actions, same as
+`ProductsController`'s `[Authorize(Roles = "Seller,Admin")]` pattern. Verified live: successful
+upload returns `{url, fileName, sizeBytes}` and the file is immediately fetchable at that URL; a
+`.txt` upload to `product-images` correctly returns 400 with the extension-whitelist message; a
+Customer-role token correctly gets 403.
+
 ## CartController — `api/v1/cart` (Customer)
 
 | Verb | Route | Handler | Status |
 |---|---|---|---|
 | GET | `` | `GetCartQuery` | ✅ Complete |
-| POST | `items` | `AddToCartCommand` | ✅ Complete (fixed 2026-08-06 — see note below) |
+| POST | `items` | `AddToCartCommand` | ✅ Complete (fixed twice — 2026-08-06 and 2026-08-11, see notes below) |
 | PUT | `items/{productId}` | `UpdateCartItemQuantityCommand` | ✅ Complete |
 | DELETE | `items/{productId}` | `RemoveFromCartCommand` | ✅ Complete |
 | DELETE | `` | `ClearCartCommand` | ✅ Complete |
@@ -59,6 +82,18 @@ it participates in the same change-tracking graph as the `Cart` it's being attac
 three Cart handlers (`UpdateCartItemQuantity`, `RemoveFromCart`, `ClearCart`) don't have this
 issue — they only mutate entities already loaded through the same tracked query, never attach a
 separately-queried entity to a new one.
+
+**Second bug found and fixed (2026-08-11)**: reported live as a 500 on every add-to-cart call
+again, but a *different* root cause this time — the no-tracking fix above had held. A brand-new
+`CartItem` was attached to the tracked `Cart` only via `cart.Items.Add(...)` collection-navigation,
+never through an explicit repository call. `CartItem.Id` is a client-generated `Guid` (set in
+`BaseEntity`'s property initializer), and EF Core's change-tracker fixup treats a newly-discovered
+entity with an already-set key ambiguously — it issued an `UPDATE` (matching 0 rows,
+`DbUpdateConcurrencyException`) instead of an `INSERT`. Same shape as the `Shipment` bug in
+`UpdateOrderItemStatusCommand`. Fixed by adding a `CartItems` repository to `IUnitOfWork` and
+calling `AddAsync` explicitly for the new item, in addition to the collection `Add()` (needed so
+the response DTO, built from the in-memory `cart.Items`, still includes it). Verified live: both a
+brand-new cart and an existing cart with a different new product now return 200.
 
 **Missing**: nothing obvious for a v1 cart — this module is complete.
 
@@ -184,8 +219,19 @@ This is the most complete module in the API, including the full KYC review lifec
 | Verb | Route | Handler | Status |
 |---|---|---|---|
 | GET | `` | `GetWishlistQuery` | ✅ Complete |
-| POST | `items/{productId}` | `AddToWishlistCommand` | ✅ Complete |
+| POST | `items/{productId}` | `AddToWishlistCommand` | ✅ Complete (fixed 2026-08-11 — see note below) |
 | DELETE | `items/{productId}` | `RemoveFromWishlistCommand` | ✅ Complete |
+
+**Bug found and fixed (2026-08-11)**: identical shape to the second `AddToCartCommand` bug above —
+`AddToWishlistCommand` attached a new `WishlistItem` to the tracked `Wishlist` only via
+`wishlist.Items.Add(...)`, never through an explicit repository call, so EF Core issued an `UPDATE`
+matching 0 rows instead of an `INSERT` (`DbUpdateConcurrencyException`, 500) the moment a customer
+wishlisted a genuinely new product. This was the third occurrence of the exact same root cause in
+this codebase (`Shipment`, then `CartItem`, now `WishlistItem`) — after this fix, the rest of
+`Features/` was swept for the same pattern and no further instances were found; every other
+`collection.Add(new Entity {...})` call happens *before* its parent's own explicit `AddAsync`,
+which is the safe ordering. Fixed by adding a `WishlistItems` repository to `IUnitOfWork` and
+calling `AddAsync` explicitly. Found live while building the Wishlist UI, not reported by the user.
 
 ## UnionsController — `api/v1/unions`
 

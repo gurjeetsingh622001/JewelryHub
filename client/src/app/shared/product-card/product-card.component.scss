@@ -81,6 +81,11 @@
     background: var(--color-gold);
     color: var(--color-bg);
   }
+
+  &--active {
+    background: var(--color-gold);
+    color: var(--color-bg);
+  }
 }
 
 .product-card__body {

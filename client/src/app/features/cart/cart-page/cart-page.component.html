@@ -17,7 +17,7 @@
         @for (item of cart.items; track item.id) {
           <div class="cart-item">
             @if (item.productImageUrl) {
-              <div class="cart-item__image" [style.background-image]="'url(' + item.productImageUrl + ')'"></div>
+              <div class="cart-item__image" [style.background-image]="'url(' + resolveMediaUrl(item.productImageUrl) + ')'"></div>
             } @else {
               <div class="cart-item__image cart-item__image--empty">
                 <lucide-icon name="Gem" [size]="24" [strokeWidth]="1.25" />

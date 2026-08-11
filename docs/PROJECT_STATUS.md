@@ -1,11 +1,10 @@
 # Project Status
 
-Last updated: **2026-08-11** (Admin module — dedicated `AdminController` + Angular `/admin` area —
-verified live, closing out the full planned v1 roadmap). This file, along with
-the rest of
-`docs/`, is the project's
-permanent memory — it should always reflect the actual state of the repository, independent of
-any chat history. See the Maintenance Rule at the bottom.
+Last updated: **2026-08-11** (post-v1 polish pass: Wishlist UI, a generic file-upload feature for
+product photos/KYC documents, two real `DbUpdateConcurrencyException` bugs found and fixed in Cart
+and Wishlist, and a large live demo-data generation pass). This file, along with the rest of
+`docs/`, is the project's permanent memory — it should always reflect the actual state of the
+repository, independent of any chat history. See the Maintenance Rule at the bottom.
 
 ## Completed
 
@@ -66,6 +65,30 @@ any chat history. See the Maintenance Rule at the bottom.
   admin queue query lives on that resource's own controller, not a central one) and deliberately
   kept seller/union approval and review moderation where they already lived, adding only what had
   no existing home. See [API_PROGRESS.md](API_PROGRESS.md) and [BACKEND_PROGRESS.md](BACKEND_PROGRESS.md).
+- ✔ **Fixed a real `AddToCartCommand` bug, second occurrence (2026-08-11)** — reported live as a
+  500 on every add-to-cart call. Root cause was the *same shape* as the Shipment bug above but in a
+  different handler: a brand-new `CartItem` was attached only via `cart.Items.Add(...)` navigation,
+  never through an explicit repository `AddAsync`, so EF Core's change tracker treated its
+  client-generated `Guid` key ambiguously and issued an `UPDATE` matching 0 rows instead of an
+  `INSERT`. Fixed identically — added a `CartItems` repository to `IUnitOfWork` and call `AddAsync`
+  explicitly. Verified live: both "brand-new cart" and "existing cart, new product" paths now
+  return 200. See [API_PROGRESS.md](API_PROGRESS.md).
+- ✔ **Found and fixed the same bug a third time, in `AddToWishlistCommand` (2026-08-11)** — caught
+  during live verification of the new Wishlist UI (see below), not reported by the user this time.
+  Identical root cause and identical fix (`WishlistItems` repository + explicit `AddAsync`). Also
+  swept the rest of `Features/` for the same `collection.Add(new Entity {...})`-before-any-explicit-
+  `Add` shape — every other instance (`RegisterCustomerCommand`, `RegisterSellerCommand`,
+  `CreateProductCommand`'s Gemstones/Images) attaches children *before* the parent's own explicit
+  `AddAsync` call, which is the safe ordering, so no further instances exist.
+- ✔ **Generic file-upload feature added (2026-08-11)** — a new `Features/Uploads` slice +
+  `UploadsController` (`api/v1/uploads`, `Seller,Admin` only): `POST product-images` and
+  `POST kyc-documents`, both validating file size (5 MB) and extension, saving to local disk under
+  the API's `wwwroot/uploads/` (new `IFileStorageService`/`LocalFileStorageService` in
+  Infrastructure — swappable for cloud blob storage later without touching any handler), served
+  back out via `app.UseStaticFiles()`. Existing commands (`CreateProductCommand`,
+  `SubmitSellerDocumentCommand`) were untouched — they already just take a URL string, so uploading
+  is a separate client-side pre-step, not baked into those commands. See
+  [API_PROGRESS.md](API_PROGRESS.md).
 
 **Frontend**
 
@@ -183,6 +206,32 @@ any chat history. See the Maintenance Rule at the bottom.
   verify a KYC document → approve the seller → hide then restore a review → deactivate then
   reactivate a user) and confirmed a non-admin (Seller) account is redirected away from `/admin`.
   Zero console errors on the final run.
+- ✔ Wishlist UI (2026-08-11) — the Heart icon in the Navbar, and the "Add to Wishlist" buttons on
+  `ProductCardComponent` and Product Detail, previously all showed an honest "coming soon" toast;
+  now wired to the always-complete Wishlist API. New `WishlistService` (signals, same
+  Customer-only lifecycle as `CartService`) and a `/wishlist` page (grid of saved items, Move to
+  Cart, Remove, empty state). Wishlist state (filled heart, live navbar badge count) is reactive
+  everywhere a product can be wishlisted. This is the work that surfaced the `AddToWishlistCommand`
+  backend bug above — found live, not by the user, fixed and re-verified with zero console errors.
+- ✔ Real image/document upload UI (2026-08-11) — the Seller product form's "Image URL" text field
+  and the KYC form's "Document URL" text field (both previously required pasting an already-hosted
+  URL) are now real file pickers backed by the new Uploads API, with an upload-in-progress spinner
+  and a thumbnail/filename preview. New shared `resolveMediaUrl()` helper (`shared/`) resolves the
+  backend's relative `/uploads/...` paths against the API's origin — needed because the Angular dev
+  server and API run on different ports, so a bare relative path would otherwise resolve against
+  the wrong origin; applied everywhere an image or KYC document link renders (product card/detail,
+  cart, wishlist, the Admin pending-sellers document link). Verified live: uploaded a real product
+  photo during creation (rendered correctly cross-origin), uploaded and submitted a real KYC
+  document, confirmed the "must be JPG/PNG/WEBP" and "must be JPG/PNG/WEBP/PDF" validation messages
+  and the Customer-role 403 all fire correctly. Zero console errors.
+- ✔ Large demo-data generation pass (2026-08-11) — a scripted pass against the live API (not direct
+  SQL) added 14 more KYC-approved sellers, 18 more customers, 131 more products spread across the 4
+  existing categories and varied metal/purity/price/discount combinations, and 5 more admin-approved
+  unions with 3-7 members each recruited from the new sellers. Brings the dev database to 32
+  customers, 22 approved sellers, 142 products, and 6 unions. Zero errors across the full run;
+  spot-checked live in the browser (product list pagination, category filter, union directory,
+  Admin dashboard counts) with zero console errors. Kept as ongoing sample data, same as every
+  other demo account in this project.
 
 ## In Progress
 

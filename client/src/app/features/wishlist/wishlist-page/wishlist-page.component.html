@@ -1,0 +1,59 @@
+<div class="wishlist-page mx-auto max-w-7xl px-4 py-12 md:px-8">
+  <header class="wishlist-page__header">
+    <p class="eyebrow">Saved For Later</p>
+    <h1>Your Wishlist</h1>
+  </header>
+
+  @if (!wishlistService.wishlist() || wishlistService.wishlist()!.items.length === 0) {
+    <div class="wishlist-page__empty">
+      <lucide-icon name="Heart" [size]="48" [strokeWidth]="1" />
+      <p>Your wishlist is empty.</p>
+      <a routerLink="/products" class="btn btn--primary">Browse Jewelry</a>
+    </div>
+  } @else {
+    <div class="wishlist-page__grid">
+      @for (item of wishlistService.wishlist()!.items; track item.id) {
+        <div class="wishlist-item">
+          <a [routerLink]="['/products', item.productId]" class="wishlist-item__image-wrap">
+            @if (item.productImageUrl) {
+              <div class="wishlist-item__image" [style.background-image]="'url(' + resolveMediaUrl(item.productImageUrl) + ')'"></div>
+            } @else {
+              <div class="wishlist-item__image wishlist-item__image--empty">
+                <lucide-icon name="Gem" [size]="28" [strokeWidth]="1.25" />
+              </div>
+            }
+          </a>
+
+          <div class="wishlist-item__body">
+            <a [routerLink]="['/products', item.productId]" class="wishlist-item__name">{{ item.productName }}</a>
+            @if (!item.isInStock) {
+              <p class="wishlist-item__out-of-stock">Out of stock</p>
+            }
+            <p class="wishlist-item__price">{{ item.currentPrice | currency: 'INR' : 'symbol' : '1.0-0' }}</p>
+
+            <div class="wishlist-item__actions">
+              <button
+                type="button"
+                class="btn btn--primary"
+                (click)="moveToCart(item.productId)"
+                [disabled]="busyProductId() === item.productId || !item.isInStock"
+              >
+                <lucide-icon name="ShoppingBag" [size]="16" [strokeWidth]="1.5" />
+                Move to Cart
+              </button>
+              <button
+                type="button"
+                class="wishlist-item__remove"
+                (click)="removeItem(item.productId)"
+                [disabled]="busyProductId() === item.productId"
+                aria-label="Remove from wishlist"
+              >
+                <lucide-icon name="Trash2" [size]="16" [strokeWidth]="1.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

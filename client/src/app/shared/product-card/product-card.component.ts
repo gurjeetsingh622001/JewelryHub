@@ -1,9 +1,12 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../core/auth/auth.service';
 import { ProductListItem, effectivePrice } from '../../features/products/models';
+import { WishlistService } from '../../features/wishlist/wishlist.service';
+import { resolveMediaUrl } from '../resolve-media-url';
 
 /**
  * Reusable listing card — used by the Product List grid, and intended for
@@ -19,15 +22,33 @@ import { ProductListItem, effectivePrice } from '../../features/products/models'
 export class ProductCardComponent {
   @Input({ required: true }) product!: ProductListItem;
 
+  protected readonly wishlistService = inject(WishlistService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly effectivePrice = effectivePrice;
+  protected readonly resolveMediaUrl = resolveMediaUrl;
 
-  addToWishlist(event: Event): void {
+  toggleWishlist(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    // Wishlist isn't wired up yet (see docs/ROADMAP.md Phase 13b) — honest
-    // feedback instead of a silent no-op click.
-    this.snackBar.open('Wishlist is coming soon.', 'Dismiss', { duration: 4000 });
+
+    if (!this.auth.isAuthenticated()) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
+    if (!this.auth.hasRole('Customer')) {
+      this.snackBar.open('Only customer accounts have a wishlist.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+
+    if (this.wishlistService.isInWishlist(this.product.id)) {
+      this.wishlistService.removeItem(this.product.id).subscribe();
+    } else {
+      this.wishlistService.addItem(this.product.id).subscribe({
+        next: () => this.snackBar.open('Added to wishlist.', 'Dismiss', { duration: 3000 }),
+      });
+    }
   }
 }

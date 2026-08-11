@@ -10,6 +10,8 @@ import { map } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CartService } from '../../cart/cart.service';
 import { ReviewsService } from '../../reviews/reviews.service';
+import { WishlistService } from '../../wishlist/wishlist.service';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { ProductsService } from '../products.service';
 import { METAL_TYPE_LABELS, PURITY_TYPE_LABELS, effectivePrice } from '../models';
 
@@ -25,15 +27,17 @@ export class ProductDetailComponent {
   private readonly productsService = inject(ProductsService);
   private readonly cartService = inject(CartService);
   private readonly reviewsService = inject(ReviewsService);
+  protected readonly wishlistService = inject(WishlistService);
   private readonly auth = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly metalTypeLabels = METAL_TYPE_LABELS;
   protected readonly purityTypeLabels = PURITY_TYPE_LABELS;
   protected readonly effectivePrice = effectivePrice;
+  protected readonly resolveMediaUrl = resolveMediaUrl;
   protected readonly stars = [1, 2, 3, 4, 5];
 
-  private readonly productId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), {
+  protected readonly productId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), {
     requireSync: true,
   });
 
@@ -85,8 +89,23 @@ export class ProductDetailComponent {
     });
   }
 
-  /** Wishlist isn't wired up yet (see docs/ROADMAP.md Phase 13c) — honest feedback instead of a silent no-op click. */
-  addToWishlist(): void {
-    this.snackBar.open('Wishlist is coming soon.', 'Dismiss', { duration: 4000 });
+  toggleWishlist(): void {
+    if (!this.auth.isAuthenticated()) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
+    if (!this.auth.hasRole('Customer')) {
+      this.snackBar.open('Only customer accounts have a wishlist.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+
+    const productId = this.productId();
+    if (this.wishlistService.isInWishlist(productId)) {
+      this.wishlistService.removeItem(productId).subscribe();
+    } else {
+      this.wishlistService.addItem(productId).subscribe({
+        next: () => this.snackBar.open('Added to wishlist.', 'Dismiss', { duration: 3000 }),
+      });
+    }
   }
 }

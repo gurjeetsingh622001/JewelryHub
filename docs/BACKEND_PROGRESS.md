@@ -1,8 +1,8 @@
 # Backend Progress
 
 Per-module completion status across all four layers (Domain → Persistence → Application → API).
-Derived directly from source inspection, last updated 2026-08-11 (`AdminController` added — a
-dashboard overview, user account management, and a review-moderation browsing queue) — see
+Derived directly from source inspection, last updated 2026-08-11 (`UploadsController` added; a
+real `DbUpdateConcurrencyException` bug found and fixed in both Cart and Wishlist) — see
 [API_PROGRESS.md](API_PROGRESS.md) for the endpoint-level detail behind the Application/API
 columns here.
 
@@ -23,6 +23,7 @@ columns here.
 | Notifications | ✅ | ✅ | ✅ (3 use cases + real-time push) | ✅ (3 endpoints + SignalR hub) | **Complete** |
 | **Jewelry Union** | ✅ (13 tables, richly modeled) | ✅ | ✅ (19 commands, 14 queries) | ✅ (33 endpoints, 3 controllers) | **Complete** |
 | Admin (as a distinct module) | n/a (reuses `User`/`Review` etc.) | n/a | ✅ (4 use cases: dashboard, users, set-status, reviews) | ✅ (4 endpoints, `AdminController`) | **Complete for v1** (added 2026-08-11; resource-specific admin actions — seller/union approval, review moderate — remain on their own controllers, see below) |
+| File Uploads | n/a | n/a (local disk, not a DB table) | ✅ (1 use case, 2 kinds) | ✅ (2 endpoints, `UploadsController`) | **Complete for v1** (added 2026-08-11 — local disk via `IFileStorageService`, see below) |
 
 ## Detail by Status
 
@@ -44,7 +45,12 @@ is the most fully-built module in the codebase.
 (no-tracking/tracking entity mismatch causing a 500 on every call) that went unnoticed until the
 Angular Cart feature exercised it live on 2026-08-06 — fixed, see
 [API_PROGRESS.md](API_PROGRESS.md). A reminder that "builds and passes review" isn't the same as
-"verified against a real database."
+"verified against a real database." **A second, different bug in the same handler** (plus an
+identical one in `AddToWishlistCommand`) was found and fixed 2026-08-11 — a new child entity
+attached only via collection-navigation `.Add()` instead of an explicit repository `AddAsync`,
+which EF Core's change tracker can mistake for an existing row given the entity's client-generated
+`Guid` key. Same shape as the `Shipment` bug below; see [API_PROGRESS.md](API_PROGRESS.md) for the
+full mechanism.
 
 **Customer Addresses** (added 2026-08-06): full CRUD via `CustomerAddressesController` —
 create/update/(soft-)delete/list. This didn't exist at all until Checkout was built on the
@@ -114,6 +120,17 @@ basic counts — both are natural Phase 17+ follow-ups, not oversights. Also wor
 deactivating a user does not revoke their already-issued refresh tokens, so a deactivated user
 stays logged in until that token expires or is rotated — `IsActive` is checked at `LoginCommand`
 time, not per-request.
+
+**File Uploads** (added 2026-08-11): a generic `Features/Uploads` slice + `UploadsController`
+(`Seller,Admin` only) — `POST product-images`, `POST kyc-documents`. Neither `CreateProductCommand`
+nor `SubmitSellerDocumentCommand` was touched; both already accept a URL string, so uploading is a
+separate client-side pre-step that returns a URL for the client to pass into those existing
+commands. Validates size (5 MB) and extension server-side via `UploadFileCommandValidator`, then
+delegates the actual write to a new `IFileStorageService` — currently `LocalFileStorageService`
+(Infrastructure), local disk under the API's `wwwroot/uploads/`, served back out via
+`app.UseStaticFiles()`. Chosen over cloud blob storage for this stage since it needs zero external
+account/credentials; the interface boundary means swapping storage backends later only touches the
+Infrastructure implementation.
 
 ### ⚠️ Partially Complete
 

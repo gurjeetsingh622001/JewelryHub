@@ -1,24 +1,27 @@
 # Frontend Progress
 
-## Status: Full Customer + Seller + Union UI Complete
+## Status: Full Customer + Seller + Union + Admin UI Complete, Plus Wishlist and Real File Upload
 
-Last updated 2026-08-07. An Angular workspace exists at `client/` (sibling to `src/`, not part of
+Last updated 2026-08-11. An Angular workspace exists at `client/` (sibling to `src/`, not part of
 `JewelryHub.sln` since it isn't a .NET project). The entire Customer-facing storefront (auth, Home,
-product browsing, cart, checkout, order history, reviews), the entire Seller module (dashboard,
-KYC, product/inventory management, order fulfillment), and the entire Union module (directory,
-create/join, membership management, announcements/documents/events, meetings, governance polls)
-are built — all wired to the live backend APIs and verified end to end against an actual running
-backend + database, not just a build. **Building Checkout surfaced a hard backend blocker** (no
-way to ever create a `CustomerAddress`), **verifying Cart live surfaced a real backend bug**,
-**verifying the Seller Order Fulfillment queue live surfaced another real backend bug** (marking an
-item Shipped always 500'd), **verifying Reviews live surfaced a real frontend CSS bug** (Lucide's
-stroke-only `Star` icon needs an explicit `fill` override to actually look "filled"), **verifying
-the Union module live surfaced a real frontend auth-gating bug** (three of its four detail tabs
-call `[Authorize]`-only endpoints, fetched unconditionally regardless of login state), and
-**verifying Union Meetings live surfaced a real layout bug** (an action-item form row squeezed
-three fields into an unusable width) — see Known Gaps. Worth remembering: "the spec says it's
-done" and "builds and looks right" are both different from "someone actually tried to use it end
-to end." Only Admin remains — see [ROADMAP.md](ROADMAP.md) Phase 12/15.
+product browsing, cart, wishlist, checkout, order history, reviews), the entire Seller module
+(dashboard, KYC, product/inventory management, order fulfillment, real photo/document upload), the
+entire Union module (directory, create/join, membership management, announcements/documents/
+events, meetings, governance polls), and the entire Admin module (dashboard, pending sellers/
+unions, review moderation, user management) are built — all wired to the live backend APIs and
+verified end to end against an actual running backend + database, not just a build. **Building
+Checkout surfaced a hard backend blocker** (no way to ever create a `CustomerAddress`),
+**verifying Cart live surfaced a real backend bug (twice — a different root cause each time, the
+second also found in Wishlist)**, **verifying the Seller Order Fulfillment queue live surfaced
+another real backend bug** (marking an item Shipped always 500'd), **verifying Reviews live
+surfaced a real frontend CSS bug** (Lucide's stroke-only `Star` icon needs an explicit `fill`
+override to actually look "filled"), **verifying the Union module live surfaced a real frontend
+auth-gating bug** (three of its four detail tabs call `[Authorize]`-only endpoints, fetched
+unconditionally regardless of login state), and **verifying Union Meetings live surfaced a real
+layout bug** (an action-item form row squeezed three fields into an unusable width) — see Known
+Gaps. Worth remembering: "the spec says it's done" and "builds and looks right" are both different
+from "someone actually tried to use it end to end." Nothing planned is outstanding — further work
+needs fresh direction, see [ROADMAP.md](ROADMAP.md).
 
 ## Design System
 
@@ -105,8 +108,8 @@ Display serif headings over Inter body copy, restrained motion, real curated Uns
   `product-list/` (URL-driven filters via `rxResource` + `toSignal(route.queryParamMap)` — search,
   category, metal type, min/max price, sort, pagination — so the page is bookmarkable/shareable
   and Navbar/Home's category links drive it directly), `product-detail/` (gallery with thumbnail
-  strip, spec table, gemstone list, a quantity stepper, and a real Add to Cart — Wishlist is still
-  an honest "coming soon" snack bar).
+  strip, spec table, gemstone list, a quantity stepper, a real Add to Cart, and — since
+  2026-08-11 — a real Add to Wishlist).
 - `shared/product-card/` — the reusable listing card (discount badge, out-of-stock badge,
   wishlist button, rating, price with strikethrough original), used by the Product List grid and
   intended for any future "you may also like"/search-result surface.
@@ -283,6 +286,21 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   found the real cause by logging the actual request/response pairs, which showed the failures
   correlated with signed-out state, not concurrency. Fixed by gating the three endpoints on
   `auth.isAuthenticated()`.
+  2026-08-11 (Wishlist UI + real file upload): reported live bug — add-to-cart 500ing again — was
+  fixed first (a second, different root cause than the 2026-08-06 fix, see
+  [API_PROGRESS.md](API_PROGRESS.md)), which prompted building out the two gaps flagged while
+  investigating: Wishlist had a complete backend and zero frontend, and there was no real file
+  upload anywhere in the app. Built `WishlistService` + `/wishlist` page + wired the Navbar/
+  product-card/product-detail wishlist buttons — **this run caught a real backend bug**
+  (`AddToWishlistCommand`, identical shape to the cart bug, found live rather than reported).
+  Built a real file-picker upload flow for the Seller product form and KYC form (previously both
+  required pasting an already-hosted URL), backed by a new generic Uploads API; added a shared
+  `resolveMediaUrl()` helper since uploaded files come back as a relative path that needs
+  resolving against the API's origin in dev (the Angular dev server and API run on different
+  ports). Verified live: both cart-bug paths and both wishlist-bug paths now succeed; a real
+  product photo uploaded during creation renders correctly; a real KYC document uploaded and
+  submitted, with a working "view document" link; extension/size validation and the Customer-role
+  403 all fire correctly. Zero console errors on the final run.
   2026-08-07 (Union Meetings + Polls): as the founding officer, scheduled a meeting with a
   two-item agenda (auto-inviting every active member), recorded minutes with an action item
   assigned to another member, and confirmed a second member could RSVP; created a poll as Draft,
@@ -309,6 +327,14 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   test meetings each with recorded minutes and an action item, and a poll with one vote cast), and
   four throwaway `temp-hash-donor*` accounts (see below) with no orders/products of their own. Kept
   intentionally as ongoing sample data (user's decision, 2026-08-06) rather than cleaned up.
+- **A much larger demo-data pass (2026-08-11)** was generated by a script driving the live API
+  (registration/KYC-submit/admin-approve/create-product/create-union/join/approve-membership —
+  real business flows, not direct SQL inserts) rather than by hand: 14 more KYC-approved sellers,
+  18 more customers, 131 more products across the 4 existing categories with varied metal/purity/
+  price/discount combinations, and 5 more admin-approved unions with 3-7 members each. Brought the
+  dev database to 32 customers, 22 approved sellers, 142 products, 6 unions. Zero errors across the
+  full scripted run; spot-checked live in the browser (product list pagination/filtering, union
+  directory, Admin dashboard counts) with zero console errors.
 - **Several accounts needed a manual password reset directly in the local dev database** across
   verification passes, since there's no self-service password-reset endpoint — this happened
   repeatedly enough (the dev admin twice, plus two different test sellers/customers) that it's
@@ -331,8 +357,10 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
   billing UI); there's no way to edit or delete a saved address from the frontend yet (the backend
   supports both — see `AddressesService`); "confirm payment" is a client-side stand-in for a real
   gateway webhook, not an actual payment integration.
-- **Seller module simplifications for v1**: product creation supports one image URL and no
-  gemstones (the backend's `CreateProductCommand` supports full gemstone/multi-image lists);
+- **Seller module simplifications for v1**: product creation supports one uploaded photo (real
+  file upload since 2026-08-11, via the new Uploads API) and no gemstones (the backend's
+  `CreateProductCommand` supports full gemstone/multi-image lists); there's no way to change a
+  product's photo after creation (the edit form has no image field);
   inventory adjustment is a single quantity-delta input with no adjustment history view; My
   Products has no pagination (fine at today's per-seller product counts, would need one before a
   seller has more than ~100 listings); there's no seller-facing analytics/reporting beyond the
@@ -381,7 +409,9 @@ photo, which was replaced before shipping). 7 are used across Home/Login/Registe
 | Seller UI — Dashboard, KYC, Products, Order Fulfillment | ✅ Complete, verified live |
 | Union UI — Directory, Create/Join, Membership, Announcements/Documents/Events | ✅ Complete, verified live |
 | Union UI — Meetings, Governance Polls | ✅ Complete, verified live |
-| Admin UI | ❌ Missing |
+| Admin UI | ✅ Complete, verified live (added 2026-08-11) |
+| Wishlist UI | ✅ Complete, verified live (added 2026-08-11) |
+| Real image/document upload (Seller product photo, KYC document) | ✅ Complete, verified live (added 2026-08-11) |
 
 ## How to Run
 

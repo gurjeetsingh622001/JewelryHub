@@ -15,7 +15,7 @@
         @for (doc of profile.documents; track doc.id) {
           <div class="seller-kyc__doc">
             <div>
-              <p class="seller-kyc__doc-type">{{ doc.documentType }}</p>
+              <a class="seller-kyc__doc-type" [href]="resolveMediaUrl(doc.fileUrl)" target="_blank" rel="noopener">{{ doc.documentType }}</a>
               <p class="seller-kyc__doc-meta">Submitted {{ doc.createdAtUtc | date: 'mediumDate' }}</p>
               @if (doc.reviewerNote) {
                 <p class="seller-kyc__doc-note">{{ doc.reviewerNote }}</p>
@@ -42,18 +42,24 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Document URL</mat-label>
-        <input matInput formControlName="fileUrl" placeholder="https://..." />
-        <mat-hint>Link to the scanned/photographed document (hosted file URL).</mat-hint>
-      </mat-form-field>
+      <div class="seller-kyc__upload">
+        <label class="seller-kyc__upload-btn" [class.seller-kyc__upload-btn--busy]="uploadingFile()">
+          @if (uploadingFile()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <lucide-icon name="FileCheck" [size]="18" [strokeWidth]="1.5" />
+          }
+          {{ form.value.fileUrl ? 'Change File' : 'Choose File' }}
+          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden [disabled]="uploadingFile()" (change)="onFileSelected($event)" />
+        </label>
+        @if (form.value.fileName) {
+          <a class="seller-kyc__upload-preview" [href]="resolveMediaUrl(form.value.fileUrl)" target="_blank" rel="noopener">
+            {{ form.value.fileName }}
+          </a>
+        }
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>File Name (optional)</mat-label>
-        <input matInput formControlName="fileName" />
-      </mat-form-field>
-
-      <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+      <button mat-flat-button color="primary" type="submit" [disabled]="submitting() || uploadingFile() || !form.value.fileUrl">
         @if (submitting()) {
           <mat-spinner diameter="20" class="inline-block" />
         } @else {

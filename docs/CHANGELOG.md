@@ -5,6 +5,109 @@ the project's development history — kept even if chat history is lost. Newest 
 
 ---
 
+## 2026-08-11 — Wishlist UI, Real File Upload, Two More `DbUpdateConcurrencyException` Bug Fixes, Large Demo-Data Pass (Verified Live)
+
+**Module**: Backend (`Features/Cart`, `Features/Wishlist`, new `Features/Uploads`,
+`UploadsController`, new `IFileStorageService`/`LocalFileStorageService`) + Frontend (new
+`features/wishlist/`, new `core/uploads/`, new `shared/resolve-media-url.ts`, Seller product/KYC
+forms) + a live demo-data generation script
+
+**Trigger**: the user reported a live 500 error on `POST /api/v1/cart/items` — every add-to-cart
+call failing — plus three feature requests in the same message: finish the Wishlist UI, add real
+image/document upload, and generate a much larger demo dataset for testing.
+
+**Bug #1 — `AddToCartCommand`, second occurrence**: a *different* root cause than the 2026-08-06
+fix (that one was a no-tracking/tracking mismatch on the `Product` load; this one held). A
+brand-new `CartItem` was attached to the tracked `Cart` only via `cart.Items.Add(...)`
+collection-navigation, never through an explicit repository call. `CartItem.Id` is a
+client-generated `Guid` (`BaseEntity`'s property initializer), and EF Core's change-tracker fixup
+treats a newly-discovered entity with an already-set key ambiguously, issuing an `UPDATE`
+(matching 0 rows, `DbUpdateConcurrencyException`) instead of an `INSERT`. Exact same shape as the
+`Shipment` bug in `UpdateOrderItemStatusCommand` (2026-08-06). Fixed by adding a `CartItems`
+repository to `IUnitOfWork` and calling `AddAsync` explicitly. Verified live via curl: both a
+brand-new cart and an existing cart with a different new product now return 200.
+
+**Bug #2 — `AddToWishlistCommand`, found live while building the Wishlist UI (not reported)**:
+identical shape and identical fix (`WishlistItems` repository + explicit `AddAsync`). This made it
+the third occurrence of the same root cause in this codebase, so the rest of `Features/` was swept
+for the same `collection.Add(new Entity {...})` pattern — every other instance
+(`RegisterCustomerCommand`, `RegisterSellerCommand`, `CreateProductCommand`'s Gemstones/Images)
+attaches children *before* the parent's own explicit `AddAsync`, which is the safe ordering, so no
+further instances exist.
+
+**Wishlist UI**: the backend (`WishlistController`, 3 endpoints) had been complete since Phase 5
+with zero frontend — the Navbar Heart icon and every "Add to Wishlist" button showed an honest
+"coming soon" toast. Built `WishlistService` (signals, same Customer-only lifecycle as
+`CartService`) and a `/wishlist` page (grid, Move to Cart, Remove, empty state); wired the Navbar
+badge and the product-card/product-detail wishlist buttons to real toggle state.
+
+**Real file upload**: nothing in the app had ever supported an actual file upload — product images
+and KYC documents were both plain URL text fields. Added a generic `Features/Uploads` slice +
+`UploadsController` (`api/v1/uploads`, `Seller,Admin` only): `POST product-images` / `POST
+kyc-documents`, validating size (5 MB) and extension, saving via a new `IFileStorageService` —
+`LocalFileStorageService` writes to the API's `wwwroot/uploads/`, served back out by
+`app.UseStaticFiles()`. Chosen over cloud blob storage for this stage (per user decision) since it
+needs zero external account/credentials; the interface boundary keeps a later swap contained to
+Infrastructure. Existing commands (`CreateProductCommand`, `SubmitSellerDocumentCommand`) were
+untouched — uploading is a separate client-side pre-step that returns a URL. Replaced the Seller
+product form's "Image URL" and the KYC form's "Document URL" text fields with real file pickers
+(upload spinner, thumbnail/filename preview). Added `shared/resolve-media-url.ts` to resolve the
+backend's relative `/uploads/...` paths against the API's origin (needed since the Angular dev
+server and API run on different ports) and applied it everywhere an image or document link renders
+(product card, product detail gallery, cart, wishlist, the Admin pending-sellers document link).
+
+**Demo data**: wrote a Node script driving the live API through real business flows (register →
+submit KYC → admin-approve → create product / create union → join → admin-approve-membership),
+not direct SQL. Added 14 sellers, 18 customers, 131 products, 5 unions with 3-7 members each —
+zero errors across the full run. Brought the dev database to 32 customers, 22 approved sellers,
+142 products, 6 unions.
+
+**Files modified (backend)**:
+- `src/JewelryHub.Application/Common/Interfaces/IUnitOfWork.cs` — added `CartItems`,
+  `WishlistItems` repositories
+- `src/JewelryHub.Persistence/UnitOfWork.cs` — same
+- `src/JewelryHub.Application/Features/Cart/Commands/AddToCart/AddToCartCommand.cs` — explicit
+  `AddAsync` for the new item
+- `src/JewelryHub.Application/Features/Wishlist/Commands/AddToWishlist/AddToWishlistCommand.cs` —
+  same fix
+- `src/JewelryHub.Application/Common/Interfaces/IFileStorageService.cs` (new)
+- `src/JewelryHub.Application/Features/Uploads/` (new) — `UploadedFileDto`, `UploadFileCommand`
+- `src/JewelryHub.Infrastructure/Storage/LocalFileStorageService.cs` (new)
+- `src/JewelryHub.Infrastructure/DependencyInjection.cs` — registered `IFileStorageService`
+- `src/JewelryHub.API/Controllers/UploadsController.cs` (new)
+- `src/JewelryHub.API/Program.cs` — added `app.UseStaticFiles()`
+- `.gitignore` — added `src/JewelryHub.API/wwwroot/uploads/` (runtime-uploaded content, not source)
+
+**Files modified (frontend)**:
+- `client/src/app/features/wishlist/` (new) — `models.ts`, `wishlist.service.ts`,
+  `wishlist-page/`
+- `client/src/app/core/uploads/uploads.service.ts` (new)
+- `client/src/app/shared/resolve-media-url.ts` (new)
+- `client/src/app/app.routes.ts` — added `/wishlist`
+- `client/src/app/core/layout/navbar/navbar.component.ts`/`.html` — real Wishlist link + badge
+- `client/src/app/shared/product-card/product-card.component.ts`/`.html`/`.scss` — real wishlist
+  toggle, `resolveMediaUrl`
+- `client/src/app/features/products/product-detail/product-detail.component.ts`/`.html` — real
+  wishlist toggle, `resolveMediaUrl`
+- `client/src/app/features/cart/cart-page/cart-page.component.ts`/`.html` — `resolveMediaUrl`
+- `client/src/app/features/seller/products/product-form/seller-product-form.component.ts`/`.html`/
+  `.scss` — file-picker image upload
+- `client/src/app/features/seller/kyc/seller-kyc.component.ts`/`.html`/`.scss` — file-picker
+  document upload, `resolveMediaUrl` on the submitted-documents list
+- `client/src/app/features/admin/pending-sellers/admin-pending-sellers.component.ts`/`.html` —
+  `resolveMediaUrl` on the document review link
+- `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md`, `docs/API_PROGRESS.md`,
+  `docs/BACKEND_PROGRESS.md`, `docs/FRONTEND_PROGRESS.md`
+
+**Verified live end-to-end**: both Cart-bug paths and both Wishlist-bug paths return 200; wishlist
+toggle from a product card → `/wishlist` page → Move to Cart; a real product photo uploaded during
+creation renders correctly cross-origin; a real KYC document uploaded, submitted, and viewable; a
+`.txt` upload correctly rejected with the extension-whitelist message; a Customer-role upload
+attempt correctly gets 403; the demo-data script's output spot-checked in the browser (pagination,
+category filter, union directory, Admin dashboard counts). Zero console errors on every run.
+
+---
+
 ## 2026-08-11 — Admin Module: Dashboard, Seller/Union Approval Consumption, Review Moderation, User Management (Verified Live)
 
 **Module**: Backend (new `Features/Admin/`, `AdminController`) + Frontend (new

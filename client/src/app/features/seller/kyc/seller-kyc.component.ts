@@ -9,6 +9,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
+import { UploadsService } from '../../../core/uploads/uploads.service';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { DOCUMENT_STATUS_LABELS } from '../models';
 import { SellerService } from '../seller.service';
 
@@ -32,7 +34,11 @@ const DOCUMENT_TYPES = ['GST Certificate', 'PAN Card', 'Business License', 'Aadh
 export class SellerKycComponent {
   private readonly fb = inject(FormBuilder);
   private readonly sellerService = inject(SellerService);
+  private readonly uploadsService = inject(UploadsService);
   private readonly snackBar = inject(MatSnackBar);
+
+  protected readonly resolveMediaUrl = resolveMediaUrl;
+  protected readonly uploadingFile = signal(false);
 
   // Plain form.reset() clears values but not FormGroupDirective's internal
   // "submitted" flag, so Material's default ErrorStateMatcher would keep
@@ -50,9 +56,26 @@ export class SellerKycComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     documentType: ['', Validators.required],
-    fileUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+    // Populated by onFileSelected() below, not typed directly — see
+    // docs/DESIGN_SYSTEM.md's file-upload pattern (also used by the Seller
+    // product form). No pattern validator needed since it's never hand-typed.
+    fileUrl: ['', Validators.required],
     fileName: [''],
   });
+
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingFile.set(true);
+    this.uploadsService.uploadKycDocument(file).subscribe({
+      next: (uploaded) => {
+        this.uploadingFile.set(false);
+        this.form.patchValue({ fileUrl: uploaded.url, fileName: uploaded.fileName });
+      },
+      error: () => this.uploadingFile.set(false),
+    });
+  }
 
   submit(): void {
     if (this.form.invalid) {

@@ -4,6 +4,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LucideAngularModule } from 'lucide-angular';
 import { CartService } from '../../../features/cart/cart.service';
+import { WishlistService } from '../../../features/wishlist/wishlist.service';
 import { AuthService } from '../../auth/auth.service';
 
 interface NavLink {
@@ -22,6 +23,7 @@ interface NavLink {
 export class NavbarComponent {
   protected readonly auth = inject(AuthService);
   protected readonly cart = inject(CartService);
+  protected readonly wishlist = inject(WishlistService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -54,7 +56,7 @@ export class NavbarComponent {
     this.mobileMenuOpen.update((open) => !open);
   }
 
-  /** Search/wishlist/cart aren't built yet (see docs/ROADMAP.md Phase 13b) — this gives honest feedback instead of a dead click or a link to a route that doesn't exist. */
+  /** Search isn't built yet (see docs/ROADMAP.md Phase 13b) — this gives honest feedback instead of a dead click or a link to a route that doesn't exist. */
   notifyComingSoon(feature: string): void {
     this.snackBar.open(`${feature} is part of the next release.`, 'Dismiss', { duration: 4000 });
   }

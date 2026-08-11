@@ -142,10 +142,23 @@
         <textarea matInput formControlName="description" rows="4"></textarea>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Image URL (optional)</mat-label>
-        <input matInput formControlName="imageUrl" placeholder="https://..." />
-      </mat-form-field>
+      <div class="product-form__image-upload">
+        <label>Photo (optional)</label>
+        <div class="product-form__image-upload-row">
+          @if (createForm.value.imageUrl) {
+            <div class="product-form__image-preview" [style.background-image]="'url(' + resolveMediaUrl(createForm.value.imageUrl) + ')'"></div>
+          }
+          <label class="product-form__upload-btn" [class.product-form__upload-btn--busy]="uploadingImage()">
+            @if (uploadingImage()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              <lucide-icon name="PackagePlus" [size]="18" [strokeWidth]="1.5" />
+            }
+            {{ createForm.value.imageUrl ? 'Change Photo' : 'Upload Photo' }}
+            <input type="file" accept="image/jpeg,image/png,image/webp" hidden [disabled]="uploadingImage()" (change)="onImageSelected($event)" />
+          </label>
+        </div>
+      </div>
 
       <div class="product-form__row">
         <mat-form-field appearance="outline">

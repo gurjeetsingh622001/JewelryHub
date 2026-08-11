@@ -1,5 +1,6 @@
 using JewelryHub.Application.Common.Interfaces;
 using JewelryHub.Infrastructure.Security;
+using JewelryHub.Infrastructure.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }

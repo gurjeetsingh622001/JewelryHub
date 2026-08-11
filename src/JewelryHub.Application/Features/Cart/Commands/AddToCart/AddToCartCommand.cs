@@ -75,14 +75,24 @@ public class AddToCartCommandHandler : IRequestHandler<AddToCartCommand, CartDto
         }
         else
         {
-            cart.Items.Add(new Domain.Cart.CartItem
+            // Adding a new item to cart.Items alone relies on EF Core's
+            // navigation fixup to detect it as Added during SaveChanges — but
+            // CartItem.Id is a client-generated Guid (set in BaseEntity's
+            // property initializer), which that fixup treats ambiguously and
+            // can issue an UPDATE for instead of an INSERT, affecting 0 rows
+            // and throwing DbUpdateConcurrencyException. Adding it through
+            // the repository explicitly marks it Added, same fix as the
+            // Shipment bug in UpdateOrderItemStatusCommand.
+            var newItem = new Domain.Cart.CartItem
             {
                 CartId = cart.Id,
                 ProductId = product.Id,
                 Product = product,
                 Quantity = request.Quantity,
                 UnitPriceSnapshot = product.BasePrice,
-            });
+            };
+            cart.Items.Add(newItem);
+            await _unitOfWork.CartItems.AddAsync(newItem, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

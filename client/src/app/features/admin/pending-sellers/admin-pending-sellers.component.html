@@ -40,7 +40,7 @@
         <div class="admin-pending__documents">
           @for (doc of seller.documents; track doc.id) {
             <div class="admin-pending__doc-row">
-              <a [href]="doc.fileUrl" target="_blank" rel="noopener">
+              <a [href]="resolveMediaUrl(doc.fileUrl)" target="_blank" rel="noopener">
                 <lucide-icon name="FileText" [size]="16" [strokeWidth]="1.5" />
                 {{ doc.documentType }}
               </a>

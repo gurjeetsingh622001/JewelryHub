@@ -13,6 +13,9 @@ dist/
 **/appsettings.*.local.json
 *.pfx
 
+## User-uploaded content (LocalFileStorageService) — runtime data, not source
+src/JewelryHub.API/wwwroot/uploads/
+
 ## OS
 .DS_Store
 Thumbs.db

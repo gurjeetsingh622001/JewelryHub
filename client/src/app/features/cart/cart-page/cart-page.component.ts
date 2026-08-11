@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LucideAngularModule } from 'lucide-angular';
+import { resolveMediaUrl } from '../../../shared/resolve-media-url';
 import { CartService } from '../cart.service';
 
 @Component({
@@ -13,6 +14,7 @@ import { CartService } from '../cart.service';
 })
 export class CartPageComponent {
   protected readonly cartService = inject(CartService);
+  protected readonly resolveMediaUrl = resolveMediaUrl;
 
   // Tracks which single line is mid-request, so only that row shows a
   // busy state instead of freezing the whole cart on every click.

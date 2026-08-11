@@ -46,6 +46,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/orders/checkout/checkout.component').then((m) => m.CheckoutComponent),
       },
       {
+        // The backend's WishlistController is [Authorize(Roles = "Customer")].
+        path: 'wishlist',
+        canActivate: [roleGuard(['Customer'])],
+        loadComponent: () => import('./features/wishlist/wishlist-page/wishlist-page.component').then((m) => m.WishlistPageComponent),
+      },
+      {
         // The backend's GetMyOrdersQuery is [Authorize(Roles = "Customer")].
         path: 'orders',
         canActivate: [roleGuard(['Customer'])],

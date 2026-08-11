@@ -45,7 +45,17 @@ public class AddToWishlistCommandHandler : IRequestHandler<AddToWishlistCommand,
         // Adding an already-wishlisted product is a no-op, not a duplicate/error.
         if (wishlist.Items.All(i => i.ProductId != request.ProductId))
         {
-            wishlist.Items.Add(new Domain.Wishlist.WishlistItem { WishlistId = wishlist.Id, ProductId = request.ProductId });
+            // Adding a new item to wishlist.Items alone relies on EF Core's
+            // navigation fixup to detect it as Added during SaveChanges — but
+            // WishlistItem.Id is a client-generated Guid (BaseEntity's
+            // property initializer), which that fixup treats ambiguously and
+            // can issue an UPDATE for instead of an INSERT, affecting 0 rows
+            // and throwing DbUpdateConcurrencyException. Adding it through
+            // the repository explicitly marks it Added — same fix as the
+            // Cart/Shipment bugs of the same shape.
+            var newItem = new Domain.Wishlist.WishlistItem { WishlistId = wishlist.Id, ProductId = request.ProductId };
+            wishlist.Items.Add(newItem);
+            await _unitOfWork.WishlistItems.AddAsync(newItem, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

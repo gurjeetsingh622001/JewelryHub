@@ -269,6 +269,47 @@ work above has settled down. Do not pull this phase forward without being asked.
 ## Phase 19 — CI/CD
 **Pending — deliberately deferred.** `.github/workflows/` exists but is empty by design for now.
 
+## Phase 20 — Wishlist UI, File Upload, Cart/Wishlist Bug Fixes, Large Demo-Data Pass
+**Completed (2026-08-11).** A post-v1 polish pass triggered by a live 500 bug report on
+add-to-cart, which snowballed into finding and fixing the same bug in Wishlist, then closing the
+two remaining gaps flagged during that work (Wishlist had a complete backend and zero frontend;
+there was no real file upload anywhere in the app) and finally generating a much larger demo
+dataset for testing against.
+
+- **Cart/Wishlist bugs**: `AddToCartCommand` (again — see Phase 13c for the first occurrence,
+  which was a different root cause) and `AddToWishlistCommand` both threw
+  `DbUpdateConcurrencyException` (500) the moment a customer added a genuinely new item, because
+  the new `CartItem`/`WishlistItem` was attached to its parent only via collection-navigation
+  (`cart.Items.Add(...)`), never through an explicit repository `AddAsync` — EF Core's change
+  tracker treated the entity's client-generated `Guid` key ambiguously and issued an `UPDATE`
+  matching 0 rows instead of an `INSERT`. Exact same shape as the `Shipment` bug from Phase 14.
+  Fixed both by adding a `CartItems`/`WishlistItems` repository to `IUnitOfWork` and calling
+  `AddAsync` explicitly; then swept the rest of `Features/` for the same shape and confirmed no
+  other instance exists (every other `collection.Add(new Entity{...})` call in the codebase
+  happens *before* the parent's own explicit `AddAsync`, which is the safe ordering).
+- **Wishlist UI**: `WishlistService` + a `/wishlist` page, the Navbar Heart icon, and the
+  product-card/product-detail "Add to Wishlist" buttons — all previously either missing or showing
+  an honest "coming soon" toast even though the backend (`WishlistController`, 3 endpoints) had
+  been complete since Phase 5.
+- **Generic file upload**: `Features/Uploads` + `UploadsController` (`Seller,Admin` only) —
+  `POST product-images` / `POST kyc-documents`, saved to local disk (`wwwroot/uploads/`, served via
+  `app.UseStaticFiles()`) behind a new `IFileStorageService` abstraction, chosen over cloud blob
+  storage for this stage since it needs zero external account/credentials. The Seller product
+  form's and KYC form's URL text fields were replaced with real file pickers. A new
+  `resolveMediaUrl()` helper resolves the backend's relative `/uploads/...` paths against the API's
+  origin (needed since the Angular dev server and API run on different ports) and is applied
+  everywhere an image or document link renders.
+- **Demo data**: a scripted pass against the live API (real registration/KYC/approval/product/
+  union flows, not direct SQL) added 14 sellers, 18 customers, 131 products, and 5 unions with
+  members, bringing the dev database to 32 customers, 22 approved sellers, 142 products, 6 unions.
+
+Verified live end-to-end throughout: both cart bug paths (new cart, new item in existing cart) and
+both wishlist bug paths return 200; wishlist toggle → `/wishlist` page → Move to Cart; a real image
+uploaded during product creation renders correctly cross-origin; a real KYC document uploaded and
+submitted; the demo-data script's output spot-checked in the browser (pagination, category filter,
+union directory, Admin dashboard counts). Zero console errors on every run. See
+[CHANGELOG.md](CHANGELOG.md) for the full file list.
+
 ## Maintenance
 
 Update this file whenever a phase's status changes, and whenever a new phase is identified.
